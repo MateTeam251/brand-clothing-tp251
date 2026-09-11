@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from core.enums import Currency, Size, DeliveryProvider
-from products.models import Product, Fabric
+from products.models import Product
 
 
 class OrderStatus(models.TextChoices):
@@ -171,10 +171,14 @@ class OrderItem(models.Model):
         validators=[MinValueValidator(1)],
     )
 
-    fabric = models.ForeignKey(
-        Fabric,
-        on_delete=models.PROTECT,
-        related_name="order_items",
+    fabric_composition_ua = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    fabric_composition_eng = models.CharField(
+        max_length=255,
+        blank=True,
     )
 
     price_at_purchase = models.DecimalField(

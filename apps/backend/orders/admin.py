@@ -12,7 +12,8 @@ class OrderItemInline(admin.TabularInline):
         "product_name",
         "size",
         "quantity",
-        "fabric",
+        "fabric_composition_ua",
+        "fabric_composition_eng",
         "price_at_purchase",
         "discount_percent_at_purchase",
     )
