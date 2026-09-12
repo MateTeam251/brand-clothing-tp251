@@ -1,6 +1,10 @@
 from django.urls import path
 
-from orders.views import CustomerOrderListView, CustomerOrderDetailView
+from orders.views import (
+    CustomerOrderListView,
+    CustomerOrderDetailView,
+    CheckoutView
+)
 
 urlpatterns = [
     path(
@@ -13,6 +17,11 @@ urlpatterns = [
         CustomerOrderDetailView.as_view(),
         name="order-detail",
     ),
+    # path(
+    #     "checkout/",
+    #     CheckoutView.as_view(),
+    #     name="checkout",
+    # )
 ]
 
 app_name = "orders"
