@@ -1,11 +1,15 @@
 from rest_framework import serializers
 
 from orders.models import OrderItem, Order
+from core.enums import Currency, DeliveryProvider
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
     """
-    Serializer for products included in a customer order.
+    Read-only serializer for products included in a customer order.
+
+    The "Product" and "Financial Data" fields are snapshots of the product state
+    stored at the time of order creation and cannot be modified via the client API.
     """
 
     line_total = serializers.DecimalField(
@@ -64,3 +68,33 @@ class OrderSerializer(serializers.ModelSerializer):
             "items",
         )
         read_only_fields = fields
+
+
+class CheckoutSerializer(serializers.ModelSerializer):
+    """
+    Validates the customer data required to create an order from the current cart.
+
+    The serializer only validates the data input. The order total, prices, discounts,
+    and other financial indicators are calculated by the checkout service,
+    based on the current cart and product data.
+    """
+
+    first_name = serializers.CharField(max_length=100)
+    last_name = serializers.CharField(max_length=100)
+    phone = serializers.CharField(max_length=50)
+    email = serializers.EmailField()
+
+    currency = serializers.ChoiceField(
+        choices=Currency.choices,
+    )
+
+    delivery_provider = serializers.ChoiceField(
+        choices=DeliveryProvider.choices,
+    )
+
+    delivery_address = serializers.CharField(max_length=255)
+
+    delivery_data = serializers.JSONField(
+        read_only=False,
+        default=dict,
+    )
