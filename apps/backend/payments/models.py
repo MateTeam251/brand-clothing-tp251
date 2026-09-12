@@ -10,6 +10,7 @@ from orders.models import Order
 class PaymentStatus(models.TextChoices):
     PENDING = "PENDING", "Pending"
     SUCCESSFUL = "SUCCESSFUL", "Successful"
+    FAILED = "FAILED", "Failed"
     CANCELED = "CANCELED", "Canceled"
     REFUNDED = "REFUNDED", "Refunded"
 
@@ -50,14 +51,17 @@ class Payment(models.Model):
     transaction_id = models.CharField(
         max_length=100,
         blank=True,
-        null=True,
-        unique=True,
     )
 
     payment_data = models.JSONField(
         default=dict,
         blank=True,
-        help_text="Raw response payload from the payment provider",
+        help_text="Provider specific non-sensitive payment metadata.",
+    )
+
+    provider_order_reference = models.CharField(
+        max_length=100,
+        blank=True,
     )
 
     paid_at = models.DateTimeField(
@@ -79,6 +83,18 @@ class Payment(models.Model):
             models.Index(
                 fields=["status", "-created_at"],
                 name="payment_status_date_idx",
+            ),
+            models.Index(
+                fields=["provider", "provider_order_reference"],
+                name="payment_provider_reference_idx",
+            )
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["provider", "provider_order_reference"],
+                condition=~models.Q(provider_order_reference=""),
+                name="unique_payment_provider_reference",
             )
         ]
 
