@@ -1,4 +1,4 @@
-from payments.providers.wayforpay import (
+from payments.providers.wayforpay.signatures import (
     build_callback_response_signature,
     build_callback_signature,
     build_check_status_response_signature,
