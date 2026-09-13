@@ -52,4 +52,8 @@ export interface ProductDetails {
 export interface ProductQueryParams {
   lang?: string;
   currency?: string;
+  collections?: string;
+  search?: string;
+  ordering?: string;
+  page?: number;
 }

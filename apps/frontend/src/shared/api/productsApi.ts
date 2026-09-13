@@ -9,16 +9,13 @@ export const productsApi = createApi({
     getProducts: builder.query<ProductListItem[], ProductQueryParams | undefined>({
       query: (params) => ({
         url: 'products/',
-        params: {
-          lang: params?.lang,
-          currency: params?.currency,
-        },
+        params
       }),
     }),
     getProductById: builder.query<ProductDetails, { id: number } & ProductQueryParams>({
-      query: ({ id, lang, currency }) => ({
+      query: ({ id, ...params }) => ({
         url: `products/${id}/`,
-        params: { lang, currency },
+        params
       }),
     }),
   }),
