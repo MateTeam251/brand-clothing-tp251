@@ -4,9 +4,6 @@ import { store } from './app/store/store';
 import './app/styles/styles.scss';
 
 import { HomePage } from './pages/HomePage';
-import { AdminLayout } from './components/Layout/AdminLayout';
-import { AdminProductFormPage } from './pages/AdminProductFormPage';
-import { AdminOrdersPage } from './pages/AdminOrdersPage';
 import { AccountLayout } from './components/Layout/AccountLayout';
 import { AccountPersonalInformationPage } from './pages/AccountPersonalInformationPage';
 import { AccountOrdersPage} from './pages/AccountOrdersPage';
@@ -22,7 +19,6 @@ import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
-import { AdminProductsPage } from './pages/AdminProductsPage';
 
 
 function App() {
@@ -46,13 +42,6 @@ function App() {
             <Route index element={<AccountPersonalInformationPage />} />
             <Route path="orders" element={<AccountOrdersPage />} />
             <Route path="favorites" element={<AccountFavoritesPage />} />
-          </Route>
-      
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminProductsPage />} />
-            <Route path="products/new" element={<AdminProductFormPage />} />
-            <Route path="products/:id" element={<AdminProductFormPage />} />
-            <Route path="orders" element={<AdminOrdersPage />} />
           </Route>
 
           <Route path='*' element={<NotFoundPage />} />
