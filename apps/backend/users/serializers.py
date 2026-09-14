@@ -1,16 +1,34 @@
 from django.contrib.auth.tokens import default_token_generator
+from django.db import transaction
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.encoding import force_str
-from users.utils import send_password_reset_link
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django_countries.serializer_fields import CountryField as CountryFieldSerializer
+
+from users.utils import send_password_reset_link
+from users.models import Address
+
 
 
 User = get_user_model()
 
+
+
+class AddressSerializer(serializers.ModelSerializer):
+
+    country = CountryFieldSerializer()
+    class Meta:
+        model = Address
+        fields = (
+            "country", "full_name", "phone_number",
+            "region", "city", "postal_code",
+            "address_line_1", "address_line_2",
+            "delivery_provider", "delivery_point",
+        )
 
 class RegisterSerializer(serializers.ModelSerializer):
     """
@@ -28,11 +46,26 @@ class RegisterSerializer(serializers.ModelSerializer):
           serialized output.
     """
     password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, min_length=8)
+    address = AddressSerializer(required=False) # address is optional
 
     class Meta:
         model = User
-        fields = ("email", "password", "name", "age", "phone_number", "marketing_opt_in", "instagram")
+        fields = ("email", "password", "password_confirm",
+                  "name", "age", "phone_number",
+                  "marketing_opt_in", "instagram", "address")
 
+
+    def validate(self, attrs):
+        """
+        Object-level validation: runs after all individual fields pass
+        their own validation. Used here because comparing two fields
+        against each other can't be expressed as a single-field validator.
+        """
+
+        if attrs["password"] != attrs["password_confirm"]:
+            raise serializers.ValidationError({"password_confirm": "Passwords do not match"})
+        return attrs
 
     def create(self, validated_data):
         """
@@ -40,13 +73,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         Args:
             validated_data (dict): Validated fields, including the
-                plain-text ``password``.
+                plain-text ``password`` and optional ``address``.
 
         Returns:
             User: The newly created (inactive) user instance.
         """
+        validated_data.pop("password_confirm") # not a model field - must be removed
         password = validated_data.pop("password")
-        user = User.objects.create_user(password=password, **validated_data)
+        address_data = validated_data.pop("address", None)
+
+        with transaction.atomic():
+            user = User.objects.create_user(password=password, **validated_data)
+
+            if address_data:
+                Address.objects.create(user=user, **address_data) # type: ignore[arg-type]
 
         return user
 
@@ -88,11 +128,32 @@ class UserProfileSerializer(serializers.ModelSerializer):
     ``id`` and ``email`` are read-only: the user's email cannot be
     changed through this serializer (e.g. to avoid breaking the
     email-based login identifier without a dedicated change-email flow).
+
+    ``addresses`` is read-only here — managing (adding/editing/deleting)
+    addresses is handled through a dedicated AddressViewSet, not through
+    this profile endpoint.
     """
+    address = AddressSerializer(required=False, read_only=True)
+
     class Meta:
         model = User
-        fields = ["id", "email", "name", "age", "phone_number", "instagram"]
+        fields = ["id", "email", "name", "age", "phone_number", "instagram", "address"]
         read_only_fields = ['id', 'email']
+
+    def update(self, instance, validated_data):
+        address_data = validated_data.pop("address", None)
+
+        # update simple User fields as usual
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if address_data is not None:
+            # update_or_create handles both "user never had an address"
+            # and "user already has one and is editing it"
+            Address.objects.update_or_create(user=instance, defaults=address_data)
+
+        return instance
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
