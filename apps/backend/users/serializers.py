@@ -47,13 +47,20 @@ class RegisterSerializer(serializers.ModelSerializer):
     """
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True, min_length=8)
-    address = AddressSerializer(required=False) # address is optional
+    agree_to_terms = serializers.BooleanField(write_only=True)
+    marketing_opt_in = serializers.BooleanField(required=False, default=False)
+
 
     class Meta:
         model = User
-        fields = ("email", "password", "password_confirm",
-                  "name", "age", "phone_number",
-                  "marketing_opt_in", "instagram", "address")
+        fields = ("email", "password", "password_confirm", "name", "instagram",
+                  "agree_to_terms", "marketing_opt_in")
+
+
+    def validate_agree_to_terms(self, value):
+        if not value:
+            raise serializers.ValidationError("You must agree to the terms and privacy policy.")
+        return value
 
 
     def validate(self, attrs):
@@ -79,16 +86,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             User: The newly created (inactive) user instance.
         """
         validated_data.pop("password_confirm") # not a model field - must be removed
+        validated_data.pop("agree_to_terms") # not a model field - must be removed
         password = validated_data.pop("password")
-        address_data = validated_data.pop("address", None)
-
-        with transaction.atomic():
-            user = User.objects.create_user(password=password, **validated_data)
-
-            if address_data:
-                Address.objects.create(user=user, **address_data) # type: ignore[arg-type]
-
-        return user
+        return User.objects.create_user(password=password, **validated_data)
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -137,7 +137,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "age", "phone_number", "instagram", "address"]
+        fields = ["id", "email", "name", "age", "phone_number",
+                  "marketing_opt_in", "instagram", "address"]
         read_only_fields = ['id', 'email']
 
     def update(self, instance, validated_data):
