@@ -49,8 +49,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "products",
     "users",
-#    "orders",
-#    "payments",
+    "orders",
+    "payments",
     "favorites",
 ]
 
@@ -180,3 +180,20 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 ACTIVATION_URL_BASE = "http://127.0.0.1:8000/api/users/activate"
+
+# WAYFORPAY
+WAYFORPAY_MERCHANT_ACCOUNT = os.environ.get("WAYFORPAY_MERCHANT_ACCOUNT")
+WAYFORPAY_SECRET_KEY = os.environ.get("WAYFORPAY_SECRET_KEY")
+WAYFORPAY_MERCHANT_DOMAIN = os.environ.get("WAYFORPAY_MERCHANT_DOMAIN")
+WAYFORPAY_SERVICE_URL = os.environ.get("WAYFORPAY_SERVICE_URL")
+WAYFORPAY_RETURN_URL = os.environ.get("WAYFORPAY_RETURN_URL")
+
+WAYFORPAY_API_URL = os.environ.get(
+    "WAYFORPAY_API_URL",
+    default="https://secure.wayforpay.com/pay",
+)
+
+WAYFORPAY_CHECK_STATUS_URL = os.environ.get(
+    "WAYFORPAY_CHECK_STATUS_URL",
+    default="https://api.wayforpay.com/api",
+)
