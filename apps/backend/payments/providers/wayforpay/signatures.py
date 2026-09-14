@@ -13,7 +13,11 @@ def _build_signature(*parts: object, secret_key: str) -> str:
     - merchant SecretKey
     """
 
-    signature_string = ";".join(str(part) for part in parts)
+    formatted_parts = [
+        "" if part is None else str(part) for part in parts
+    ]
+
+    signature_string = ";".join(formatted_parts)
 
     return hmac.new(
         secret_key.encode("utf-8"),

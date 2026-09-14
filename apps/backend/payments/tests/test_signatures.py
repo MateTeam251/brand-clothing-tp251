@@ -23,6 +23,47 @@ def test_build_signature():
     assert signature == "33359fd577eb432921a64108701df323"
 
 
+def test_build_signature_with_none_values():
+    signature_with_none = _build_signature(
+        "merchant",
+        "order-123",
+        "100.00",
+        None,
+        "44****1212",
+        None,
+        secret_key="secret",
+    )
+
+    signature_with_empty_strings = _build_signature(
+        "merchant",
+        "order-123",
+        "100.00",
+        "",
+        "44****1212",
+        "",
+        secret_key="secret",
+    )
+
+    assert signature_with_none == signature_with_empty_strings
+    assert signature_with_none == "c45da2dfc64c179dd497a479a518e762"
+
+
+def test_build_callback_signature_with_none():
+    signature = build_callback_signature(
+        merchant_account="test_merch_n1",
+        order_reference="DH783023",
+        amount="100",
+        currency="UAH",
+        auth_code=None,
+        card_pan="44****1212",
+        transaction_status="Declined",
+        reason_code=None,
+        secret_key=TEST_SECRET_KEY,
+    )
+
+    assert signature == "dd7f577f41aa591e0a38c0c1367af07a"
+
+
 def test_build_purchase_signature():
     signature = build_purchase_signature(
         merchant_account="test_merch_n1",
