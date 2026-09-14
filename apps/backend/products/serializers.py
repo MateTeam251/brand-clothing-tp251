@@ -198,6 +198,7 @@ class ProductListSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSeria
     price = serializers.SerializerMethodField()
     discounted_price = serializers.SerializerMethodField()
     collection = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -210,6 +211,7 @@ class ProductListSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSeria
                   "is_available",
                   "is_bestseller",
                   "is_new_collection",
+                  "is_favorite"
                   )
 
     def get_collection(self, obj):
@@ -238,6 +240,12 @@ class ProductListSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSeria
             return ProductImageSerializer(first_image, context=self.context).data
         return None
 
+    def get_is_favorite(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.favorited_by.filter(user=request.user).exists()
+
 
 class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSerializer):
     """
@@ -256,6 +264,7 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
     price = serializers.SerializerMethodField()
     discounted_price = serializers.SerializerMethodField()
     collection = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -295,3 +304,9 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
     def get_discounted_price(self, obj):
         """Returns the discounted price as a string, or None if there is no discount."""
         return _get_discounted_price(obj, self._currency())
+
+    def get_is_favorite(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.favorited_by.filter(user=request.user).exists()
