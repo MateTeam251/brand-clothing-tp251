@@ -37,9 +37,10 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         queryset = Product.objects.all()
-        collection_slug = self.request.query_params.get("collection")
-        if collection_slug:
-            queryset = queryset.filter(collection__slug=collection_slug)
+        collection_slugs = self.request.query_params.get("collection")
+        if collection_slugs:
+            slugs = [slug.strip() for slug in collection_slugs.split(",") if slug.strip()]
+            queryset = queryset.filter(collection__slug__in=slugs)
         return queryset
 
 
@@ -47,6 +48,8 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 class CollectionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Collection.objects.all()
     lookup_field = "slug"
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+
 
     def get_serializer_class(self):
         if self.action == "retrieve":

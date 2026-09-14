@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "users",
     "orders",
     "payments",
+    "favorites",
 ]
 
 MIDDLEWARE = [
@@ -117,8 +118,8 @@ DATABASES = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=100), #change later. Made it 100 days for developing
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=100), #change later. Made it 100 days for developing
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
