@@ -1,0 +1,77 @@
+name: Backend CI
+run-name: ${{ github.actor }} - ${{ github.head_ref || github.ref_name }} - ${{ github.sha }}
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "apps/backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/backend/**"
+      - ".github/workflows/backend-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+defaults:
+  run:
+    working-directory: apps/backend
+
+env:
+  # Dummy values only — never real secrets. Good enough for `manage.py check`,
+  # migration checks and the existing test suite (payments tests override
+  # WAYFORPAY_* themselves via override_settings).
+  SECRET_KEY: ci-dummy-secret-key
+  DEBUG: "False"
+  POSTGRES_DB: brand_clothing_db
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_HOST: localhost
+  POSTGRES_PORT: "5432"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: brand_clothing_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: apps/backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        run: pytest -v
