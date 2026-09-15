@@ -1,6 +1,8 @@
+import type { DeliveryProvider } from "./delivery";
+
+
 export type OrderStatus = 'CREATED' | 'PAID' | 'SHIPPED' | 'DELIVERED';  // need to comfirm by backend
 export type Currency = 'UAH' | 'USD';
-export type DeliveryProvider = 'NOVA_POSHTA' | 'UKRPOSHTA' | 'DHL';  // need to comfirm by backend
 export type Size = 'XS' | 'S' | 'M' | 'L' | 'XL';  // need to comfirm by backend
 
 export interface OrderItem {
