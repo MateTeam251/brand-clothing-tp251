@@ -1,9 +1,25 @@
-import type { DeliveryProvider } from "./delivery";
+import type { DeliveryProvider } from './delivery';
 
+export type OrderStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'AWAITING_SHIPMENT'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELED';
 
-export type OrderStatus = 'CREATED' | 'PAID' | 'SHIPPED' | 'DELIVERED';  // need to comfirm by backend
 export type Currency = 'UAH' | 'USD';
-export type Size = 'XS' | 'S' | 'M' | 'L' | 'XL';  // need to comfirm by backend
+
+export type Size =
+  | '2XS'
+  | 'XS'
+  | 'S'
+  | 'M'
+  | 'L'
+  | 'XL'
+  | '2XL'
+  | '3XL'
+  | '4XL';
 
 export interface OrderItem {
   id: number;
@@ -29,7 +45,6 @@ export interface Order {
   currency: Currency;
   subtotal: string;
   discount_amount: string;
-  delivery_cost: string;
   total_amount: string;
   delivery_provider: DeliveryProvider;
   delivery_data: string;
