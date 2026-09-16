@@ -91,7 +91,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
     color is the id of the related color and can be null if the image
     isn't tied to a specific color (a generic product photo).
     """
-    color = serializers.SerializerMethodField()
     class Meta:
         model = ProductImage
         fields = ("id", "image", "order")
