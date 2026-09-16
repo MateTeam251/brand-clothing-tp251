@@ -36,10 +36,9 @@ def payment():
         currency="UAH",
         subtotal="100.00",
         discount_amount="0.00",
-        delivery_cost="0.00",
         total_amount="100.00",
         delivery_provider="NOVA_POSHTA",
-        status=OrderStatus.CREATED,
+        status=OrderStatus.PENDING,
     )
 
     return Payment.objects.create(
@@ -166,7 +165,7 @@ def test_handle_callback_rejects_invalid_signature(
 
     assert payment.status == PaymentStatus.PENDING
     assert payment.paid_at is None
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.order.status == OrderStatus.PENDING
 
 
 @pytest.mark.django_db
@@ -187,7 +186,7 @@ def test_handle_callback_rejects_amount_mismatch(
 
     assert payment.status == PaymentStatus.PENDING
     assert payment.paid_at is None
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.order.status == OrderStatus.PENDING
 
 
 @pytest.mark.django_db
@@ -208,7 +207,7 @@ def test_handle_callback_rejects_currency_mismatch(
 
     assert payment.status == PaymentStatus.PENDING
     assert payment.paid_at is None
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.order.status == OrderStatus.PENDING
 
 
 @pytest.mark.django_db
@@ -298,7 +297,7 @@ def test_handle_callback_with_none_fields_validates_signature(
     payment.order.refresh_from_db()
 
     assert payment.status == PaymentStatus.PENDING
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.order.status == OrderStatus.PENDING
     assert payment.paid_at is None
 
     assert response["status"] == "accept"

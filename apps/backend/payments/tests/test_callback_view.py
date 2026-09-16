@@ -35,11 +35,10 @@ def payment():
     order = Order.objects.create(
         delivery_address="Test address",
         email="test@example.com",
-        status=OrderStatus.CREATED,
+        status=OrderStatus.PENDING,
         currency="UAH",
         subtotal=Decimal("100.00"),
         discount_amount=Decimal("0.00"),
-        delivery_cost=Decimal("0.00"),
         total_amount=Decimal("100.00"),
         delivery_provider="NOVA_POSHTA",
         user_name="Test User",
