@@ -11,6 +11,7 @@ from django_countries.serializer_fields import CountryField as CountryFieldSeria
 
 from users.utils import send_password_reset_link
 from users.models import Address
+from carts.services import merge_guest_cart_into_user_cart
 
 
 
@@ -118,6 +119,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         if not self.user.is_active:
             raise serializers.ValidationError("Account is not activated. Check your email.")
+        request = self.context.get("request")
+        if request is not None:
+            try:
+                merge_guest_cart_into_user_cart(request, self.user)
+            except Exception:
+                pass
+
         return data
 
 

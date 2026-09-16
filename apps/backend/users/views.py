@@ -9,12 +9,13 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from users.models import Address
 from users.serializers import (RegisterSerializer,
                                UserProfileSerializer,
                                PasswordResetConfirmSerializer,
-                               PasswordResetRequestSerializer, AddressSerializer)
+                               PasswordResetRequestSerializer, AddressSerializer, CustomTokenObtainPairSerializer)
 from users.tokens import account_activation_token
 from users.utils import send_activation_email
 
@@ -168,6 +169,9 @@ class AddressView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         address, _ = Address.objects.get_or_create(user=self.request.user)
         return address
+
+class LoginView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 class LogoutView(APIView):
     """
