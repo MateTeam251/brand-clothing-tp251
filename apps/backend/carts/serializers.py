@@ -55,6 +55,7 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
     Client sends only product+size+quantity — price is never accepted
     from the client, it's always derived server-side (see CartItemSerializer).
     """
+    quantity = serializers.IntegerField(default=1, min_value=1)
     class Meta:
         model = CartItem
         fields = ("id", "product", "quantity", "size")
