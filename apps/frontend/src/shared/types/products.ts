@@ -7,7 +7,6 @@ export interface ProductImage {
   id: number;
   image: string;
   order: number;
-  color: ProductImageColor | null;
 }
 
 export interface Collection {
