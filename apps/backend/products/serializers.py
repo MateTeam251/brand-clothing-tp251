@@ -25,15 +25,12 @@ returns null instead of duplicating price.
 """
 
 from rest_framework import serializers
-from decimal import Decimal, ROUND_HALF_UP
 from products.models import (Product,
                              ProductImage,
-                             Color,
-                             ProductColor,
                              SizeGuide,
                              Collection)
 from core.mixins import CurrencyMixin, LanguageMixin
-from core.pricing import calc_discounted, get_discounted_price
+from core.pricing import get_discounted_price
 
 
 
@@ -97,33 +94,9 @@ class ProductImageSerializer(serializers.ModelSerializer):
     color = serializers.SerializerMethodField()
     class Meta:
         model = ProductImage
-        fields = ("id", "image", "order", "color")
-
-    def get_color(self, obj):
-        if obj.color:
-            return ColorSerializer(obj.color, context=self.context).data
-        return None
+        fields = ("id", "image", "order")
 
 
-class ColorSerializer(serializers.ModelSerializer):
-    """Serializes the Color reference model. Color names are always in English."""
-    class Meta:
-        model = Color
-        fields = ("name", "hex_code")
-
-class ProductColorSerializer(serializers.ModelSerializer):
-    """
-    Serializes a product-color link (ProductColor) along with the color's
-    own details.
-
-    is_available reflects whether THIS specific color is currently
-    available for THIS specific product (independent of the product's
-    overall is_available flag on Product).
-    """
-    colors = ColorSerializer(source="color", many=False)
-    class Meta:
-        model = ProductColor
-        fields = ("colors", "is_available")
 
 class ProductListSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSerializer):
     """
@@ -195,7 +168,6 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
     colors, and the size guide.
     """
     images = ProductImageSerializer(many=True, read_only=True)
-    available_colors = ProductColorSerializer(source="colors", many=True)
     type = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     fabric_composition = serializers.SerializerMethodField()
@@ -209,7 +181,7 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
         model = Product
         fields = ("id", "name", "type", "collection", "description", "fabric_composition",
                   "price", "discounted_price",
-                  "is_bestseller", "images", "available_colors", "is_available", "size_guide", "is_favorite")
+                  "is_bestseller", "images", "is_available", "size_guide", "is_favorite")
 
     def get_collection(self, obj):
         if obj.collection:

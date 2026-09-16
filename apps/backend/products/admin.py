@@ -1,53 +1,47 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from products.models import (ProductType,
                              Product,
-                             ProductColor,
                              ProductImage,
-                             Color,
                              SizeGuide,
                              Collection)
 
 
-@admin.register(Color)
-class ColorAdmin(admin.ModelAdmin):
-    list_display = ("name", "hex_code")
-    search_fields = ("name",)
-
-
-@admin.register(ProductColor)
-class ProductColorAdmin(admin.ModelAdmin):
-    list_display = ("product", "color", "is_available")
-    list_filter = ("is_available", "color")
-    search_fields = ("product__name", "color__name")
-
-
-admin.site.register(ProductImage)
 admin.site.register(ProductType)
-
-
-class ProductColorInline(admin.TabularInline):
-    model = ProductColor
-    extra = 1
-    autocomplete_fields = ["color"]
 
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
+    fields = ("image", "image_preview", "order")
+    readonly_fields = ("image_preview",)
+
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 80px;" />', obj.image.url)
+        return "—"
+    image_preview.short_description = "Preview"
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "type", "price_uah", "is_available", "is_bestseller")
-    inlines = [ProductColorInline, ProductImageInline]
+    list_display = (
+        "name", "type", "collection", "price_uah", "discount_percent",
+        "is_available", "is_bestseller", "is_new_collection",
+    )
+    list_editable = ("is_available", "is_bestseller", "is_new_collection")
+    list_filter = ("is_available", "is_bestseller", "is_new_collection", "type", "collection")
+    inlines = [ProductImageInline]
     search_fields = ("name",)
+    ordering = ("-created_at",)
 
 
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     list_display = ("name", "slug", "created_at")
+    search_fields = ("name",)
 
 
 @admin.register(SizeGuide)
