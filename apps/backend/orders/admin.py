@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from orders.email_services import send_order_status_changed_email
 from orders.models import OrderItem, Order
 
 
@@ -16,6 +17,9 @@ class OrderItemInline(admin.TabularInline):
         "fabric_composition_eng",
         "price_at_purchase",
         "discount_percent_at_purchase",
+        "unit_price_after_discount",
+        "line_subtotal",
+        "line_total",
     )
     fields = readonly_fields
 
@@ -62,7 +66,6 @@ class OrderAdmin(admin.ModelAdmin):
         "currency",
         "subtotal",
         "discount_amount",
-        "delivery_cost",
         "total_amount",
         "delivery_provider",
         "delivery_data",
@@ -89,7 +92,6 @@ class OrderAdmin(admin.ModelAdmin):
                     "currency",
                     "subtotal",
                     "discount_amount",
-                    "delivery_cost",
                     "total_amount",
                 )
             },
@@ -118,3 +120,13 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = (OrderItemInline,)
 
     ordering = ("-created_at",)
+
+    def save_model(self, request, obj: Order, form, change):
+        old_status = None
+        if change and "status" in form.changed_data:
+            old_status = Order.objects.only("status").get(pk=obj.pk).status
+
+        super().save_model(request, obj, form, change)
+
+        if old_status is not None and old_status != obj.status:
+            send_order_status_changed_email(obj)
