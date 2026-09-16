@@ -16,6 +16,7 @@ class Fabric(models.Model):
     def __str__(self):
         return self.name
 
+
 class Collection(models.Model):
     """
     A named collection used to group products for collection landing pages
@@ -27,20 +28,6 @@ class Collection(models.Model):
     description_ua = models.TextField(blank=True)
     description_eng = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Color(models.Model):
-    """
-    Reference list of colors available across all products.
-
-    Colors are stored in English only (no _ua/_eng split) — color names
-    are treated as universal labels shown the same way regardless of site language.
-    """
-    name = models.CharField(max_length=100)
-    hex_code = models.CharField(max_length=7, blank=True)  # for example "#FF0000" for frontend
 
     def __str__(self):
         return self.name
@@ -127,31 +114,9 @@ class SizeGuide(models.Model):
         return "Size guide"
 
 
-class ProductColor(models.Model):
-    """
-    Through model linking a Product to a Color it's offered in.
-
-    is_available tracks whether this specific color is currently in stock
-    for this specific product — independent of the product's own
-    is_available flag (a product can be "available" overall while
-    one of its colors is temporarily out of stock).
-    """
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="colors")
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="products")
-    is_available = models.BooleanField(default=True)  # is this color available for this product right now
-
-    def __str__(self):
-        return f"{self.product.name} - {self.color.name}"
-
-
 class ProductImage(models.Model):
     """
     A single image belonging to a product.
-
-    color links the image to a specific color variant, so the frontend
-    can swap the displayed photo when the user clicks a color swatch.
-    color=None means the image is generic (not tied to any specific
-    color) — the frontend needs fallback logic for this case.
 
     order determines display order within the gallery; order=0 is
     reserved for the product's main/cover image (enforced by the
@@ -159,7 +124,6 @@ class ProductImage(models.Model):
     at most one order=0 image per product).
     """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name="images", null=True, blank=True)
     image = models.ImageField(upload_to="products/")  # will develop later using S3 AWS bucket
     order = models.PositiveSmallIntegerField(default=0)  # for frontend. order = 0 decides which photo is main one
 
