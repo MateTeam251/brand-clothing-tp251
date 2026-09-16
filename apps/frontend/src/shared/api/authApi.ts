@@ -18,15 +18,22 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     login: builder.mutation<TokenResponse, LoginCredentials>({
       query: (credentials) => ({
-        url: 'users/token/',
+        url: 'auth/token/',
         method: 'POST',
         body: credentials,
       }),
     }),
+    refreshToken: builder.mutation<TokenResponse, { refresh: string }>({
+      query: (body) => ({
+        url: 'auth/refresh/',
+        method: 'POST',
+        body,
+      }),
+    }),
     getUser: builder.query<UserProfile, void>({
-      query: () => 'users/me/',
+      query: () => 'auth/me/',
     }),
   }),
 });
 
-export const { useLoginMutation, useGetUserQuery } = authApi;
+export const { useLoginMutation, useRefreshTokenMutation, useGetUserQuery } = authApi;
