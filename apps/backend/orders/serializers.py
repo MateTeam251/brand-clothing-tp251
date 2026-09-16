@@ -12,6 +12,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
     stored at the time of order creation and cannot be modified via the client API.
     """
 
+    unit_price_after_discount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        read_only=True,
+    )
+
+    line_subtotal = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        read_only=True,
+    )
+
     line_total = serializers.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -30,6 +42,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "fabric_composition_eng",
             "price_at_purchase",
             "discount_percent_at_purchase",
+            "unit_price_after_discount",
+            "line_subtotal",
             "line_total",
         )
         read_only_fields = fields
@@ -61,7 +75,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "currency",
             "subtotal",
             "discount_amount",
-            "delivery_cost",
             "total_amount",
             "delivery_provider",
             "delivery_data",
@@ -92,9 +105,32 @@ class CheckoutSerializer(serializers.ModelSerializer):
         choices=DeliveryProvider.choices,
     )
 
-    delivery_address = serializers.CharField(max_length=255)
+    delivery_address = serializers.CharField(
+        max_length=255,
+        required=True,
+    )
 
     delivery_data = serializers.JSONField(
         read_only=False,
         default=dict,
+        help_text="Delivery service details (city, branch, postal code, etc.)",
     )
+
+    class Meta:
+        model = Order
+        fields = (
+            "first_name",
+            "last_name",
+            "phone",
+            "email",
+            "currency",
+            "delivery_provider",
+            "delivery_address",
+            "delivery_data",
+        )
+
+
+class CheckoutResponseSerializer(serializers.Serializer):
+    order_id = serializers.IntegerField(required=False)
+    payment_id = serializers.IntegerField()
+    payment_url = serializers.URLField()

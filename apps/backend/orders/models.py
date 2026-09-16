@@ -12,11 +12,11 @@ class OrderStatus(models.TextChoices):
     """
     Customer-facing order lifecycle.
 
-    The "CREATED" status is a technical prepayment status used during order placement.
+    The "PENDING" status is a technical prepayment status used during order placement.
     The final business order begins with the "PAID" status after successful payment.
     """
 
-    CREATED = "CREATED", "Created"
+    PENDING = "PENDING", "Pending"
     PAID = "PAID", "Paid"
     AWAITING_SHIPMENT = "AWAITING_SHIPMENT", "Awaiting Shipment"
     SHIPPED = "SHIPPED", "Shipped"
@@ -40,14 +40,6 @@ class Order(models.Model):
         related_name="orders",
     )
 
-    # session = models.ForeignKey(
-    #     Session,
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True,
-    #     related_name="orders",
-    # )
-
     delivery_address = models.TextField(
         help_text="Final delivery address at the time of order placement.",
     )
@@ -59,7 +51,7 @@ class Order(models.Model):
     status = models.CharField(
         max_length=45,
         choices=OrderStatus.choices,
-        default=OrderStatus.CREATED
+        default=OrderStatus.PENDING
     )
 
     currency = models.CharField(
@@ -80,12 +72,6 @@ class Order(models.Model):
         validators=[MinValueValidator(Decimal("0.00"))],
     )
 
-    delivery_cost = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=Decimal("0.00"),
-        validators=[MinValueValidator(Decimal("0.00"))],
-    )
 
     total_amount = models.DecimalField(
         max_digits=10,
@@ -204,12 +190,32 @@ class OrderItem(models.Model):
         ]
 
     @property
-    def line_total(self):
+    def unit_price_after_discount(self) -> Decimal:
         """
-        Total amount for this order item.
+        Price per 1 unit after applying discount.
+        """
+
+        if not self.discount_percent_at_purchase:
+            return self.price_at_purchase
+
+        discount = Decimal(100 - self.discount_percent_at_purchase) / Decimal("100")
+        return (self.price_at_purchase * discount).quantize(Decimal("0.01"))
+
+    @property
+    def line_subtotal(self) -> Decimal:
+        """
+        Total subtotal amount without discount for this order item.
         """
 
         return self.price_at_purchase * self.quantity
+
+    @property
+    def line_total(self) -> Decimal:
+        """
+        Final total amount after discount for this order item.
+        """
+
+        return self.unit_price_after_discount * self.quantity
 
     def __str__(self):
         return f"{self.product_name} - {self.size} x {self.quantity}"
