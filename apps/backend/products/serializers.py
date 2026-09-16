@@ -33,38 +33,11 @@ from products.models import (Product,
                              SizeGuide,
                              Collection)
 from core.mixins import CurrencyMixin, LanguageMixin
+from core.pricing import calc_discounted, get_discounted_price
 
 
 
-def _calc_discounted(price, discount_percent):
-    """
-    Calculates the discounted price using Decimal arithmetic throughout
-    (no float), to avoid rounding-precision errors.
 
-    :param price: Decimal — the original price in the relevant currency.
-    :param discount_percent: int — discount size in percent (0-100).
-    :return: str — the discounted price, rounded to 2 decimal places
-             (ROUND_HALF_UP), returned as a string, e.g. "900.00".
-    """
-    multiplier = Decimal(100 - discount_percent) / Decimal(100)
-    discounted = price * multiplier
-    return str(discounted.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
-
-
-def _get_discounted_price(obj, currency):
-    """
-    Returns the product's discounted price in the given currency,
-    or None if the product has no discount (discount_percent == 0).
-
-    :param obj: Product — the product instance.
-    :param currency: str — "usd" or "uah", determines which price field
-                     (price_usd/price_uah) is used as the base.
-    :return: str | None
-    """
-    if not obj.discount_percent:
-        return None
-    price = obj.price_usd if currency == "usd" else obj.price_uah
-    return _calc_discounted(price, obj.discount_percent)
 
 class CollectionSerializer(LanguageMixin, serializers.ModelSerializer):
     description = serializers.SerializerMethodField()
@@ -192,7 +165,7 @@ class ProductListSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSeria
 
     def get_discounted_price(self, obj):
         """Returns the discounted price as a string, or None if there is no discount."""
-        return _get_discounted_price(obj, self._currency())
+        return get_discounted_price(obj, self._currency())
 
 
     def get_main_image(self, obj):
@@ -269,7 +242,7 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
 
     def get_discounted_price(self, obj):
         """Returns the discounted price as a string, or None if there is no discount."""
-        return _get_discounted_price(obj, self._currency())
+        return get_discounted_price(obj, self._currency())
 
     def get_is_favorite(self, obj):
         request = self.context.get("request")

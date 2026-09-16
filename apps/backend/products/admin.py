@@ -41,6 +41,7 @@ class ProductImageInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("name", "type", "price_uah", "is_available", "is_bestseller")
     inlines = [ProductColorInline, ProductImageInline]
+    search_fields = ("name",)
 
 
 @admin.register(Collection)
