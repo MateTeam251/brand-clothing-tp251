@@ -39,6 +39,7 @@ class CartItemViewSet(mixins.CreateModelMixin,
                        mixins.DestroyModelMixin,
                        viewsets.GenericViewSet):
     serializer_class = CartItemWriteSerializer
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
 
     def get_serializer_context(self):

@@ -41,10 +41,7 @@ def check_payment_status(order_reference: str) -> dict:
         "merchantSignature",
         "amount",
         "currency",
-        "authCode",
-        "cardPan",
         "transactionStatus",
-        "reasonCode",
     )
 
     missing_fields = [field for field in required_fields if field not in response_data]
@@ -60,15 +57,19 @@ def check_payment_status(order_reference: str) -> dict:
     if response_data["orderReference"] != order_reference:
         raise ValueError("Invalid order reference")
 
+    auth_code = response_data.get("authCode")
+    card_pan = response_data.get("cardPan")
+    reason_code = response_data.get("reasonCode")
+
     expected_signature = build_check_status_response_signature(
         merchant_account=response_data["merchantAccount"],
         order_reference=response_data["orderReference"],
         amount=response_data["amount"],
         currency=response_data["currency"],
-        auth_code=response_data["authCode"],
-        card_pan=response_data["cardPan"],
+        auth_code=auth_code,
+        card_pan=card_pan,
         transaction_status=response_data["transactionStatus"],
-        reason_code=response_data["reasonCode"],
+        reason_code=reason_code,
         secret_key=config.secret_key,
     )
 

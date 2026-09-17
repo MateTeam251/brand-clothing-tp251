@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import Mock
 
 import pytest
@@ -12,6 +13,8 @@ from payments.providers.wayforpay.signatures import (
 
 
 TEST_SECRET_KEY = "test-secret-key"
+
+TEST_ORDER_REF = "ba73d8c8-97f3-4a86-ae07-22b4e347f3d3"
 
 
 @pytest.fixture
@@ -33,7 +36,7 @@ def wayforpay_settings():
 def build_response_data(
     *,
     merchant_account="test_merchant",
-    order_reference="ORDER-123",
+    order_reference=TEST_ORDER_REF,
     amount="100.00",
     currency="UAH",
     auth_code="123456",
@@ -95,7 +98,7 @@ def test_check_payment_status_returns_verified_response(
         response_data,
     )
 
-    result = check_payment_status("ORDER-123")
+    result = check_payment_status(TEST_ORDER_REF)
 
     assert result == response_data
 
@@ -106,7 +109,7 @@ def test_check_payment_status_returns_verified_response(
     assert args[0] == "https://api.wayforpay.com/api"
     assert kwargs["json"]["transactionType"] == "CHECK_STATUS"
     assert kwargs["json"]["merchantAccount"] == "test_merchant"
-    assert kwargs["json"]["orderReference"] == "ORDER-123"
+    assert kwargs["json"]["orderReference"] == TEST_ORDER_REF
     assert kwargs["json"]["apiVersion"] == 1
     assert kwargs["timeout"] == (5, 15)
 
@@ -122,13 +125,13 @@ def test_check_payment_status_builds_correct_request_signature(
         response_data,
     )
 
-    check_payment_status("ORDER-123")
+    check_payment_status(TEST_ORDER_REF)
 
     payload = mock_post.call_args.kwargs["json"]
 
     expected_signature = build_check_status_signature(
         merchant_account="test_merchant",
-        order_reference="ORDER-123",
+        order_reference=TEST_ORDER_REF,
         secret_key=TEST_SECRET_KEY,
     )
 
@@ -151,7 +154,7 @@ def test_check_payment_status_rejects_invalid_response_signature(
         ValueError,
         match="Invalid WayForPay Check Status signature",
     ):
-        check_payment_status("ORDER-123")
+        check_payment_status(TEST_ORDER_REF)
 
 
 def test_check_payment_status_rejects_invalid_merchant_account(
@@ -171,15 +174,16 @@ def test_check_payment_status_rejects_invalid_merchant_account(
         ValueError,
         match="Invalid merchant account",
     ):
-        check_payment_status("ORDER-123")
+        check_payment_status(TEST_ORDER_REF)
 
 
 def test_check_payment_status_rejects_invalid_order_reference(
     monkeypatch,
     wayforpay_settings,
 ):
+    unknown_ref = str(uuid.uuid4())
     response_data = build_response_data(
-        order_reference="ANOTHER-ORDER",
+        order_reference=unknown_ref,
     )
 
     mock_wayforpay_response(
@@ -191,7 +195,7 @@ def test_check_payment_status_rejects_invalid_order_reference(
         ValueError,
         match="Invalid order reference",
     ):
-        check_payment_status("ORDER-123")
+        check_payment_status(TEST_ORDER_REF)
 
 
 @pytest.mark.parametrize(
@@ -202,10 +206,7 @@ def test_check_payment_status_rejects_invalid_order_reference(
         "merchantSignature",
         "amount",
         "currency",
-        "authCode",
-        "cardPan",
         "transactionStatus",
-        "reasonCode",
     ],
 )
 def test_check_payment_status_rejects_missing_required_field(
@@ -225,7 +226,7 @@ def test_check_payment_status_rejects_missing_required_field(
         ValueError,
         match="Missing required WayForPay Check Status response fields",
     ):
-        check_payment_status("ORDER-123")
+        check_payment_status(TEST_ORDER_REF)
 
 
 def test_check_payment_status_propagates_http_error(
@@ -245,7 +246,7 @@ def test_check_payment_status_propagates_http_error(
     )
 
     with pytest.raises(requests.HTTPError, match="WayForPay unavailable"):
-        check_payment_status("ORDER-123")
+        check_payment_status(TEST_ORDER_REF)
 
 
 def test_check_payment_status_does_not_modify_database(
@@ -266,6 +267,6 @@ def test_check_payment_status_does_not_modify_database(
         response_data,
     )
 
-    result = check_payment_status("ORDER-123")
+    result = check_payment_status(TEST_ORDER_REF)
 
     assert result["transactionStatus"] == "Declined"

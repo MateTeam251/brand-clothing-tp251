@@ -202,3 +202,71 @@ WAYFORPAY_CHECK_STATUS_URL = os.environ.get(
     "WAYFORPAY_CHECK_STATUS_URL",
     default="https://api.wayforpay.com/api",
 )
+
+# Site URL
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
+
+#LOGS
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} [{levelname}] {name} (Line: {lineno}): {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{name}] {levelname}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "level": "INFO",
+        },
+        "error_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "verbose",
+            "filename": LOGS_DIR / "error.log",
+            "level": "ERROR",
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 5,
+            "encoding": "utf-8",
+        },
+        "payments_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "verbose",
+            "filename": LOGS_DIR / "payments.log",
+            "level": "INFO",
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 10,
+            "encoding": "utf-8",
+        },
+    },
+    "root": {
+        "level": "INFO",
+        "handlers": ["console", "error_file"],
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "payments": {
+            "handlers": ["console", "error_file", "payments_file"],
+            "level": "INFO",
+            "propagate": False,
+        }
+    },
+}

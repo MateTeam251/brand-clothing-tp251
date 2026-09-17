@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from django.core.validators import MinValueValidator
@@ -11,7 +12,6 @@ class PaymentStatus(models.TextChoices):
     PENDING = "PENDING", "Pending"
     SUCCESSFUL = "SUCCESSFUL", "Successful"
     FAILED = "FAILED", "Failed"
-    CANCELED = "CANCELED", "Canceled"
     REFUNDED = "REFUNDED", "Refunded"
 
 
@@ -59,9 +59,10 @@ class Payment(models.Model):
         help_text="Provider specific non-sensitive payment metadata.",
     )
 
-    provider_order_reference = models.CharField(
-        max_length=100,
-        blank=True,
+    provider_order_reference = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
     )
 
     paid_at = models.DateTimeField(
@@ -84,17 +85,13 @@ class Payment(models.Model):
                 fields=["status", "-created_at"],
                 name="payment_status_date_idx",
             ),
-            models.Index(
-                fields=["provider", "provider_order_reference"],
-                name="payment_provider_reference_idx",
-            )
         ]
 
         constraints = [
             models.UniqueConstraint(
-                fields=["provider", "provider_order_reference"],
-                condition=~models.Q(provider_order_reference=""),
-                name="unique_payment_provider_reference",
+                fields=["order"],
+                condition=models.Q(status=PaymentStatus.SUCCESSFUL),
+                name="unique_successful_payment_per_order",
             )
         ]
 
