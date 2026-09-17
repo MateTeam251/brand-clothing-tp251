@@ -79,10 +79,10 @@ def build_callback_signature(
         order_reference: str,
         amount: str,
         currency: str,
-        auth_code: str,
-        card_pan: str,
+        auth_code: str | None = None,
+        card_pan: str | None = None,
         transaction_status: str,
-        reason_code: str,
+        reason_code: str | None = None,
         secret_key: str,
 ) -> str:
     """
@@ -168,10 +168,10 @@ def build_check_status_response_signature(
         order_reference: str,
         amount: str,
         currency: str,
-        auth_code: str,
-        card_pan: str,
+        auth_code: str | None = None,
+        card_pan: str | None = None,
         transaction_status: str,
-        reason_code: str,
+        reason_code: str | None = None,
         secret_key: str,
 ) -> str:
     """
