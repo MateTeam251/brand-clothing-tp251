@@ -1,0 +1,198 @@
+@use '../../../app/styles/mixins.scss';
+@use '../../../app/styles/variables.scss' as variables;
+
+.header {
+	background-color: #fff;
+	color: #171717;
+
+	&__top {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+    gap: 16px;
+		min-height: 40px;
+	}
+
+	&__currency,
+	&__lang {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	&__select-button,
+	&__icon-button {
+		border: 0;
+		padding: 0;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+	}
+
+	&__select-button {
+		font-size: 16px;
+		line-height: 24px;
+		letter-spacing: 0%;
+	}
+
+	&__select-button[aria-pressed='true'] {
+		color: #000;
+	}
+
+	&__select-button[aria-pressed='false'],
+	&__select-button[aria-pressed='false']:hover,
+	&__select-button[aria-pressed='false']:focus-visible {
+		color: variables.$color-inactive;
+	}
+
+	&__select-divider {
+		width: 1px;
+		height: 24px;
+		background-color: #000;
+	}
+
+	&__divider {
+		margin: 0;
+		border: 0;
+	}
+
+	&__main {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		min-height: 76px;
+	}
+
+	&__nav--account {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 20px;
+	}
+
+	&__actions {
+		display: none;
+		align-items: center;
+		gap: 12px;
+	}
+
+	&__nav:last-child {
+		justify-self: end;
+	}
+
+	&__list {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__nav--desktop,
+	&__search-button {
+		display: none;
+	}
+
+	&__nav--account .header__search-button {
+		display: none;
+	}
+
+	&__favourite-button {
+		display: none;
+	}
+
+	&__nav--mobile,
+	&__mobile-favorites {
+		display: block;
+	}
+
+	&__link {
+		color: inherit;
+		font-size: 20px;
+    line-height: 24px;
+		text-decoration: none;
+	}
+
+	&__link:hover,
+	&__link:focus-visible {
+		color: #777;
+	}
+
+	&__icon-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+	}
+
+	&__icon-button:hover,
+	&__icon-button:focus-visible {
+		opacity: 0.6;
+	}
+
+	&__nav--account .header__search-button,
+	&__nav--account .header__favourite-button {
+		display: none;
+	}
+
+	&__icon {
+		width: 20px;
+		height: 20px;
+		object-fit: contain;
+	}
+
+	&__search-icon {
+		width: 20px;
+		height: 20px;
+		object-fit: contain;
+	}
+
+	&__logo {
+		display: block;
+		width: 120px;
+		height: auto;
+		justify-self: center;
+	}
+
+	&__logo-link {
+		display: block;
+		justify-self: center;
+	}
+}
+
+@include mixins.on-desktop {
+	.header {
+		&__top {
+			display: none;
+		}
+
+		&__divider,
+		&__nav--mobile,
+		&__mobile-favorites {
+			display: none;
+		}
+
+		&__nav--desktop,
+		&__search-button {
+			display: inline-flex;
+		}
+
+		&__nav--account .header__search-button {
+			display: inline-flex;
+		}
+
+		&__nav--account .header__favourite-button {
+			display: inline-flex;
+		}
+
+		&__nav--account {
+			display: flex;
+		}
+
+		&__actions {
+			display: flex;
+		}
+	}
+}

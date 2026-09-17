@@ -1,11 +1,13 @@
-import type { Cart } from './Cart';
-import type { Product } from './Product';
-import type { Fabric } from './Fabric';
+import type { ProductImage } from './products';
+import type { Size } from './common';
 
 export interface CartItem {
   id: number;
-  cart: Cart;
-  product: Product;
+  product: number;
+  name: string;
+  main_image: ProductImage | null;
+  size: Size;
   quantity: number;
-  fabric: Fabric;
+  price: string;
+  total_price: string;
 }
