@@ -1,6 +1,7 @@
 import json
 import logging
 
+from django.core.exceptions import ValidationError
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -72,14 +73,17 @@ class WayForPayCallbackView(APIView):
 
         try:
             response_data = handle_callback(data)
-        except ValueError as exc:
+        except (ValueError, ValidationError) as exc:
             logger.warning(
                 "WayForPay callback rejected: orderReference=%s, error: %s",
                 order_reference,
                 exc,
             )
+            detail_msg = (
+                exc.messages[0] if isinstance(exc, ValidationError) else str(exc)
+            )
             return Response(
-                {"detail": str(exc)},
+                {"detail": detail_msg},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception:
@@ -97,3 +101,16 @@ class WayForPayCallbackView(APIView):
             order_reference,
         )
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class PaymentSuccessView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return Response(
+            {"message": "Payment successful! Thank you for your order."},
+            status=status.HTTP_200_OK,
+        )
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
