@@ -1,9 +1,11 @@
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from carts.views import get_or_create_active_cart
 from orders.models import Order
 from orders.serializers import (
     OrderSerializer,
@@ -98,8 +100,6 @@ class CheckoutView(APIView):
         serializer = CheckoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # TODO: Cart is not implemented yet
-
         cart = self._get_current_cart(request)
 
         order, payment, payment_url = checkout(
@@ -119,7 +119,16 @@ class CheckoutView(APIView):
         )
 
     def _get_current_cart(self, request):
-        raise NotImplementedError("Cart is not implemented yet")
+        """
+        Retrieves the active shopping cart for an authorized or guest user.
+        Raises a 400 Bad Request error if the cart is missing or contains no products.
+        """
+        cart = get_or_create_active_cart(request)
+
+        if not cart.items.exists():
+            raise ValidationError({"cart": "Can not checkout an empty cart."})
+
+        return cart
 
 
 class RetryPaymentView(APIView):
@@ -136,13 +145,13 @@ class RetryPaymentView(APIView):
             404: OpenApiResponse(description="Order not found or access denied"),
         },
     )
-    def post(self, request, order_id):
+    def post(self, request, pk):
         """
         Create a new payment attempt for the customer's pending order.
         """
 
         order = Order.objects.filter(
-            pk=order_id,
+            pk=pk,
             user=request.user,
         ).first()
 
@@ -153,7 +162,7 @@ class RetryPaymentView(APIView):
             )
 
         order, payment, payment_url = retry_payment(
-            order_id=order_id,
+            order_id=order.id,
         )
 
         response_data = {
