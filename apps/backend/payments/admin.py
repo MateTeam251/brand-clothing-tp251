@@ -8,6 +8,7 @@ class PaymentAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "order",
+        "provider_order_reference",
         "currency",
         "amount",
         "provider",
@@ -26,6 +27,7 @@ class PaymentAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
+        "provider_order_reference",
         "transaction_id",
         "order__id",
         "order__email",
@@ -33,6 +35,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "order",
+        "provider_order_reference",
         "currency",
         "amount",
         "provider",
@@ -49,6 +52,7 @@ class PaymentAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "order",
+                    "provider_order_reference",
                     "amount",
                     "currency",
                     "status",

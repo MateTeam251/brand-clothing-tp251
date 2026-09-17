@@ -55,6 +55,10 @@ def build_purchase_signature(
     productPrice[0..n]
     """
 
+    str_product_names = [str(name) for name in product_names]
+    str_product_counts = [str(count) for count in product_counts]
+    str_product_prices = [str(price) for price in product_prices]
+
     return _build_signature(
         merchant_account,
         merchant_domain,
@@ -62,9 +66,9 @@ def build_purchase_signature(
         order_date,
         amount,
         currency,
-        *product_names,
-        *product_counts,
-        *product_prices,
+        *str_product_names,
+        *str_product_counts,
+        *str_product_prices,
         secret_key=secret_key,
     )
 
@@ -75,10 +79,10 @@ def build_callback_signature(
         order_reference: str,
         amount: str,
         currency: str,
-        auth_code: str,
-        card_pan: str,
+        auth_code: str | None = None,
+        card_pan: str | None = None,
         transaction_status: str,
-        reason_code: str,
+        reason_code: str | None = None,
         secret_key: str,
 ) -> str:
     """
@@ -164,10 +168,10 @@ def build_check_status_response_signature(
         order_reference: str,
         amount: str,
         currency: str,
-        auth_code: str,
-        card_pan: str,
+        auth_code: str | None = None,
+        card_pan: str | None = None,
         transaction_status: str,
-        reason_code: str,
+        reason_code: str | None = None,
         secret_key: str,
 ) -> str:
     """

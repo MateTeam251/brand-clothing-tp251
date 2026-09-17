@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
+<body style="font-family: sans-serif; color: #333; line-height: 1.5;">
+    <h2>Payment Confirmed!</h2>
+    <p>Hi {{ order.user_name }},</p>
+    <p>We've received your payment for order <strong>#{{ order.id }}</strong>.</p>
+    <p><strong>Amount Paid:</strong> {{ order.total_amount }} {{ order.currency }}</p>
+    <p>We are preparing your package for shipment now!</p>
+</body>
+</html>

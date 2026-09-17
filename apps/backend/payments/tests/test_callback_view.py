@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 import pytest
@@ -13,6 +14,8 @@ from payments.providers.wayforpay.signatures import (
 
 
 TEST_SECRET_KEY = "test-secret-key"
+
+TEST_ORDER_REF = "ba73d8c8-97f3-4a86-ae07-22b4e347f3d3"
 
 @pytest.fixture
 def wayforpay_settings():
@@ -35,11 +38,10 @@ def payment():
     order = Order.objects.create(
         delivery_address="Test address",
         email="test@example.com",
-        status=OrderStatus.CREATED,
+        status=OrderStatus.PENDING,
         currency="UAH",
         subtotal=Decimal("100.00"),
         discount_amount=Decimal("0.00"),
-        delivery_cost=Decimal("0.00"),
         total_amount=Decimal("100.00"),
         delivery_provider="NOVA_POSHTA",
         user_name="Test User",
@@ -52,7 +54,7 @@ def payment():
         amount=Decimal("100.00"),
         provider=PaymentProvider.WAYFORPAY,
         status=PaymentStatus.PENDING,
-        provider_order_reference="ORDER-123",
+        provider_order_reference=TEST_ORDER_REF,
     )
 
 
@@ -60,7 +62,7 @@ def payment():
 def callback_data():
     data = {
         "merchantAccount": "test_merchant",
-        "orderReference": "ORDER-123",
+        "orderReference": TEST_ORDER_REF,
         "amount": "100.00",
         "currency": "UAH",
         "authCode": "123456",
@@ -105,7 +107,7 @@ def test_wayforpay_callback_returns_success_response(
 
     assert response.status_code == 200
 
-    assert response.data["orderReference"] == "ORDER-123"
+    assert response.data["orderReference"] == TEST_ORDER_REF
     assert response.data["status"] == "accept"
     assert "time" in response.data
     assert "signature" in response.data
@@ -130,7 +132,7 @@ def test_wayforpay_callback_processes_payment(
     payment.order.refresh_from_db()
 
     assert payment.status == PaymentStatus.SUCCESSFUL
-    assert payment.transaction_id == "123456"
+    assert payment.transaction_id == TEST_ORDER_REF
     assert payment.paid_at is not None
     assert payment.order.status == OrderStatus.PAID
 
@@ -151,7 +153,7 @@ def test_wayforpay_callback_returns_valid_response_signature(
     assert response.status_code == 200
 
     expected_signature = build_callback_response_signature(
-        order_reference="ORDER-123",
+        order_reference=TEST_ORDER_REF,
         status="accept",
         timestamp=response.data["time"],
         secret_key=TEST_SECRET_KEY,
@@ -189,7 +191,7 @@ def test_wayforpay_callback_rejects_unknown_payment(
     callback_data,
     wayforpay_settings,
 ):
-    callback_data["orderReference"] = "UNKNOWN-ORDER"
+    callback_data["orderReference"] = str(uuid.uuid4())
 
     callback_data["merchantSignature"] = build_callback_signature(
         merchant_account=callback_data["merchantAccount"],
