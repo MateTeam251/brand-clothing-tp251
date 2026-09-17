@@ -1,34 +1,40 @@
+export interface ProductImageColor {
+  name: string;
+  hex_code: string;
+}
+
 export interface ProductImage {
   id: number;
   image: string;
   order: number;
-  color: string | null;
+}
+
+export interface Collection {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
 }
 
 export interface ProductListItem {
   id: number;
   name: string;
+  collection: Collection;
   main_image: ProductImage | null;
-  price_uah: string;
-  price_usd: string;
+  price: string;
+  discounted_price: string | null;
   is_available: boolean;
-  discounted_price_uah: string;
-  discounted_price_usd: string;
   is_bestseller: boolean;
   is_new_collection: boolean;
+  is_favorite: boolean;
 }
 
-export interface ProductColor {
-  colors: {
-    name: string;
-    hex_code: string;
-  };
+export interface AvailableColor {
+  colors: ProductImageColor;
   is_available: boolean;
 }
 
 export interface SizeGuide {
-  id: number;
-  product_type: string;
   image: string;
   description: string;
 }
@@ -37,16 +43,17 @@ export interface ProductDetails {
   id: number;
   name: string;
   type: string;
+  collection: Collection;
   description: string;
-  price_uah: string;
-  price_usd: string;
-  discounted_price_uah: string;
-  discounted_price_usd: string;
+  fabric_composition: string;
+  price: string;
+  discounted_price: string | null;
   is_bestseller: boolean;
   images: ProductImage[];
-  available_colors: ProductColor[];
+  available_colors: AvailableColor[];
   is_available: boolean;
   size_guide: SizeGuide;
+  is_favorite: boolean;
 }
 
 export interface ProductQueryParams {
@@ -55,5 +62,6 @@ export interface ProductQueryParams {
   collections?: string;
   search?: string;
   ordering?: string;
-  page?: number;
+  offset?: number;
+  limit?: number;
 }
