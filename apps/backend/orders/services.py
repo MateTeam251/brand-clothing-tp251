@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
+from carts.models import CartStatusEnum
 from core.enums import Currency
 from orders.email_services import send_order_created_email
 from orders.models import OrderItem, Order, OrderStatus
@@ -36,22 +37,6 @@ def create_order_from_cart(*, cart, checkout_data):
 
     Financial values are calculated on the backend based on current Product data.
     The frontend should not provide subtotals, discounts, or total values.
-
-    TODO: Cart is not yet implemented.
-    This service assumes that the Cart provides:
-
-    - cart.user
-    - cart.items.all()
-    - CartItem.product
-    - CartItem.quantity
-    - CartItem.size
-    - cart.status
-
-    TODO: Session integration is not yet implemented.
-    To checkout without registration, in the final implementation, it will be necessary to determine
-    the current cart from a guest session.
-
-    TODO: Delivery cost calculation is temporary.
     """
 
     if cart is None:
@@ -188,7 +173,8 @@ def checkout(*, cart, checkout_data):
         payment=payment,
     )
 
-    cart.items.all().delete()
+    cart.status = CartStatusEnum.CONVERTED
+    cart.save(update_fields=["status"])
 
     return order, payment, payment_url
 
