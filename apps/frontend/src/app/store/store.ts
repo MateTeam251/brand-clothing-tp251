@@ -4,6 +4,7 @@ import { ordersApi } from '../../shared/api/ordersApi';
 import { userApi } from '../../shared/api/userApi';
 import { authApi } from '../../shared/api/authApi';
 import { favoritesApi } from '../../shared/api/favoritesApi';
+import authReducer from './reducers/authSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     [userApi.reducerPath]: userApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [favoritesApi.reducerPath]: favoritesApi.reducer,
+    auth: authReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -20,6 +22,8 @@ export const store = configureStore({
       .concat(userApi.middleware)
       .concat(authApi.middleware)
       .concat(favoritesApi.middleware)
+  .concat(authApi.middleware)
+  .concat(favoritesApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
