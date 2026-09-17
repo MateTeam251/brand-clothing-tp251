@@ -1,0 +1,53 @@
+name: Frontend CI
+run-name: ${{ github.actor }} - ${{ github.head_ref || github.ref_name }} - ${{ github.sha }}
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "apps/frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+defaults:
+  run:
+    working-directory: apps/frontend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (includes tsc type-check)
+        run: npm run build
+
+      # No test runner is installed yet (no Vitest/Jest). This step is a
+      # placeholder — add `npm run test` here once one exists, so this
+      # workflow doesn't need to change again.
+      # - name: Test
+      #   run: npm run test

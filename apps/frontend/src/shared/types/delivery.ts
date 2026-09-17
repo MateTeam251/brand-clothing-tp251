@@ -1,0 +1,1 @@
+export type DeliveryProvider = 'NOVA_POSHTA' | 'UKRPOSHTA' | 'DHL'; 

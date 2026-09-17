@@ -1,24 +1,35 @@
-import { useEffect } from "react";
-import { fetchUser } from "../../app/store/reducers/userSlice";
-import { useAppDispatch, useAppSelector } from "../../shared/hooks/reduxHooks";
-import { useLocalStorage } from "../../shared/hooks/useLocalStorage";
-
+import { useLocalStorage } from '../../shared/hooks/useLocalStorage';
+import { useGetMeQuery } from '../../shared/api/userApi';
 
 export const HomePage = () => {
-  const dispatch = useAppDispatch();
-  const [accessToken] = useLocalStorage<string | null>("accessToken", null);
-  
-  const user = useAppSelector((state) => state.user);
+  const [accessToken] = useLocalStorage<string | null>('accessToken', null);
 
-  useEffect(() => {
-    if (accessToken && !user.id) {
-      dispatch(fetchUser(accessToken));
-    }
-  }, [accessToken, user.id, dispatch]);
+  const { data: user, isLoading, isError } = useGetMeQuery(undefined, {
+    skip: !accessToken,
+  });
+
+  if (isLoading) {
+    return (
+      <div>
+        <h1>Home Page</h1>
+        <p>Завантаження...</p>
+      </div>
+    );
+  }
+
+  if (isError || !user && accessToken) {
+    return (
+      <div>
+        <h1>Home Page</h1>
+        <p>Не вдалося завантажити дані користувача.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
       <h1>Home Page</h1>
+      <p>Вітаємо!</p>
     </div>
   );
-}
+};
