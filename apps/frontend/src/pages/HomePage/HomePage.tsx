@@ -1,10 +1,10 @@
 import { useLocalStorage } from '../../shared/hooks/useLocalStorage';
-import { useGetMeQuery } from '../../shared/api/userApi';
+import { useGetUserQuery } from '../../shared/api/authApi';
 
 export const HomePage = () => {
   const [accessToken] = useLocalStorage<string | null>('accessToken', null);
 
-  const { data: user, isLoading, isError } = useGetMeQuery(undefined, {
+  const { data: user, isLoading, isError } = useGetUserQuery(undefined, {
     skip: !accessToken,
   });
 
@@ -29,7 +29,7 @@ export const HomePage = () => {
   return (
     <div>
       <h1>Home Page</h1>
-      <p>Вітаємо!</p>
+      {user && <p>Welcome, {user.name}</p>}
     </div>
   );
-};
+}

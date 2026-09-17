@@ -20,6 +20,8 @@ export const store = configureStore({
       .concat(userApi.middleware)
       .concat(authApi.middleware)
       .concat(favoritesApi.middleware)
+  .concat(authApi.middleware)
+  .concat(favoritesApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
