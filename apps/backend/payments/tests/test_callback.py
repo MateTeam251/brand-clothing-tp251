@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from django.test import override_settings
 
@@ -10,6 +12,8 @@ from payments.providers.wayforpay.signatures import (
 )
 
 TEST_SECRET_KEY = "test-secret-key"
+
+TEST_ORDER_REF = "ba73d8c8-97f3-4a86-ae07-22b4e347f3d3"
 
 
 @pytest.fixture
@@ -36,10 +40,9 @@ def payment():
         currency="UAH",
         subtotal="100.00",
         discount_amount="0.00",
-        delivery_cost="0.00",
         total_amount="100.00",
         delivery_provider="NOVA_POSHTA",
-        status=OrderStatus.CREATED,
+        status=OrderStatus.PENDING,
     )
 
     return Payment.objects.create(
@@ -48,18 +51,18 @@ def payment():
         amount="100.00",
         provider=PaymentProvider.WAYFORPAY,
         status=PaymentStatus.PENDING,
-        provider_order_reference="ORDER-123",
+        provider_order_reference=TEST_ORDER_REF,
     )
 
 
 def build_callback_data(
     *,
+    order_reference = TEST_ORDER_REF,
     amount="100.00",
     currency="UAH",
     transaction_status="Approved",
 ):
     merchant_account = "test_merchant"
-    order_reference = "ORDER-123"
     auth_code = "123456"
     card_pan = "414141******1111"
     reason_code = "1100"
@@ -91,7 +94,7 @@ def build_callback_data(
 
 def build_declined_callback_data_with_none():
     merchant_account = "test_merchant"
-    order_reference = "ORDER-123"
+    order_reference = TEST_ORDER_REF
     amount = "100.00"
     currency = "UAH"
     auth_code = None
@@ -137,11 +140,11 @@ def test_handle_successful_callback(
     payment.order.refresh_from_db()
 
     assert payment.status == PaymentStatus.SUCCESSFUL
-    assert payment.transaction_id == "123456"
+    assert payment.transaction_id == TEST_ORDER_REF
     assert payment.paid_at is not None
     assert payment.order.status == OrderStatus.PAID
 
-    assert response["orderReference"] == "ORDER-123"
+    assert response["orderReference"] == TEST_ORDER_REF
     assert response["status"] == "accept"
     assert "time" in response
     assert "signature" in response
@@ -166,7 +169,7 @@ def test_handle_callback_rejects_invalid_signature(
 
     assert payment.status == PaymentStatus.PENDING
     assert payment.paid_at is None
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.order.status == OrderStatus.PENDING
 
 
 @pytest.mark.django_db
@@ -187,7 +190,7 @@ def test_handle_callback_rejects_amount_mismatch(
 
     assert payment.status == PaymentStatus.PENDING
     assert payment.paid_at is None
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.order.status == OrderStatus.PENDING
 
 
 @pytest.mark.django_db
@@ -208,7 +211,7 @@ def test_handle_callback_rejects_currency_mismatch(
 
     assert payment.status == PaymentStatus.PENDING
     assert payment.paid_at is None
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.order.status == OrderStatus.PENDING
 
 
 @pytest.mark.django_db
@@ -240,11 +243,11 @@ def test_handle_callback_rejects_missing_required_field(
     wayforpay_settings,
 ):
     data = build_callback_data()
-    del data["reasonCode"]
+    del data["currency"]
 
     with pytest.raises(
         ValueError,
-        match="Missing required callback fields: reasonCode",
+        match="Missing required callback fields: currency",
     ):
         handle_callback(data)
 
@@ -276,11 +279,12 @@ def test_handle_callback_rejects_invalid_merchant_account(
 def test_handle_callback_rejects_unknown_payment(
     wayforpay_settings,
 ):
-    data = build_callback_data()
+    unknown_ref = str(uuid.uuid4())
+    data = build_callback_data(order_reference=unknown_ref)
 
     with pytest.raises(
         ValueError,
-        match="Payment with reference ORDER-123 not found",
+        match=f"Payment with reference {unknown_ref} not found",
     ):
         handle_callback(data)
 
@@ -297,12 +301,12 @@ def test_handle_callback_with_none_fields_validates_signature(
     payment.refresh_from_db()
     payment.order.refresh_from_db()
 
-    assert payment.status == PaymentStatus.PENDING
-    assert payment.order.status == OrderStatus.CREATED
+    assert payment.status == PaymentStatus.FAILED
+    assert payment.order.status == OrderStatus.PENDING
     assert payment.paid_at is None
 
     assert response["status"] == "accept"
-    assert response["orderReference"] == "ORDER-123"
+    assert response["orderReference"] == TEST_ORDER_REF
 
 
 @pytest.mark.django_db

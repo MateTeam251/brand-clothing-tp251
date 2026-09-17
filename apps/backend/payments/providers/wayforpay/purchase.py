@@ -72,7 +72,10 @@ def send_purchase_request(
         product_prices: list[str],
         language: str = "UA"
 ) -> str:
-    # Creates and sends a signed purchase Request to WayForPay and returns its response.
+    """
+    Creates and sends a signed purchase Request to WayForPay and returns its response.
+    """
+
     payload = build_purchase_payload(
         order_reference=order_reference,
         order_date=order_date,
@@ -104,4 +107,12 @@ def send_purchase_request(
 
     response_data = response.json()
 
-    return response_data["url"]
+    payment_url = response_data.get("url")
+
+    if not payment_url:
+        raise ValueError(
+            f"WayForPay did not return payment URL: "
+            f"{response_data.get('reason', 'Unknown error')}"
+        )
+
+    return payment_url

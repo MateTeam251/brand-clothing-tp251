@@ -25,12 +25,12 @@ class WayForPayCallbackSerializer(serializers.Serializer):
     merchantAccount = serializers.CharField()
     orderReference = serializers.CharField()
     merchantSignature = serializers.CharField()
-    amount = serializers.CharField()
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
     currency = serializers.CharField()
-    authCode = serializers.CharField()
-    cardPan = serializers.CharField()
+    authCode = serializers.CharField(required=False, allow_blank=True)
+    cardPan = serializers.CharField(required=False, allow_blank=True)
     transactionStatus = serializers.CharField()
-    reasonCode = serializers.CharField()
+    reasonCode = serializers.CharField(required=False, allow_blank=True)
     paymentSystem = serializers.CharField(required=False, allow_blank=True)
 
 
