@@ -57,9 +57,9 @@ def check_payment_status(order_reference: str) -> dict:
     if response_data["orderReference"] != order_reference:
         raise ValueError("Invalid order reference")
 
-    auth_code = str(response_data.get("authCode", ""))
-    card_pan = str(response_data.get("cardPan", ""))
-    reason_code = str(response_data.get("reasonCode", ""))
+    auth_code = response_data.get("authCode")
+    card_pan = response_data.get("cardPan")
+    reason_code = response_data.get("reasonCode")
 
     expected_signature = build_check_status_response_signature(
         merchant_account=response_data["merchantAccount"],

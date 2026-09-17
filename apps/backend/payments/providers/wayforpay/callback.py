@@ -36,9 +36,9 @@ def handle_callback(data: dict) -> dict:
     if data["merchantAccount"] != config.merchant_account:
         raise ValueError("Invalid merchant account")
 
-    auth_code = str(data.get("authCode", ""))
-    card_pan = str(data.get("cardPan", ""))
-    reason_code = str(data.get("reasonCode", ""))
+    auth_code = data.get("authCode")
+    card_pan = data.get("cardPan")
+    reason_code = data.get("reasonCode")
 
     expected_signature = build_callback_signature(
         merchant_account=data["merchantAccount"],
