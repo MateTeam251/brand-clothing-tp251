@@ -2,7 +2,6 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './api';
 import type { Address, UserProfile } from '../types/User';
 
-
 export const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery,
@@ -20,10 +19,12 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['User'],
     }),
+
     getAddress: builder.query<Address, void>({
       query: () => 'auth/me/address/',
       providesTags: ['Address'],
     }),
+
     updateAddress: builder.mutation<Address, Partial<Address>>({
       query: (body) => ({
         url: 'auth/me/address/',
