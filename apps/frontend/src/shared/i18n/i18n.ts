@@ -11,13 +11,23 @@ i18n.use(initReactI18next).init({
     en: {
       translation: {
         catalog: 'Catalog',
-        about: 'About Us'
+        about: 'About Us',
+        instagram: 'Instagram',
+        care: 'Care',
+        delivery: 'Delivery',
+        refund: "Refund's",
+        privacy: 'Privacy policy'
       }
     }, 
     ua: {
       translation: {
         catalog: 'Каталог',
-        about: 'Про нас'
+        about: 'Про нас',
+        instagram: 'Інстаграм',
+        care: 'Догляд',
+        delivery: 'Доставка',
+        refund: 'Повернненя',
+        privacy: 'Політика конфіденційності'
       }
     }
   }
