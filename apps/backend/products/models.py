@@ -1,20 +1,7 @@
 from django.db import models
 
 
-class Fabric(models.Model):
-    """
-    DEPRECATED: Temporary placeholder for backward compatibility with orders/models.py,
-    pending other dev update to OrderItem.fabric. Remove after the orders fix.
 
-    Not used anywhere in the products app itself — fabric composition on Product
-    is stored as plain text (see Product.fabric_composition_ua/_eng below).
-    This class only exists so that `from products.models import Fabric` in
-    orders/models.py doesn't raise an ImportError while that app is being updated.
-    """
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
 
 
 class Collection(models.Model):
