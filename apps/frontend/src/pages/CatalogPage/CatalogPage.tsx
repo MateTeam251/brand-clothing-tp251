@@ -15,9 +15,9 @@ export const CatalogPage: React.FC = () => {
     <div>
       <h1>Catalog</h1>
       <ul>
-        {products?.map((product) => (
+        {products?.results.map((product) => (
           <li key={product.id}>
-            {product.name} — {product.price_uah} грн
+            {product.name} — {product.price} грн
           </li>
         ))}
       </ul>

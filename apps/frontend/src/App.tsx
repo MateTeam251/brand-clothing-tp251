@@ -19,12 +19,14 @@ import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
+import { Header } from './components/Layout/Header';
 
 
 function App() {
   return (
     <Provider store={store}>
       <BrowserRouter>
+        <Header />
         <Routes>
           <Route path='/' element={<HomePage />} />
           <Route path='/catalog' element={<CatalogPage />} />
