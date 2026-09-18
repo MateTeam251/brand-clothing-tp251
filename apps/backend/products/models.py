@@ -1,7 +1,6 @@
 from django.db import models
 
-
-
+from core.enums import AvailabilityRequestStatusEnum
 
 
 class Collection(models.Model):
@@ -123,3 +122,28 @@ class ProductImage(models.Model):
                 name="unique_main_image_per_product"
             )
         ]
+
+
+class AvailabilityRequest(models.Model):
+    """
+    "Check availability" form submission — a guest/user asking whether
+    a specific product is in stock and, if not, when it will be. Depends on Product.is_available bool.
+    A manager follows up by phone; status tracks the manual follow-up,
+    it's not resolved automatically.
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="availability_requests")
+    name = models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=20)
+    status = models.CharField(
+        max_length=20,
+        choices=AvailabilityRequestStatusEnum.choices,
+        default=AvailabilityRequestStatusEnum.NEW,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "created_at"])]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} — {self.product.name} - ({self.status})"
