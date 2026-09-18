@@ -1,11 +1,16 @@
 from rest_framework import (viewsets,
-                            filters)
+                            filters, generics)
+from rest_framework.permissions import AllowAny
+from rest_framework.throttling import AnonRateThrottle
+
 from products.serializers import (ProductListSerializer,
                                   ProductDetailSerializer,
                                   CollectionSerializer,
-                                  CollectionDetailSerializer)
+                                  CollectionDetailSerializer, AvailabilityRequestSerializer)
 from products.models import Product, Collection
 from django.db.models import F, Case, When, DecimalField, ExpressionWrapper
+
+from products.utils import send_availability_request_notification
 
 
 class CurrencyAwareOrderingFilter(filters.OrderingFilter):
@@ -106,3 +111,18 @@ class CollectionViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return Collection.objects.prefetch_related("products__images")
         return Collection.objects.all()
+
+
+class AvailabilityRequestView(generics.CreateAPIView):
+    """
+    POST /api/products/availability-requests/
+    Public endpoint — anyone (including guests) can submit a "notify me"
+    request. Throttled to prevent spam/abuse.
+    """
+    serializer_class = AvailabilityRequestSerializer
+    permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        send_availability_request_notification(instance)
