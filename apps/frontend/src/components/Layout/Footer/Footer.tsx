@@ -31,7 +31,11 @@ export const Footer: React.FC = () => {
     }
 
     return (
-      <Link key={item.key} className={styles['footer__link']} to={item.to ?? '/'}>
+      <Link
+        key={item.key}
+        className={`${styles['footer__link']} ${item.key === 'privacy' ? styles['footer__link--privacy'] : ''}`}
+        to={item.to ?? '/'}
+      >
         {label}
       </Link>
     );

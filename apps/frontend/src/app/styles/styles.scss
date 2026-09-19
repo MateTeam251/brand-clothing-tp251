@@ -3,6 +3,38 @@
 @import './mixins.scss';
 
 @font-face {
+    font-family: 'Bodoni';
+    src: url('../../shared/assets/fonts/Bodoni/BodoniflfRoman.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Bodoni';
+    src: url('../../shared/assets/fonts/Bodoni/BodoniflfItalic.ttf') format('truetype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Bodoni';
+    src: url('../../shared/assets/fonts/Bodoni/BodoniflfBold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Bodoni';
+    src: url('../../shared/assets/fonts/Bodoni/BodoniflfBolditalic.ttf') format('truetype');
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
     font-family: 'Cambria';
     src: url('Cambria-Bold.eot');
     src: local('Cambria Bold'), local('Cambria-Bold'),
@@ -70,6 +102,57 @@ textarea {
   margin: 0;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Bodoni', 'Cambria', serif;
+  color: #000;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: 32px;
+  line-height: 40px;
+
+  @include on-desktop {
+    font-size: 40px;
+    line-height: 48px;
+  }
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 32px;
+
+  @include on-desktop {
+    font-size: 32px;
+    line-height: 40px;
+  }
+}
+
+h3 {
+  font-size: 20px;
+  line-height: 24px;
+  
+  @include on-desktop {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}
+
+h4 {
+  font-size: 16px;
+  line-height: 24px;
+
+  @include on-desktop {
+    font-size: 20px;
+    line-height: 24px;
+  }
+}
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -84,4 +167,8 @@ textarea {
 
 .container {
   padding: 8px 15px;
+
+   @include on-desktop {
+    padding: 8px 40px;
+   }
 }
