@@ -28,8 +28,10 @@ from rest_framework import serializers
 from products.models import (Product,
                              ProductImage,
                              SizeGuide,
-                             Collection)
-from core.mixins import CurrencyMixin, LanguageMixin
+                             Collection,
+                             AvailabilityRequest)
+from core.mixins import (CurrencyMixin,
+                         LanguageMixin)
 from core.pricing import get_discounted_price
 
 
@@ -220,3 +222,16 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
         if not request or not request.user.is_authenticated:
             return False
         return obj.favorited_by.filter(user=request.user).exists()
+
+
+
+class AvailabilityRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AvailabilityRequest
+        fields = ("product", "name", "phone_number")
+
+
+    def validate_product(self, product):
+        if product.is_available:
+            raise serializers.ValidationError("This product is already available.")
+        return product

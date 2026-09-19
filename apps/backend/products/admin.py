@@ -5,7 +5,7 @@ from products.models import (ProductType,
                              Product,
                              ProductImage,
                              SizeGuide,
-                             Collection)
+                             Collection, AvailabilityRequest)
 
 
 admin.site.register(ProductType)
@@ -51,3 +51,12 @@ class SizeGuideAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(AvailabilityRequest)
+class AvailabilityRequestAdmin(admin.ModelAdmin):
+    list_display = ("product", "name", "phone_number", "status", "created_at")
+    list_editable = ("status",)
+    list_filter = ("status",)
+    search_fields = ("name", "phone_number", "product__name")
+    ordering = ("-created_at",)
