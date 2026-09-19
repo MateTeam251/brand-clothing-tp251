@@ -1,0 +1,249 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.home {
+  position: relative;
+  width: 100vw;
+  margin: 0;
+
+  &__wrapper {
+    position: relative;
+    background-image: url('./home_bg-phone.png');
+    min-height: 504px;
+    background-repeat: no-repeat;
+    width: 100%;
+    background-size: cover;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 16px 28px;
+    box-sizing: border-box;
+
+    @include on-desktop {
+      background-image: url('./home_bg-desktop.png');
+    }
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 28px;
+    margin-bottom: 8px;
+    text-align: center;
+    background-color: $accent;
+    color: #000;
+    border: none;
+    border-radius: 100px;
+    font-family: 'Bodoni';
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    text-decoration: none;
+    box-sizing: border-box;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+
+    @include on-desktop {
+      width: 438px;
+      max-width: 438px;
+      margin-bottom: 12px;
+      font-size: 20px;
+      line-height: 24px;
+    }
+  }
+
+  &__searchWrap {
+    position: fixed;
+    right: 16px;
+    bottom: 28px;
+    z-index: 20;
+    display: flex;
+    justify-content: flex-end;
+    width: fit-content;
+
+    @include on-desktop {
+      display: none;
+    }
+  }
+
+  &__search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: #fff;
+    cursor: pointer;
+
+    img {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+  }
+
+  &__searchForm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(calc(100vw - 32px), 330px);
+    padding: 8px 15px;
+    background: #fff;
+    border-radius: 999px;
+    box-sizing: border-box;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  &__searchInput {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 14px;
+    color: #000;
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.65);
+    }
+  }
+
+  &__searchSubmit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background-color: $accent;
+    color: #000;
+    padding: 0;
+    cursor: pointer;
+
+    img {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+  }
+
+  &__subscribe {
+    background-color: $dominant;
+
+    &-wrapper {
+      display: flex;
+      flex-direction: column;
+
+      @include on-desktop {
+        flex-direction: row;
+
+        align-items: center;
+      }
+    }
+
+    &-left h2 {
+      margin-bottom: 24px;
+      text-align: center;
+
+      @include on-desktop {
+        font-size: 32px;
+        line-height: 40px;
+
+        text-align: left;
+      }
+    }
+
+    &-left p {
+      color: #7E7C7C;
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 400;
+      font-family: 'Cambria', serif;
+      margin: 0;
+      margin-bottom: 32px;
+      text-align: center;
+
+      @include on-desktop {
+        text-align: left;
+        font-size: 20px;
+        line-height: 24px;
+        max-width: 700px;
+      }
+    }
+
+    &-input {
+      border: none;
+      flex: 1;
+      min-width: 0;
+      padding: 10px 0;
+      background: inherit;
+      outline: none;
+
+      @include on-desktop {
+        border: 1px solid #C6C6C6;
+        padding: 0;
+        border-right: none;
+        border-radius: 8px;
+        padding-left: 15px;
+        border-start-end-radius: 0;
+        border-end-end-radius: 0;
+        height: 58px;
+      }
+    }
+
+    &-right {
+      display: flex;
+      width: 100%;
+
+      @include on-desktop {
+        min-width: 140px;
+        max-width: 600px;
+
+        margin-left: auto;
+      }
+    }
+
+    &-right > label {
+      display: flex;
+      margin-left: auto;
+
+      @include on-desktop {
+        border: 1px solid #C6C6C6;
+        border-left: none;
+        padding-right: 15px;
+        border-radius: 8px;
+        border-end-start-radius: 0;
+        border-start-start-radius: 0;
+        height: 58px;
+      }
+    }
+
+    &-right > label > button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+      padding: 10px 0 10px 16px;
+      border: none;
+      background-color: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    @include on-desktop {
+      padding-top: 72px;
+      padding-bottom: 40px;
+    }
+  }
+
+
+}
