@@ -1,4 +1,5 @@
 import type { DeliveryProvider } from './delivery';
+import type { Size } from './common';
 
 export type OrderStatus =
   | 'PENDING'
@@ -9,17 +10,6 @@ export type OrderStatus =
   | 'CANCELED';
 
 export type Currency = 'UAH' | 'USD';
-
-export type Size =
-  | '2XS'
-  | 'XS'
-  | 'S'
-  | 'M'
-  | 'L'
-  | 'XL'
-  | '2XL'
-  | '3XL'
-  | '4XL';
 
 export interface OrderItem {
   id: number;

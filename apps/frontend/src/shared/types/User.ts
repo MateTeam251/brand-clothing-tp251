@@ -1,6 +1,5 @@
 import type { DeliveryProvider } from "./delivery";
 
-
 export interface Address {
   country: string;
   full_name: string;
