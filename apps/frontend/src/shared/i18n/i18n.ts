@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 i18n.use(initReactI18next).init({
-  lng: localStorage.getItem('language') ?? 'en', 
+  lng: localStorage.getItem('language') ?? 'en',
   fallbackLng: 'en',
   react: {
     useSuspense: false,
@@ -24,9 +24,83 @@ i18n.use(initReactI18next).init({
         'search-placeholder': 'Search in catalog...',
         'subscribe-title': 'A personality that needs no explanation',
         'subscribe-subtitle': 'We create clothes that speak for you without words. Be the first to know about new releases and exclusive sales!',
-        'collections': 'Collections'
-      }
-    }, 
+        collections: 'Collections',
+        password: 'Password',
+        email: 'Email',
+        continue_btn: 'Continue shopping',
+        checkout_btn: 'Checkout',
+        shipping: 'Shipping',
+        payment: 'Payment',
+        header: {
+          catalog: 'Catalog',
+          about: 'About',
+        },
+        footer: {
+          info: 'Information',
+          contacts: 'Contacts',
+        },
+        home: {
+          hero_title: 'The Art is the clothes. You are The Artist.',
+          cta_catalog: 'To catalog',
+        },
+        catalog_page: {
+          title: 'Products catalog',
+          search_placeholder: 'Search',
+          empty_search: 'No results found for ',
+          price: 'Price',
+          category: 'Category',
+          sort: 'Sort',
+          sort_price_asc: 'Price: low to high',
+          sort_price_desc: 'Price: high to low',
+          sort_newest: 'Most recent',
+        },
+        product: {
+          cart_btn: 'Add to cart',
+          size: 'Size chart',
+          returns_policy: 'Exchange and returns',
+          slider_title: 'You may also like',
+          add_favorite: 'Add to favorites',
+          remove_favorite: 'Remove from favorites',
+        },
+        order_confirmation: {},
+        cart: {
+          title: 'Cart',
+          quantity: 'Quantity',
+          total: 'Total:',
+          empty: 'Cart is empty',
+        },
+        checkout: {
+          contacts: 'Contact information',
+          comment: 'Order comment',
+        },
+        about: {},
+        account: {
+          info: 'Personal information',
+          favorites: 'Favorites',
+          orders: 'Orders',
+          order_status_1: 'Processing',
+          order_status_2: 'Awaiting shipment',
+          order_status_3: 'Shipped',
+          order_status_4: 'Delivered',
+        },
+        sign_in: {
+          title: 'Log in',
+          sign_in_btn: 'Sign in',
+          create: 'Create account',
+          password_reset: 'Forgot password?',
+        },
+        sign_up: {
+          first_name: 'First name',
+          last_name: 'Last name',
+          confirm_password: 'Confirm password',
+          sign_up_btn: 'Sign up',
+        },
+        admin: {},
+        not_found: {
+          text: 'Page is not found',
+        },
+      },
+    },
     ua: {
       translation: {
         catalog: 'Каталог',
@@ -43,10 +117,84 @@ i18n.use(initReactI18next).init({
         'search-placeholder': 'Пошук в каталозі...',
         'subscribe-title': 'Індивідуальність, що не потребує пояснень',
         'subscribe-subtitle': 'Створюємо одяг, що говорить про тебе без слів. Будь першою у курсі нових релізів та закритих сейлів!',
-        'collections': 'Колекції'
-      }
-    }
-  }
+        collections: 'Колекції',
+        password: 'Пароль',
+        email: 'Електронна пошта',
+        continue_btn: 'Продовжити покупки',
+        checkout_btn: 'Оформити замовлення',
+        payment: 'Оплата',
+        shipping: 'Доставка',
+        header: {
+          catalog: 'Каталог',
+          about: 'Про нас',
+        },
+        footer: {
+          info: 'Інформація',
+          contacts: 'Контакти',
+        },
+        home: {
+          hero_title: 'The Art is the clothes. You are The Artist.',
+          cta_catalog: 'До каталогу',
+        },
+        catalog_page: {
+          title: 'Каталог товарів',
+          search_placeholder: 'Пошук',
+          empty_search: 'Не знайдено результатів для запиту ',
+          price: 'Ціна',
+          category: 'Тип товару',
+          sort: 'Сортувати',
+          sort_price_asc: 'За ціною: від нижчої до вищої',
+          sort_price_desc: 'За ціною: від вищої до нижчої',
+          sort_newest: 'Найновіші',
+        },
+        product: {
+          cart_btn: 'Додати до кошика',
+          size: 'Таблиця розмірів',
+          returns_policy: 'Обмін та повернення',
+          slider_title: 'Вам також може сподобатися',
+          add_favorite: 'Додати в обране',
+          remove_favorite: 'Прибрати з обраного',
+        },
+        order_confirmation: {},
+        cart: {
+          title: 'Кошик',
+          quantity: 'Кількість',
+          total: 'Всього:',
+          empty: 'Кошик порожній',
+        },
+        checkout: {
+          contacts: 'Контактна інформація',
+          comment: 'Коментар до замовлення',
+        },
+        about: {},
+        account: {
+          info: 'Особиста інформація',
+          favorites: 'Обране',
+          orders: 'Замовлення',
+          order_status_1: 'В обробці',
+          order_status_2: 'Очікує відправлення',
+          order_status_3: 'Відправлено',
+          order_status_4: 'Доставлено',
+        },
+        sign_in: {
+          title: 'Увійти в обліковий запис',
+          sign_in_btn: 'Увійти',
+          create: 'Створити обліковий запис',
+          password_reset: 'Забули пароль?',
+        },
+        sign_up: {
+          first_name: "Ім'я",
+          last_name: 'Прізвище',
+          confirm_password: 'Підтвердіть пароль',
+          sign_up_btn: 'Зареєструватись',
+        },
+        admin: {},
+        not_found: {
+          text: 'Сторінка не знайдена',
+        },
+      },
+    },
+  },
 });
 
 export default i18n;
