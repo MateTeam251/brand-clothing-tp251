@@ -1,0 +1,119 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.cart {
+  background-color: $dominant;
+  padding: 24px 0 64px;
+
+  &__wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  &__title {
+    font-size: 20px;
+    font-weight: 500;
+    color: #111;
+    text-align: center;
+    margin: 0;
+
+    @include on-desktop {
+      font-size: 24px;
+      text-align: left; 
+    }
+  }
+
+  &__empty {
+    padding: 40px 0;
+    text-align: center;
+    color: #666;
+    font-size: 16px;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    @include on-desktop {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 64px;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    @include on-desktop {
+      max-width: 650px;
+      flex-grow: 1;
+    }
+  }
+
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+
+    @include on-desktop {
+      max-width: 400px;
+      flex-shrink: 0;
+      padding: 32px 16px;
+      border: 1px solid #C6C6C6;
+      border-radius: 16px;
+    }
+  }
+
+  &__total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+
+    span:last-child {
+      font-weight: 500;
+      color: #111;
+    }
+  }
+
+  &__divider {
+    border-top: 1px solid #E5E5E5;
+    padding-top: 16px;
+
+    .cart__total-row {
+      font-size: 16px;
+      font-weight: 600;
+
+      span:last-child {
+        font-size: 18px;
+      }
+    }
+  }
+
+  &__checkout-btn {
+    width: 100%;
+    background-color: #FFC7C7;
+    font-family: 'BodoniFLF', serif;
+    color: #111;
+    border: none;
+    border-radius: 100px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 8px;
+    font-weight: 500;
+
+    &:hover {
+      background-color: #FFB3B3;
+    }
+  }
+}

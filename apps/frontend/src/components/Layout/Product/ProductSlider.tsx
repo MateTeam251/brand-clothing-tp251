@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useGetProductsQuery } from '../../../shared/api/productsApi';
 import { useAppSelector } from '../../../shared/hooks/reduxHooks';
 import type { ProductQueryParams } from '../../../shared/types/products';
-import { CardItem } from '../CartItem/CartItem';
+import { CardItem } from '../ProductItem/ProductItem';
 import styles from './ProductSlider.module.scss';
 
 type ProductSliderProps = {

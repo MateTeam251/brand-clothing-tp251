@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../../shared/hooks/reduxHooks';
 import type { ProductListItem } from '../../../shared/types/products';
-import styles from './CartItem.module.scss';
+import styles from './ProductItem.module.scss';
 
 type CardItemProps = {
   product: ProductListItem;

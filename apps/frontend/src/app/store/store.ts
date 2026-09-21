@@ -7,6 +7,7 @@ import { authApi } from '../../shared/api/authApi';
 import { favoritesApi } from '../../shared/api/favoritesApi';
 import authReducer from './reducers/authSlice';
 import settingsReducer from './reducers/settingsSlice';
+import cartReducer from './reducers/cartSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     [favoritesApi.reducerPath]: favoritesApi.reducer,
     auth: authReducer,
     settings: settingsReducer,
+    cart: cartReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
