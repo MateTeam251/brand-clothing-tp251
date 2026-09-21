@@ -74,6 +74,16 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
             slugs = [slug.strip() for slug in collection_slugs.split(",") if slug.strip()]
             queryset = queryset.filter(collection__slug__in=slugs)
 
+        type_slugs = self.request.query_params.get("type")
+        if type_slugs:
+            slugs = [s.strip() for s in type_slugs.split(",") if s.strip()]
+            queryset = queryset.filter(type__slug__in=slugs)
+
+        only_bestsellers = self.request.query_params.get("is_bestseller")
+        if only_bestsellers == "true":
+            queryset = queryset.filter(is_bestseller=True)
+
+
         queryset = queryset.annotate(
             effective_price_uah=Case(
                 When(discount_percent__gt=0, then=ExpressionWrapper(
