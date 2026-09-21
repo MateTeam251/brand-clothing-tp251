@@ -4,6 +4,7 @@ import { incrementQuantity, decrementQuantity, removeFromCart, changeSize } from
 import { CartItemComponent } from '../../components/Layout/CartItem/CartItemComponent';
 import styles from './CartPage.module.scss';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
+import { Link } from 'react-router-dom';
 
 export const CartPage = () => {
   const { t } = useTranslation();
@@ -84,9 +85,12 @@ export const CartPage = () => {
                     <span>{totalPrice} {currency.toUpperCase() === 'USD' ? '$' : '₴'}</span>
                   </div>
                 </div>
+
                 <button className={styles['cart__checkout-btn']}>
                   {t('checkout')}
                 </button>
+                
+                <Link to={'/catalog'} className={styles['cart__continue-btn']}>{t('continue-purchase')}</Link>
               </div>
             </div>
           )}

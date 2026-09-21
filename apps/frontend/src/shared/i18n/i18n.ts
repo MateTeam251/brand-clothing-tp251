@@ -31,7 +31,9 @@ i18n.use(initReactI18next).init({
         'cart-delivery': 'Payment at check-out',
         products: 'Products',
         'cart-item-desc': '5–8 days for custom orders',
-        size: 'Size'
+        size: 'Size',
+        checkout: 'Place an order',
+        'continue-purchase': 'Continue shopping'
       }
     }, 
     ua: {
@@ -57,7 +59,9 @@ i18n.use(initReactI18next).init({
         'cart-delivery': 'Розрахунок при оформленні',
         products: 'Товари',
         'cart-item-desc': 'Під замовлення 5-8 днів',
-        size: 'Розмір'
+        size: 'Розмір',
+        checkout: 'Оформити замовлення',
+        'continue-purchase': 'Продовжити покупки'
       }
     }
   }

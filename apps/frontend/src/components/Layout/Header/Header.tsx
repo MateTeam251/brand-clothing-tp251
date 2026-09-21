@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Header.module.scss';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../shared/hooks/reduxHooks';
 import { setCurrency, setLanguage } from '../../../app/store/reducers/settingsSlice';
 import { useTranslation } from 'react-i18next';
@@ -13,11 +13,13 @@ import CartIcon from '../../../shared/assets/icons/cart.svg';
 import UserIcon from '../../../shared/assets/icons/user.svg';
 import SearchIcon from '../../../shared/assets/icons/search.svg';
 import closeIcon from '../../../shared/assets/icons/close.svg';
+import cartActive from '../../../shared/assets/icons/cart-active.svg';
 
 export const Header: React.FC = () => {
   const dispatch = useAppDispatch();
   const { currency, language } = useAppSelector((state) => state.settings);
   const { t, i18n } = useTranslation();
+  const location = useLocation();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -120,7 +122,7 @@ export const Header: React.FC = () => {
               </li>
               <li>
                 <Link className={styles['header__icon-button']} to="/cart" aria-label="Cart">
-                  <img className={styles['header__icon']} src={CartIcon} alt="" />
+                  <img className={styles['header__icon']} src={location.pathname === '/cart' ? cartActive : CartIcon} alt="" />
                 </Link>
               </li>
               <li>
