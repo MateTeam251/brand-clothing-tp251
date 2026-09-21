@@ -73,7 +73,7 @@ i18n.use(initReactI18next).init({
           contacts: 'Contact information',
           comment: 'Order comment',
         },
-        about: {},
+        about_page: {},
         account: {
           info: 'Personal information',
           favorites: 'Favorites',
@@ -110,7 +110,7 @@ i18n.use(initReactI18next).init({
         delivery: 'Доставка',
         refund: 'Повернненя',
         privacy: 'Політика конфіденційності',
-        'autumn-collection': 'Осіння колеція',
+        'autumn-collection': 'Осіння колекція',
         bestsellers: 'Наші бестселери',
         'new-collections': 'Нові колекції',
         'view-all': 'Переглянути все',
@@ -137,7 +137,7 @@ i18n.use(initReactI18next).init({
           cta_catalog: 'До каталогу',
         },
         catalog_page: {
-          title: 'Каталог товарів',
+          title: 'Каталог',
           search_placeholder: 'Пошук',
           empty_search: 'Не знайдено результатів для запиту ',
           price: 'Ціна',
@@ -166,7 +166,7 @@ i18n.use(initReactI18next).init({
           contacts: 'Контактна інформація',
           comment: 'Коментар до замовлення',
         },
-        about: {},
+        about_page: {},
         account: {
           info: 'Особиста інформація',
           favorites: 'Обране',

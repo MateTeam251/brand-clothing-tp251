@@ -1,3 +1,5 @@
+@use '../../app/styles/variables.scss' as *;
+
 .card {
   display: flex;
   flex-direction: column;
@@ -39,19 +41,27 @@
   }
 
   &__name {
-    margin-top: 12px;
-    font-size: 14px;
-  }
+  margin: 16px 0 8px;
+  font-family: 'Bodoni', serif;
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: 0%;
+}
 
   &__priceRow {
     display: flex;
     gap: 8px;
-    margin-top: 4px;
+
   }
 
   &__price {
-    font-weight: bold;
-  }
+    font-family: 'Cambria', serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 24px;
+    letter-spacing: 0%;
+}
 
   &__priceOld {
     text-decoration: line-through;
