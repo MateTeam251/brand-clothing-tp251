@@ -31,6 +31,8 @@ i18n.use(initReactI18next).init({
         checkout_btn: 'Checkout',
         shipping: 'Shipping',
         payment: 'Payment',
+        close: 'Close',
+        delete: 'Delete',
         header: {
           catalog: 'Catalog',
           about: 'About',
@@ -44,7 +46,7 @@ i18n.use(initReactI18next).init({
           cta_catalog: 'To catalog',
         },
         catalog_page: {
-          title: 'Products catalog',
+          title: 'Catalog',
           search_placeholder: 'Search',
           empty_search: 'No results found for ',
           price: 'Price',
@@ -53,6 +55,11 @@ i18n.use(initReactI18next).init({
           sort_price_asc: 'Price: low to high',
           sort_price_desc: 'Price: high to low',
           sort_newest: 'Most recent',
+          sort_title: 'Sort',
+          sort_label: 'Choose sorting order',
+          sort_default: 'Default',
+          sort_oldest: 'Oldest first',
+          apply: 'Apply',
         },
         product: {
           cart_btn: 'Add to cart',
@@ -124,6 +131,8 @@ i18n.use(initReactI18next).init({
         checkout_btn: 'Оформити замовлення',
         payment: 'Оплата',
         shipping: 'Доставка',
+        close: 'Закрити',
+        delete: 'Видалити',
         header: {
           catalog: 'Каталог',
           about: 'Про нас',
@@ -146,6 +155,11 @@ i18n.use(initReactI18next).init({
           sort_price_asc: 'За ціною: від нижчої до вищої',
           sort_price_desc: 'За ціною: від вищої до нижчої',
           sort_newest: 'Найновіші',
+          sort_title: 'Сортування',
+          sort_label: 'Оберіть порядок сортування',
+          sort_default: 'За замовчуванням',
+          sort_oldest: 'Від старого',
+          apply: 'Застосувати',
         },
         product: {
           cart_btn: 'Додати до кошика',
