@@ -28,6 +28,7 @@ class ProductType(models.Model):
     """
     name_ua = models.CharField(max_length=100)
     name_eng = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name_ua
