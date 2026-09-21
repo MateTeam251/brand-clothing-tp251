@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "payments",
     "favorites",
     "carts",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -164,8 +165,33 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+#LOCALSTORAGES
 
+USE_LOCALSTACK = os.getenv("USE_LOCALSTACK", "True").lower() in ("true", "1", "yes")
 
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "test")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "test")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "brand-clothing-media")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
+
+if USE_LOCALSTACK:
+    AWS_S3_ENDPOINT_URL = "http://localstack:4566"
+    AWS_S3_URL_PROTOCOL = "http:"
+    AWS_S3_CUSTOM_DOMAIN = f"localhost:4566/{AWS_STORAGE_BUCKET_NAME}"
+else:
+    AWS_S3_ENDPOINT_URL = None
+
+AWS_DEFAULT_ACL = None
+AWS_S3_FILE_OVERWRITE = False
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
