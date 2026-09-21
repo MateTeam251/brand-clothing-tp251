@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+# Never commit terraform.tfvars itself.
+
+aws_region          = "eu-central-1"
+project_name        = "brand-clothing"
+bucket_suffix       = "REPLACE_WITH_YOUR_AWS_ACCOUNT_ID"
+budget_limit_usd    = 27
+budget_alert_email  = "you@example.com"
