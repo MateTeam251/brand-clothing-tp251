@@ -6,8 +6,9 @@ import styles from './HomePage.module.scss';
 import searchIcon from '../../shared/assets/icons/search.svg';
 import arrowRight from '../../shared/assets/icons/arrow-right.svg';
 
-import { ProductSlider } from '../../components/Layout/Product/ProductSlider';
-import { CollectionSlider } from '../../components/Layout/Collection/CollectionSlider';
+import { ProductSlider } from '../../components/Product/ProductSlider';
+import { CollectionSlider } from '../../components/Collection/CollectionSlider';
+
 
 export const HomePage = () => {
   const { t } = useTranslation();

@@ -1,0 +1,8 @@
+@use '../../app/styles/variables.scss' as *;
+
+.emptyState {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+  color: $color-inactive;
+}

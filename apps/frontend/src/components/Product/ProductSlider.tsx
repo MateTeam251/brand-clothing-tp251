@@ -1,43 +1,32 @@
 import { useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useGetCollectionsQuery } from '../../../shared/api/collectionsApi';
-import { useAppSelector } from '../../../shared/hooks/reduxHooks';
-import type { Collection } from '../../../shared/types/products';
-import fallbackImage from '../../../shared/assets/images/autumn-collection.png';
-import summerImage from '../../../shared/assets/images/summer-collection.png';
-import styles from './CollectionSlider.module.scss';
+import { useGetProductsQuery } from '../../shared/api/productsApi';
+import { useAppSelector } from '../../shared/hooks/reduxHooks';
+import type { ProductQueryParams } from '../../shared/types/products';
+import { CardItem } from '../CartItem/CartItem';
+import styles from './ProductSlider.module.scss';
 
-type CollectionSliderProps = {
+type ProductSliderProps = {
   title: string;
+  queryParams: ProductQueryParams;
+  viewAllTo?: string;
 };
 
-const CollectionCard = ({ collection }: { collection: Collection }) => {
-  const image = collection.slug === 'summer' ? summerImage : fallbackImage;
-
-  return (
-    <article className={styles.slider__item}>
-      <Link className={styles.card} to={`/catalog?collection=${encodeURIComponent(collection.slug)}`}>
-        <img className={styles.card__image} src={image} alt={collection.name} />
-      <h3 className={styles.card__title}>{collection.name}</h3>
-      <p className={styles.card__description}>{collection.description}</p>
-      </Link>
-    </article>
-  );
-};
-
-export const CollectionSlider = ({ title }: CollectionSliderProps) => {
+export const ProductSlider = ({ title, queryParams, viewAllTo = '/catalog?ordering=-is_bestseller' }: ProductSliderProps) => {
   const { t } = useTranslation();
-  const language = useAppSelector((state) => state.settings.language);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const dragStartX = useRef(0);
   const dragStartScrollLeft = useRef(0);
   const isDragging = useRef(false);
   const hasDragged = useRef(false);
-  const { data, isLoading, isError } = useGetCollectionsQuery({ lang: language });
+  const { currency, language } = useAppSelector((state) => state.settings);
+  const requestParams = { ...queryParams, currency, lang: language };
+  const { data, isLoading, isError } = useGetProductsQuery(requestParams);
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
+
     const slider = sliderRef.current;
     if (!slider) return;
     if (slider.scrollWidth <= slider.clientWidth) return;
@@ -52,6 +41,7 @@ export const CollectionSlider = ({ title }: CollectionSliderProps) => {
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDragging.current || !sliderRef.current) return;
+
     const distance = event.clientX - dragStartX.current;
     if (Math.abs(distance) > 5) hasDragged.current = true;
     sliderRef.current.scrollLeft = dragStartScrollLeft.current - distance;
@@ -60,6 +50,7 @@ export const CollectionSlider = ({ title }: CollectionSliderProps) => {
   const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
     const slider = sliderRef.current;
     if (!slider || !isDragging.current) return;
+
     isDragging.current = false;
     slider.releasePointerCapture(event.pointerId);
     slider.classList.remove('is-dragging');
@@ -74,18 +65,20 @@ export const CollectionSlider = ({ title }: CollectionSliderProps) => {
   };
 
   return (
-    <section className={styles.slider} aria-labelledby='collections-slider-title'>
+    <section className={styles.slider} aria-labelledby='product-slider-title'>
       <div className={styles.slider__header}>
-        <h2 id='collections-slider-title' className={styles.slider__title}>{title}</h2>
-        <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--desktop']}`} to='/catalog'>
+        <h2 id='product-slider-title' className={styles.slider__title}>
+          {title}
+        </h2>
+        <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--desktop']}`} to={viewAllTo}>
           {t('view-all')}
         </Link>
       </div>
 
       {isLoading && <p className={styles.slider__status}>Loading...</p>}
-      {isError && <p className={styles.slider__status}>Unable to load collections.</p>}
+      {isError && <p className={styles.slider__status}>Unable to load products.</p>}
       {!isLoading && !isError && data?.results.length === 0 && (
-        <p className={styles.slider__status}>No collections found.</p>
+        <p className={styles.slider__status}>No products found.</p>
       )}
 
       {!isLoading && !isError && data?.results.length ? (
@@ -98,13 +91,15 @@ export const CollectionSlider = ({ title }: CollectionSliderProps) => {
           onPointerCancel={handlePointerUp}
           onClick={handleTrackClick}
         >
-          {data.results.map((collection) => (
-            <CollectionCard collection={collection} key={collection.id} />
+          {data.results.map((product) => (
+            <div className={styles.slider__item} data-slider-item='true' key={product.id}>
+              <CardItem product={product} />
+            </div>
           ))}
         </div>
       ) : null}
 
-      <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--mobile']}`} to='/catalog'>
+      <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--mobile']}`} to={viewAllTo}>
         {t('view-all')}
       </Link>
     </section>

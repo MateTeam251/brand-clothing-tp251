@@ -1,0 +1,49 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+.catalog {
+  padding: 40px 16px;
+  background-color: $dominant;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  @include on-desktop {
+    padding: 72px 40px;
+    gap: 64px;
+  }
+
+  &__title {
+    font-family: 'Bodoni', 'Cambria', serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 40px;
+    letter-spacing: 0%;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    row-gap: 32px;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      row-gap: 56px;
+    }
+  }
+
+  &__loadMore {
+    display: block;
+    margin: 32px auto 0;
+    padding: 12px 32px;
+    background: none;
+    border: 1px solid $color-inactive;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
