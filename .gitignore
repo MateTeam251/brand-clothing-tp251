@@ -23,4 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
-node_copy-files/ 
+node_copy-files/
+
+# Terraform
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.backup
+infra/**/terraform.tfvars
+infra/**/.terraform.lock.hcl
+infra/**/crash.log
