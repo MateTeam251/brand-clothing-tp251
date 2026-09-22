@@ -7,29 +7,14 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.encoding import force_str
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django_countries.serializer_fields import CountryField as CountryFieldSerializer
 
 from users.utils import send_password_reset_link
-from users.models import Address
 from carts.services import merge_guest_cart_into_user_cart
 
 
 
 User = get_user_model()
 
-
-
-class AddressSerializer(serializers.ModelSerializer):
-
-    country = CountryFieldSerializer()
-    class Meta:
-        model = Address
-        fields = (
-            "country", "full_name", "phone_number",
-            "region", "city", "postal_code",
-            "address_line_1", "address_line_2",
-            "delivery_provider", "delivery_point",
-        )
 
 class RegisterSerializer(serializers.ModelSerializer):
     """
@@ -141,26 +126,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
     addresses is handled through a dedicated AddressViewSet, not through
     this profile endpoint.
     """
-    address = AddressSerializer(required=False, read_only=True)
 
     class Meta:
         model = User
         fields = ["id", "email", "name", "age", "phone_number",
-                  "marketing_opt_in", "instagram", "address"]
+                  "marketing_opt_in", "instagram",]
         read_only_fields = ['id', 'email']
 
     def update(self, instance, validated_data):
-        address_data = validated_data.pop("address", None)
 
         # update simple User fields as usual
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-
-        if address_data is not None:
-            # update_or_create handles both "user never had an address"
-            # and "user already has one and is editing it"
-            Address.objects.update_or_create(user=instance, defaults=address_data)
 
         return instance
 
