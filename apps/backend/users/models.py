@@ -1,9 +1,7 @@
 from django.contrib.auth.models import (AbstractUser,
                                         UserManager)
 from django.db import models
-from django_countries.fields import CountryField
 
-from core.enums import DeliveryProvider
 
 class CustomUserManager(UserManager):
     """
@@ -134,52 +132,3 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
-
-
-class Address(models.Model):
-    """
-    A shipping address belonging to a user.
-
-    Fields are split (rather than one free-text field) to support
-    international shipping — validation, filtering, and integration
-    with delivery provider APIs (Nova Poshta, UkrPoshta, DHL) all need
-    structured data, not a single blob of text.
-
-    Not every field applies to every country (e.g. "region/state" is
-    meaningless in some countries) — most are left optional, and the
-    frontend should adapt the form based on the selected country.
-    """
-
-    user = models.OneToOneField(
-        "users.User", on_delete=models.CASCADE, related_name="address"
-    )
-
-    country = CountryField() # ISO 3166-1 alpha-2, e.g. "UA", "US", "DE"
-
-    full_name = models.CharField(max_length=255)  # recipient's name — may differ from account owner
-    phone_number = models.CharField(max_length=20)
-
-    region = models.CharField(max_length=100, blank=True)  # region / state / province
-    city = models.CharField(max_length=100)
-    postal_code = models.CharField(max_length=20, blank=True)  # not all countries use one
-
-    address_line_1 = models.CharField(max_length=255)  # street + house number
-    address_line_2 = models.CharField(max_length=255, blank=True)  # apartment, floor, etc.
-
-    # Optional: for carrier-specific delivery points (e.g. Nova Poshta branch number)
-    delivery_provider = models.CharField(
-        max_length=30,
-        choices=DeliveryProvider.choices, # type: ignore[arg-type]
-        blank=True
-    )
-    delivery_point = models.CharField(max_length=255, blank=True)  # e.g. "Branch #25" Should probably be able to choose from Nova Poshta or ukr poshta integrated list of branches
-
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.full_name} — {self.city}, {self.country}"
-

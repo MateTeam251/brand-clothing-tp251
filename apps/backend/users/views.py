@@ -10,12 +10,11 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-
-from users.models import Address
 from users.serializers import (RegisterSerializer,
                                UserProfileSerializer,
                                PasswordResetConfirmSerializer,
-                               PasswordResetRequestSerializer, AddressSerializer, CustomTokenObtainPairSerializer)
+                               PasswordResetRequestSerializer,
+                               CustomTokenObtainPairSerializer)
 from users.tokens import account_activation_token
 from users.utils import send_activation_email
 
@@ -153,22 +152,6 @@ class MeView(generics.RetrieveUpdateAPIView):
         """
         return self.request.user
 
-class AddressView(generics.RetrieveUpdateAPIView):
-    """
-    Retrieve or update the authenticated user's shipping address.
-
-    GET returns the address (or 404 if the user hasn't set one yet).
-    PUT/PATCH creates or updates it — since the user may not have an
-    address yet (it was optional at registration), get_object() falls
-    back to creating an empty Address instance rather than raising 404
-    on write attempts.
-    """
-    serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        address, _ = Address.objects.get_or_create(user=self.request.user)
-        return address
 
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
