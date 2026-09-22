@@ -41,13 +41,16 @@ class CurrencyAwareOrderingFilter(filters.OrderingFilter):
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Basic ViewSet with ReadOnlyMode
+    Basic ViewSet with ReadOnlyMode.
 
-    Has name search field and ordering via price (uah and usd),
-    created_at (auto incremented time stamp in Product model. Depends on when was the product add to the db)
-    is_bestseller (bool) and is_new_collection (bool).
-    Basic ordering depends on when was the product add to the db (so the new products are shown first)
+    Supports:
+    - name search (?search=)
+    - ordering by price (uah/usd via ?currency=) and created_at
+    - filtering by collection (?collection=slug1,slug2)
+    - filtering by product type (?type=slug1,slug2)
+    - filtering to bestsellers only (?is_bestseller=true)
 
+    Default ordering is by created_at descending (newest products first).
     """
     queryset = Product.objects.all()
     filter_backends =  [filters.SearchFilter, CurrencyAwareOrderingFilter]
@@ -56,8 +59,6 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = [
         "price", # resolved to price_auh/price_usd basen on ?currency=
         "created_at",
-        "is_bestseller",
-        "is_new_collection",
     ]
     ordering = ["-created_at"] #default sorting if the user didn't specify ordering
 
