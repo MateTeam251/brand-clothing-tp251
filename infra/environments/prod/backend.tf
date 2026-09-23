@@ -14,7 +14,7 @@ terraform {
 
   backend "s3" {
     # Fill these in from the outputs of infra/bootstrap.
-    bucket         = "REPLACE_WITH_STATE_BUCKET_NAME"
+    bucket         = "brand-clothing-tfstate-971441629275-eu"
     key            = "prod/terraform.tfstate"
     region         = "eu-central-1"
     dynamodb_table = "brand-clothing-terraform-lock"
