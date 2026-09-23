@@ -13,7 +13,7 @@ variable "public_subnet_cidr" {
 variable "availability_zone" {
   description = "AZ for the public subnet. Single-AZ is deliberate — no ALB/RDS multi-AZ requirement at this stage."
   type        = string
-  default     = "us-east-1a"
+  default     = "eu-central-1a"
 }
 
 variable "project_name" {
