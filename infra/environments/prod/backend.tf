@@ -13,12 +13,8 @@ terraform {
   }
 
   backend "s3" {
-    # Fill these in from the outputs of infra/bootstrap.
-    bucket         = "REPLACE_WITH_STATE_BUCKET_NAME"
-    key            = "prod/terraform.tfstate"
-    region         = "eu-central-1"
-    dynamodb_table = "brand-clothing-terraform-lock"
-    encrypt        = true
+    key     = "prod/terraform.tfstate"
+    encrypt = true
   }
 }
 

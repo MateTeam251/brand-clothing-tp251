@@ -103,7 +103,7 @@ resource "aws_vpc_security_group_ingress_rule" "app_https_v6" {
 
 resource "aws_vpc_security_group_ingress_rule" "app_http_v4" {
   security_group_id = aws_security_group.app.id
-  description       = "HTTP — ACME challenge + redirect to HTTPS"
+  description       = "HTTP - ACME challenge + redirect to HTTPS"
   cidr_ipv4         = "0.0.0.0/0"
   from_port         = 80
   to_port           = 80
@@ -112,7 +112,7 @@ resource "aws_vpc_security_group_ingress_rule" "app_http_v4" {
 
 resource "aws_vpc_security_group_ingress_rule" "app_http_v6" {
   security_group_id = aws_security_group.app.id
-  description       = "HTTP — ACME challenge + redirect to HTTPS (IPv6)"
+  description       = "HTTP - ACME challenge + redirect to HTTPS (IPv6)"
   cidr_ipv6         = "::/0"
   from_port         = 80
   to_port           = 80
@@ -123,7 +123,7 @@ resource "aws_vpc_security_group_ingress_rule" "app_exporters_from_monitoring" {
   for_each = toset(["9100", "9187", "8080"]) # node_exporter, postgres_exporter, cAdvisor
 
   security_group_id            = aws_security_group.app.id
-  description                   = "Exporter scrape (port ${each.value}) — monitoring instance only"
+  description                   = "Exporter scrape (port ${each.value}) - monitoring instance only"
   referenced_security_group_id = aws_security_group.monitoring.id
   from_port                     = tonumber(each.value)
   to_port                       = tonumber(each.value)
@@ -139,7 +139,7 @@ resource "aws_vpc_security_group_ingress_rule" "app_exporters_from_monitoring" {
 
 resource "aws_vpc_security_group_egress_rule" "app_egress_v4" {
   security_group_id = aws_security_group.app.id
-  description       = "All outbound — ECR, S3, SSM, OS updates, ACME"
+  description       = "All outbound - ECR, S3, SSM, OS updates, ACME"
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }
@@ -155,7 +155,7 @@ resource "aws_vpc_security_group_egress_rule" "app_egress_v6" {
 
 resource "aws_vpc_security_group_ingress_rule" "monitoring_loki_from_app" {
   security_group_id            = aws_security_group.monitoring.id
-  description                   = "promtail (app instance) -> Loki"
+  description                   = "promtail (app instance) to Loki"
   referenced_security_group_id = aws_security_group.app.id
   from_port                     = 3100
   to_port                       = 3100
@@ -171,7 +171,7 @@ resource "aws_vpc_security_group_ingress_rule" "monitoring_loki_from_app" {
 
 resource "aws_vpc_security_group_egress_rule" "monitoring_egress_v4" {
   security_group_id = aws_security_group.monitoring.id
-  description       = "All outbound — updates, container pulls, Telegram alert API, SSM"
+  description       = "All outbound - updates, container pulls, Telegram alert API, SSM"
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }
