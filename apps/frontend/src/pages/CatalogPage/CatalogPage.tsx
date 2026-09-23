@@ -5,23 +5,46 @@ import { ProductCard } from '../../components/ProductCard/ProductCard';
 import { Loader } from '../../components/Loader/Loader';
 import { ErrorState } from '../../components/ErrorState/ErrorState';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
+import { Sort, type SortValue } from '../../components/Sort/Sort';
+import { Filters, type FiltersValue } from '../../components/Filters/Filters';
 import type { ProductListItem } from '../../shared/types/products';
 import styles from './CatalogPage.module.scss';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
+import sortActiveIcon from '../../shared/assets/icons/sort-active.svg';
+import sortInactiveIcon from '../../shared/assets/icons/sort-inactive.svg';
+import filterActiveIcon from '../../shared/assets/icons/filter-active.svg';
+import filterInactiveIcon from '../../shared/assets/icons/filter-inactive.svg';
 
 const PRODUCTS_LIMIT = 12;
+
+const EMPTY_FILTERS: FiltersValue = {
+  types: [],
+  collections: [],
+  isBestseller: false,
+};
 
 export const CatalogPage = () => {
   const { t } = useTranslation();
   const [offset, setOffset] = useState(0);
   const [accumulatedProducts, setAccumulatedProducts] = useState<ProductListItem[]>([]);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [sortValue, setSortValue] = useState<SortValue>('');
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [filtersValue, setFiltersValue] = useState<FiltersValue>(EMPTY_FILTERS);
 
   const currency = useAppSelector((state) => state.settings.currency);
+
+  const isFiltersActive =
+    filtersValue.types.length > 0 || filtersValue.collections.length > 0 || filtersValue.isBestseller;
 
   const { data, isLoading, isFetching, error } = useGetProductsQuery({
     limit: PRODUCTS_LIMIT,
     offset,
     currency,
+    ordering: sortValue || undefined,
+    type: filtersValue.types.length > 0 ? filtersValue.types.join(',') : undefined,
+    collections: filtersValue.collections.length > 0 ? filtersValue.collections.join(',') : undefined,
+    is_bestseller: filtersValue.isBestseller || undefined,
   });
 
   useEffect(() => {
@@ -39,7 +62,7 @@ export const CatalogPage = () => {
   useEffect(() => {
     setOffset(0);
     setAccumulatedProducts([]);
-  }, [currency]);
+  }, [currency, sortValue, filtersValue]);
 
   const handleLoadMore = () => {
     setOffset((prev) => prev + PRODUCTS_LIMIT);
@@ -62,6 +85,41 @@ export const CatalogPage = () => {
   return (
     <div className={styles.catalog}>
       <h1 className={styles.catalog__title}>{t('catalog_page.title')}</h1>
+
+      <div className={styles.catalog__actions}>
+        <button
+          type="button"
+          className={styles.catalog__iconButton}
+          onClick={() => setIsFiltersOpen(true)}
+          aria-label={t('catalog_page.filter')}
+        >
+          <img src={isFiltersActive ? filterActiveIcon : filterInactiveIcon} alt="" />
+        </button>
+        <button
+          type="button"
+          className={styles.catalog__iconButton}
+          onClick={() => setIsSortOpen(true)}
+          aria-label={t('catalog_page.sort')}
+        >
+          <img src={sortValue ? sortActiveIcon : sortInactiveIcon} alt="" />
+        </button>
+      </div>
+
+      {isSortOpen && (
+        <Sort
+          currentValue={sortValue}
+          onApply={setSortValue}
+          onClose={() => setIsSortOpen(false)}
+        />
+      )}
+
+      {isFiltersOpen && (
+        <Filters
+          currentValue={filtersValue}
+          onApply={setFiltersValue}
+          onClose={() => setIsFiltersOpen(false)}
+        />
+      )}
 
       <div className={styles.catalog__grid}>
         {products.map((product) => (

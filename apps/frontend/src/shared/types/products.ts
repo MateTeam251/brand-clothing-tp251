@@ -60,6 +60,8 @@ export interface ProductQueryParams {
   lang?: string;
   currency?: string;
   collections?: string;
+  type?: string;
+  is_bestseller?: boolean;
   search?: string;
   ordering?: string;
   offset?: number;

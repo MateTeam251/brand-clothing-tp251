@@ -46,4 +46,23 @@
       cursor: default;
     }
   }
+
+  &__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+  }
+
+  &__iconButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+
+    img {
+      width: 24px;
+      height: 24px;
+    }
+  }
 }
