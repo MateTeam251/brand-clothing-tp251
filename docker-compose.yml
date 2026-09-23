@@ -1,0 +1,38 @@
+services:
+  db:
+    image: ${ECR_REGISTRY}/brand-clothing-db:${IMAGE_TAG}
+    container_name: brand_clothing_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      WALG_S3_PREFIX: ${WALG_S3_PREFIX}
+      AWS_REGION: ${AWS_REGION:-eu-central-1}
+      PGHOST: /var/run/postgresql
+      PGDATABASE: ${POSTGRES_DB}
+    volumes:
+      - ./db/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - postgres_data:/var/lib/postgresql/data
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: ${ECR_REGISTRY}/brand-clothing-backend:${IMAGE_TAG}
+    container_name: brand_clothing_web
+    restart: always
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
