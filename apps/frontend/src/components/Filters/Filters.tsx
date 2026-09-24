@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useGetCollectionsQuery } from '../../shared/api/collectionsApi';
-import closeIcon from '../../shared/assets/icons/close.svg';
-import trashIcon from '../../shared/assets/icons/Trash.svg';
-import styles from './Filters.module.scss';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
+import { useGetCollectionsQuery } from '../../shared/api/collectionsApi';
+import styles from './Filters.module.scss';
 
 export interface FiltersValue {
   types: string[];
   collections: string[];
   isBestseller: boolean;
 }
+
+const EMPTY_FILTERS: FiltersValue = {
+  types: [],
+  collections: [],
+  isBestseller: false,
+};
 
 const CATEGORY_OPTIONS = [
   { value: 'dress', labelKey: 'catalog_page.category_dress' },
@@ -28,9 +32,9 @@ interface FiltersProps {
 
 export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
   const { t } = useTranslation();
-  const [draftValue, setDraftValue] = useState<FiltersValue>(currentValue);
   const language = useAppSelector((state) => state.settings.language);
   const { data: collectionsData } = useGetCollectionsQuery({ lang: language });
+  const [draftValue, setDraftValue] = useState<FiltersValue>(currentValue);
 
   const toggleType = (type: string) => {
     setDraftValue((prev) => ({
@@ -59,21 +63,17 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
     onClose();
   };
 
+  const handleClearAll = () => {
+    setDraftValue(EMPTY_FILTERS);
+  };
+
   const selectedCount =
     draftValue.types.length + draftValue.collections.length + (draftValue.isBestseller ? 1 : 0);
 
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.filters} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.filters__header}>
-          <button type="button" className={styles.filters__iconBtn} onClick={onClose} aria-label={t('close')}>
-            <img src={closeIcon} alt="" />
-          </button>
-          <h2 className={styles.filters__title}>{t('catalog_page.filter_title')}</h2>
-          <button type="button" className={styles.filters__iconCircle} aria-label={t('delete')}>
-            <img src={trashIcon} alt="" />
-          </button>
-        </div>
+        <h2 className={styles.filters__title}>{t('catalog_page.filter_title')}</h2>
 
         <p className={styles.filters__sectionLabel}>{t('catalog_page.category')}</p>
         <div className={styles.filters__options}>
@@ -120,6 +120,10 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
 
         <button type="button" className={styles.filters__apply} onClick={handleApply}>
           {t('catalog_page.save')} ({selectedCount})
+        </button>
+
+        <button type="button" className={styles.filters__reset} onClick={handleClearAll}>
+          {t('catalog_page.reset_filters')}
         </button>
       </div>
     </div>

@@ -11,9 +11,11 @@
   justify-content: center;
 
   @include on-desktop {
+    background: transparent;
     align-items: flex-start;
     justify-content: flex-end;
-    background: transparent;
+    padding-top: 80px;
+    padding-right: 40px;
   }
 }
 
@@ -27,56 +29,13 @@
   border-radius: 24px 24px 0 0;
 
   @include on-desktop {
-    max-width: 320px;
+    max-width: 380px;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    margin-top: 60px;
-    margin-right: 40px;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-  }
-
-  &__iconBtn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-
-    img {
-      width: 20px;
-      height: 20px;
-    }
-  }
-
-  &__iconCircle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #fff;
-    border: 1px solid $color-inactive;
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: #f4c9c9;
-    }
-
-    img {
-      width: 16px;
-      height: 16px;
-    }
+    box-shadow: 0px 0px 15px 0px rgba(171, 152, 152, 0.2);
   }
 
   &__title {
-    margin: 0;
+    margin: 0 0 24px;
   }
 
   &__label {
@@ -101,14 +60,14 @@
   &__radio {
     width: 20px;
     height: 20px;
-    accent-color: #f4c9c9;
+    accent-color: $accent;
   }
 
   &__apply {
     padding: 16px;
     border: none;
     border-radius: 999px;
-    background: #f4c9c9;
+    background: $accent;
     font-size: 16px;
     cursor: pointer;
   }

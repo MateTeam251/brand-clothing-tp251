@@ -7,6 +7,8 @@ import { ErrorState } from '../../components/ErrorState/ErrorState';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
 import { Sort, type SortValue } from '../../components/Sort/Sort';
 import { Filters, type FiltersValue } from '../../components/Filters/Filters';
+import { Search } from '../../components/Search/Search';
+import { useDebounce } from '../../shared/hooks/useDebounce';
 import type { ProductListItem } from '../../shared/types/products';
 import styles from './CatalogPage.module.scss';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
@@ -31,6 +33,8 @@ export const CatalogPage = () => {
   const [sortValue, setSortValue] = useState<SortValue>('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [filtersValue, setFiltersValue] = useState<FiltersValue>(EMPTY_FILTERS);
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebounce(searchInput, 500);
 
   const currency = useAppSelector((state) => state.settings.currency);
 
@@ -45,6 +49,7 @@ export const CatalogPage = () => {
     type: filtersValue.types.length > 0 ? filtersValue.types.join(',') : undefined,
     collections: filtersValue.collections.length > 0 ? filtersValue.collections.join(',') : undefined,
     is_bestseller: filtersValue.isBestseller || undefined,
+    search: debouncedSearch || undefined,
   });
 
   useEffect(() => {
@@ -62,10 +67,20 @@ export const CatalogPage = () => {
   useEffect(() => {
     setOffset(0);
     setAccumulatedProducts([]);
-  }, [currency, sortValue, filtersValue]);
+  }, [currency, sortValue, filtersValue, debouncedSearch]);
 
   const handleLoadMore = () => {
     setOffset((prev) => prev + PRODUCTS_LIMIT);
+  };
+
+  const handleOpenSort = () => {
+    setIsSortOpen(true);
+    setIsFiltersOpen(false);
+  };
+
+  const handleOpenFilters = () => {
+    setIsFiltersOpen(true);
+    setIsSortOpen(false);
   };
 
   if (isLoading) {
@@ -78,39 +93,35 @@ export const CatalogPage = () => {
 
   const products = accumulatedProducts.length > 0 ? accumulatedProducts : data?.results ?? [];
 
-  if (products.length === 0) {
-    return <EmptyState message={t('catalog_page.empty_search')} />;
-  }
-
   return (
     <div className={styles.catalog}>
       <h1 className={styles.catalog__title}>{t('catalog_page.title')}</h1>
 
-      <div className={styles.catalog__actions}>
-        <button
-          type="button"
-          className={styles.catalog__iconButton}
-          onClick={() => setIsFiltersOpen(true)}
-          aria-label={t('catalog_page.filter')}
-        >
-          <img src={isFiltersActive ? filterActiveIcon : filterInactiveIcon} alt="" />
-        </button>
-        <button
-          type="button"
-          className={styles.catalog__iconButton}
-          onClick={() => setIsSortOpen(true)}
-          aria-label={t('catalog_page.sort')}
-        >
-          <img src={sortValue ? sortActiveIcon : sortInactiveIcon} alt="" />
-        </button>
+      <div className={styles.catalog__controls}>
+        <Search value={searchInput} onChange={setSearchInput} />
+
+        <div className={styles.catalog__actions}>
+          <button
+            type="button"
+            className={styles.catalog__iconButton}
+            onClick={handleOpenFilters}
+            aria-label={t('catalog_page.filter')}
+          >
+            <img src={isFiltersActive ? filterActiveIcon : filterInactiveIcon} alt="" />
+          </button>
+          <button
+            type="button"
+            className={styles.catalog__iconButton}
+            onClick={handleOpenSort}
+            aria-label={t('catalog_page.sort')}
+          >
+            <img src={sortValue ? sortActiveIcon : sortInactiveIcon} alt="" />
+          </button>
+        </div>
       </div>
 
       {isSortOpen && (
-        <Sort
-          currentValue={sortValue}
-          onApply={setSortValue}
-          onClose={() => setIsSortOpen(false)}
-        />
+        <Sort currentValue={sortValue} onApply={setSortValue} onClose={() => setIsSortOpen(false)} />
       )}
 
       {isFiltersOpen && (
@@ -121,21 +132,27 @@ export const CatalogPage = () => {
         />
       )}
 
-      <div className={styles.catalog__grid}>
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {products.length === 0 ? (
+        <EmptyState message={t('catalog_page.empty_search')} />
+      ) : (
+        <>
+          <div className={styles.catalog__grid}>
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
 
-      {data?.next && (
-        <button
-          type="button"
-          className={styles.catalog__loadMore}
-          onClick={handleLoadMore}
-          disabled={isFetching}
-        >
-          {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
-        </button>
+          {data?.next && (
+            <button
+              type="button"
+              className={styles.catalog__loadMore}
+              onClick={handleLoadMore}
+              disabled={isFetching}
+            >
+              {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
+            </button>
+          )}
+        </>
       )}
     </div>
   );

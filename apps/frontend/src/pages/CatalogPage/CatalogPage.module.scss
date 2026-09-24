@@ -3,24 +3,32 @@
 .catalog {
   padding: 40px 16px;
   background-color: $dominant;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  row-gap: 32px;
 
   @include on-desktop {
     padding: 72px 40px;
-    gap: 64px;
   }
 
   &__title {
+    grid-row: 1;
+    grid-column: span 2;
+    margin: 0 auto;
     font-family: 'Bodoni', 'Cambria', serif;
     font-weight: 400;
     font-size: 32px;
     line-height: 40px;
     letter-spacing: 0%;
+
+    @include on-desktop {
+      grid-column: 1;
+      margin: 0;
+    }
   }
 
   &__grid {
+    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
@@ -48,10 +56,10 @@
   }
 
   &__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-  margin-bottom: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-left: auto;
   }
 
   &__iconButton {
@@ -64,5 +72,26 @@
       width: 24px;
       height: 24px;
     }
+  }
+
+  &__controls {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    grid-row: 2;
+    grid-column: span 2;
+
+    @include on-desktop {
+      grid-row: 1;
+    }
+  }
+
+  &__sortWrapper {
+    position: relative;
+  }
+
+  &__filterWrapper {
+    position: relative;
   }
 }
