@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { ProductQueryParams } from '../../shared/types/products';
-import { CardItem } from '../CartItem/CartItem';
 import styles from './ProductSlider.module.scss';
+import { ProductCard } from '../ProductCard';
 
 type ProductSliderProps = {
   title: string;
@@ -93,7 +93,7 @@ export const ProductSlider = ({ title, queryParams, viewAllTo = '/catalog?orderi
         >
           {data.results.map((product) => (
             <div className={styles.slider__item} data-slider-item='true' key={product.id}>
-              <CardItem product={product} />
+              <ProductCard product={product} />
             </div>
           ))}
         </div>

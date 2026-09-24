@@ -86,6 +86,8 @@ i18n.use(initReactI18next).init({
           quantity: 'Quantity',
           total: 'Total:',
           empty: 'Cart is empty',
+          size: 'Size',
+          'cart-item-desc': 'Free shipping and returns',
         },
         checkout: {
           contacts: 'Contact information',
@@ -197,6 +199,8 @@ i18n.use(initReactI18next).init({
           quantity: 'Кількість',
           total: 'Всього:',
           empty: 'Кошик порожній',
+          size: 'Розмір',
+          'cart-item-desc': 'Безкоштовна доставка та повернення',
         },
         checkout: {
           contacts: 'Контактна інформація',
