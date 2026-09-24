@@ -6,7 +6,7 @@ ARG WALG_ASSET=wal-g-pg-24.04-aarch64
 ADD https://github.com/wal-g/wal-g/releases/download/${WALG_VERSION}/${WALG_ASSET} /usr/local/bin/wal-g
 ADD https://github.com/wal-g/wal-g/releases/download/${WALG_VERSION}/${WALG_ASSET}.sha256 /tmp/wal-g.sha256
 
-RUN echo "$(cat /tmp/wal-g.sha256)  /usr/local/bin/wal-g" | sha256sum -c - \
+RUN echo "$(cut -d' ' -f1 /tmp/wal-g.sha256)  /usr/local/bin/wal-g" | sha256sum -c - \
     && chmod +x /usr/local/bin/wal-g \
     && rm /tmp/wal-g.sha256
 
