@@ -20,6 +20,8 @@ COPY scripts/crontab /etc/cron.d/wal-g-backup
 RUN chmod 0644 /etc/cron.d/wal-g-backup \
     && crontab /etc/cron.d/wal-g-backup
 
+RUN touch /var/log/wal-g-backup.log && chown postgres:postgres /var/log/wal-g-backup.log
+
 COPY scripts/docker-entrypoint-wrapper.sh /usr/local/bin/docker-entrypoint-wrapper.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint-wrapper.sh
 
