@@ -10,7 +10,7 @@ RUN echo "$(cut -d' ' -f1 /tmp/wal-g.sha256)  /usr/local/bin/wal-g" | sha256sum 
     && chmod +x /usr/local/bin/wal-g \
     && rm /tmp/wal-g.sha256
 
-RUN apt-get update && apt-get install -y --no-install-recommends cron tini \
+RUN apt-get update && apt-get install -y --no-install-recommends cron tini ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY scripts/wal-g-backup.sh /usr/local/bin/wal-g-backup.sh
