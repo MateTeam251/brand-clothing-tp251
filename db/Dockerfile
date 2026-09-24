@@ -6,11 +6,11 @@ ARG WALG_ASSET=wal-g-pg-24.04-aarch64
 ADD https://github.com/wal-g/wal-g/releases/download/${WALG_VERSION}/${WALG_ASSET} /usr/local/bin/wal-g
 ADD https://github.com/wal-g/wal-g/releases/download/${WALG_VERSION}/${WALG_ASSET}.sha256 /tmp/wal-g.sha256
 
-RUN echo "$(cat /tmp/wal-g.sha256)  /usr/local/bin/wal-g" | sha256sum -c - \
+RUN echo "$(cut -d' ' -f1 /tmp/wal-g.sha256)  /usr/local/bin/wal-g" | sha256sum -c - \
     && chmod +x /usr/local/bin/wal-g \
     && rm /tmp/wal-g.sha256
 
-RUN apt-get update && apt-get install -y --no-install-recommends cron tini \
+RUN apt-get update && apt-get install -y --no-install-recommends cron tini ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY scripts/wal-g-backup.sh /usr/local/bin/wal-g-backup.sh
@@ -20,8 +20,12 @@ COPY scripts/crontab /etc/cron.d/wal-g-backup
 RUN chmod 0644 /etc/cron.d/wal-g-backup \
     && crontab /etc/cron.d/wal-g-backup
 
+RUN touch /var/log/wal-g-backup.log && chown postgres:postgres /var/log/wal-g-backup.log
+
 COPY scripts/docker-entrypoint-wrapper.sh /usr/local/bin/docker-entrypoint-wrapper.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint-wrapper.sh
+
+COPY postgresql.conf /etc/postgresql/postgresql.conf
 
 # tini as real PID 1 — reaps orphaned children (cron's daily job
 # processes) that Postgres's postmaster wouldn't otherwise reap, since
