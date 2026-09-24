@@ -23,6 +23,8 @@ RUN chmod 0644 /etc/cron.d/wal-g-backup \
 COPY scripts/docker-entrypoint-wrapper.sh /usr/local/bin/docker-entrypoint-wrapper.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint-wrapper.sh
 
+COPY postgresql.conf /etc/postgresql/postgresql.conf
+
 # tini as real PID 1 — reaps orphaned children (cron's daily job
 # processes) that Postgres's postmaster wouldn't otherwise reap, since
 # it only waits on children it spawned itself.
