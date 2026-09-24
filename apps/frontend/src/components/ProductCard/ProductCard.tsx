@@ -31,23 +31,25 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         )}
       </div>
 
-      <p className={styles.card__name}>{product.name}</p>
+      <div className={styles.card__info}>
+        <p className={styles.card__name}>{product.name}</p>
 
-      <div className={styles.card__priceRow}>
-        {product.discounted_price ? (
-          <>
-            <span className={styles.card__priceOld}>
+        <div className={styles.card__priceRow}>
+          {product.discounted_price ? (
+            <>
+              <span className={styles.card__priceOld}>
+                {formatPrice(product.price, currency)}
+              </span>
+              <span className={styles.card__price}>
+                {formatPrice(product.discounted_price, currency)}
+              </span>
+            </>
+          ) : (
+            <span className={styles.card__price}>
               {formatPrice(product.price, currency)}
             </span>
-            <span className={styles.card__price}>
-              {formatPrice(product.discounted_price, currency)}
-            </span>
-          </>
-        ) : (
-          <span className={styles.card__price}>
-            {formatPrice(product.price, currency)}
-          </span>
-        )}
+          )}
+        </div>
       </div>
     </Link>
   );
