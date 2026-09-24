@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Header.module.scss';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../shared/hooks/reduxHooks';
 import { setCurrency, setLanguage } from '../../../app/store/reducers/settingsSlice';
 import { useTranslation } from 'react-i18next';
@@ -13,11 +13,13 @@ import CartIcon from '../../../shared/assets/icons/cart.svg';
 import UserIcon from '../../../shared/assets/icons/user.svg';
 import SearchIcon from '../../../shared/assets/icons/search.svg';
 import closeIcon from '../../../shared/assets/icons/close.svg';
+import cartActive from '../../../shared/assets/icons/cart-active.svg';
 
 export const Header: React.FC = () => {
   const dispatch = useAppDispatch();
   const { currency, language } = useAppSelector((state) => state.settings);
   const { t, i18n } = useTranslation();
+  const location = useLocation();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -65,6 +67,8 @@ export const Header: React.FC = () => {
             <ul className={styles['header__list']}>
               <li><Link className={styles['header__link']} to="/catalog">{t('catalog')}</Link></li>
               <li><Link className={styles['header__link']} to="/about">{t('about')}</Link></li>
+              <li><Link className={styles['header__link']} to="/catalog?filter=bestsellers">{t('bestsellers')}</Link></li>
+              <li><Link className={styles['header__link']} to="/collections">{t('collections')}</Link></li>
             </ul>
           </nav>
           <nav className={`${styles['header__nav']} ${styles['header__nav--mobile']}`} aria-label="Mobile navigation">
@@ -118,7 +122,7 @@ export const Header: React.FC = () => {
               </li>
               <li>
                 <Link className={styles['header__icon-button']} to="/cart" aria-label="Cart">
-                  <img className={styles['header__icon']} src={CartIcon} alt="" />
+                  <img className={styles['header__icon']} src={location.pathname === '/cart' ? cartActive : CartIcon} alt="" />
                 </Link>
               </li>
               <li>
@@ -173,7 +177,7 @@ export const Header: React.FC = () => {
         <div className={styles.menu__content}>
           <ul className={styles.menu__list}>
             <li><Link className={styles.menu__link} to="/catalog" onClick={() => setIsMenuOpen(false)}>{t('catalog', { defaultValue: 'Каталог' })}</Link></li>
-            <li><Link className={styles.menu__link} to="/bestsellers" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
+            <li><Link className={styles.menu__link} to="/catalog?filter=bestsellers" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
             <li><Link className={styles.menu__link} to="/collections" onClick={() => setIsMenuOpen(false)}>{t('collections', { defaultValue: 'Колекції' })}</Link></li>
             <li><Link className={styles.menu__link} to="/about" onClick={() => setIsMenuOpen(false)}>{t('about', { defaultValue: 'Про нас' })}</Link></li>
           </ul>
