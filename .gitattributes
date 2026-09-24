@@ -1,0 +1,6 @@
+# Files that run inside Linux containers must keep LF endings on every checkout.
+# CRLF breaks shebangs (#!/bin/bash\r) and crontab.
+*.sh               text eol=lf
+db/Dockerfile      text eol=lf
+db/postgresql.conf text eol=lf
+db/scripts/crontab text eol=lf

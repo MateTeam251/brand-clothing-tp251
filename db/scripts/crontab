@@ -1,1 +1,1 @@
-0 3 * * * root /usr/local/bin/wal-g-backup.sh >> /var/log/wal-g-backup.log 2>&1
+0 3 * * * postgres /usr/local/bin/wal-g-backup.sh >> /var/log/wal-g-backup.log 2>&1
