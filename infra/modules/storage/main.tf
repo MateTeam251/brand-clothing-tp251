@@ -55,6 +55,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
 resource "aws_s3_bucket" "media" {
   bucket = local.media_bucket_name
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
     Name = local.media_bucket_name
   }
@@ -87,6 +91,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
 
 resource "aws_s3_bucket" "backups" {
   bucket = local.backups_bucket_name
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   tags = {
     Name = local.backups_bucket_name
