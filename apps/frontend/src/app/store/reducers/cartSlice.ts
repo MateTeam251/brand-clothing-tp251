@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { CartItem } from "../../../shared/types/CartItem";
 import type { Size } from "../../../shared/types/common";
+import type { CartElement } from "../../../shared/types/Cart";
 
 interface CartState {
-  items: CartItem[];
+  items: CartElement[];
 }
 
 const initialState: CartState = {
@@ -21,7 +21,7 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<CartItem>) => {
+    addToCart: (state, action: PayloadAction<CartElement>) => {
       const existingItem = state.items.find(
         item => item.id === action.payload.id && item.size === action.payload.size
       );
