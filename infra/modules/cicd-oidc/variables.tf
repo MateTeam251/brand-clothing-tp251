@@ -23,8 +23,8 @@ variable "create_oidc_provider" {
     GitHub Actions), set this to false and pass its ARN via
     existing_oidc_provider_arn instead.
   EOT
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "existing_oidc_provider_arn" {
