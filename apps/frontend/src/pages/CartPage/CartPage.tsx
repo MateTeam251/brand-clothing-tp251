@@ -4,7 +4,7 @@ import { incrementQuantity, decrementQuantity, removeFromCart, changeSize } from
 import styles from './CartPage.module.scss';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
 import { Link } from 'react-router-dom';
-import { CartItemComponent } from '../../components/CartItem/CartItem';
+import { CartItem } from '../../components/CartItem/CartItem';
 
 export const CartPage = () => {
   const { t } = useTranslation();
@@ -31,23 +31,30 @@ export const CartPage = () => {
     return acc + rawPrice * item.quantity;
   }, 0);
 
+  const formatPrice = (price: number) =>
+  new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    currencyDisplay: 'narrowSymbol',
+    maximumFractionDigits: 0,
+  }).format(price);
+
   return (
     <section className={styles.cart}>
-      <div className="container">
         <article className={styles['cart__wrapper']}>
           <h2 className={styles['cart__title']}>
-            {t('cart')} ({cartItems.length})
+            {t('cart.title')} ({cartItems.length})
           </h2>
 
           {cartItems.length === 0 ? (
             <div className={styles['cart__empty']}>
-              <p>{t('empty-cart')}</p>
+              <p>{t('cart.empty')}</p>
             </div>
           ) : (
             <div className={styles['cart__content']}>
               <div className={styles['cart__list']}>
                 {fullCartItems.map((item) => (
-                  <CartItemComponent
+                  <CartItem
                     key={item.id}
                     item={item}
                     onIncrement={() => {
@@ -70,32 +77,38 @@ export const CartPage = () => {
                 ))}
               </div>
 
-              <div className={styles['cart__summary']}>
+            </div>
+        )}
+          <div className={styles['cart__bottom']}>
+            <div className={styles['cart__summary']}>
+              <div className={styles['cart__box']}>
                 <div className={styles['cart__total-row']}>
-                  <span>{t('products')} ({totalCount})</span>
-                  <span>{totalPrice} {currency.toUpperCase() === 'USD' ? '$' : '₴'}</span>
+                  <span>{t('cart.products')} ({totalCount})</span>
+                  <span>{formatPrice(totalPrice)}</span>
                 </div>
                 <div className={styles['cart__total-row']}>
                   <span>{t('delivery')}</span>
-                  <span>{t('cart-delivery')}</span>
+                  <span>{t('cart.delivery_details')}</span>
                 </div>
                 <div className={styles['cart__divider']}>
                   <div className={styles['cart__total-row']}>
-                    <span>{t('total')}</span>
-                    <span>{totalPrice} {currency.toUpperCase() === 'USD' ? '$' : '₴'}</span>
+                    <span>{t('cart.total')}</span>
+                    <span>{formatPrice(totalPrice)}</span>
                   </div>
                 </div>
-
-                <button className={styles['cart__checkout-btn']}>
-                  {t('checkout')}
-                </button>
-                
-                <Link to={'/catalog'} className={styles['cart__continue-btn']}>{t('continue-purchase')}</Link>
               </div>
-            </div>
-          )}
+          </div>
+          
+          <div className={styles['cart__buttons']}>
+            <button className={styles['cart__checkout-btn']}>
+              {t('checkout_btn')}
+            </button>
+            
+            <Link to={'/catalog'} className={styles['cart__continue-btn']}>{t('continue_btn')}</Link>
+          </div>
+          </div>
         </article>
-      </div>
+
     </section>
   );
 };

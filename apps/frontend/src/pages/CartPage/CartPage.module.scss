@@ -3,12 +3,24 @@
 
 .cart {
   background-color: $dominant;
-  padding: 24px 0 64px;
+  padding: 40px 16px 72px;
+
+  @include on-desktop {
+    padding: 72px 40px 120px;
+  }
 
   &__wrapper {
+    grid-column: span 2;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 32px;
+
+    @include on-desktop {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 100px;
+      row-gap: 64px;
+    }
   }
 
   &__title {
@@ -19,6 +31,7 @@
     margin: 0;
 
     @include on-desktop {
+      grid-column: span 2;
       font-size: 24px;
       text-align: left; 
     }
@@ -32,6 +45,7 @@
   }
 
   &__content {
+    grid-column: 1;
     display: flex;
     flex-direction: column;
     gap: 32px;
@@ -55,36 +69,60 @@
     }
   }
 
+  &__bottom {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    @include on-desktop {
+      gap: 32px;
+      grid-column: 2;
+      margin-left: auto;
+      width: 100%;
+      max-width: 553px;
+    }
+  }
+
   &__summary {
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    width: 100%;
+    border: none;
+    border-radius: 16px;
 
     @include on-desktop {
-      max-width: 400px;
-      flex-shrink: 0;
-      padding: 32px 16px;
-      border: 1px solid #C6C6C6;
-      border-radius: 16px;
+      border: 1px solid $light-gray;
     }
+}
+
+&__box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @include on-desktop {
+    padding: 16px $light-gray;
+    border-radius: 16px;
   }
+}
 
   &__total-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 14px;
-    color: #333;
+    color: #000;
 
     span:last-child {
       font-weight: 500;
-      color: #111;
+      color: #000;
     }
   }
 
   &__divider {
-    border-top: 1px solid #E5E5E5;
+    border-top: 1px solid $light-gray;
     padding-top: 16px;
 
     .cart__total-row {
@@ -99,34 +137,41 @@
 
   &__checkout-btn {
     width: 100%;
-    background-color: #FFC7C7;
-    font-family: 'BodoniFLF', serif;
-    color: #111;
+    background-color: $accent;
+    font-family: 'Bodoni', serif;
+    color: #000;
     border: none;
     border-radius: 100px;
     padding: 14px;
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 500;
+    line-height: 24px;
     cursor: pointer;
     transition: background-color 0.2s ease;
     margin-top: 8px;
-    font-weight: 500;
 
     &:hover {
-      background-color: #FFB3B3;
+      background-color: $pink100;
     }
   }
 
   &__continue-btn {
-    font-family: 'Cambria', serif;
-    color: #000;
-    text-align: center;
-    font-size: 12px;
-    line-height: 16px;
+  font-family: 'Cambria', serif;
+  color: #000;
+  text-align: center;
+  font-size: 12px;
+  line-height: 16px;
+  text-decoration: underline;
 
-    @include on-desktop {
-      font-size: 16px;
-      line-height: 24px;
-    }
+  @include on-desktop {
+    font-size: 16px;
+    line-height: 24px;
+  }
+}
+  &__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
   }
 }
