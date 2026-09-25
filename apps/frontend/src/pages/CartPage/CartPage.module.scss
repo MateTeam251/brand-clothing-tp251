@@ -85,6 +85,7 @@
   }
 
   &__summary {
+    font-family: 'Cambria', serif;
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -114,11 +115,6 @@
     align-items: center;
     font-size: 14px;
     color: #000;
-
-    span:last-child {
-      font-weight: 500;
-      color: #000;
-    }
   }
 
   &__divider {
@@ -148,7 +144,6 @@
     line-height: 24px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    margin-top: 8px;
 
     &:hover {
       background-color: $pink100;
@@ -156,22 +151,26 @@
   }
 
   &__continue-btn {
-  font-family: 'Cambria', serif;
-  color: #000;
-  text-align: center;
-  font-size: 12px;
-  line-height: 16px;
-  text-decoration: underline;
+    font-family: 'Cambria', serif;
+    color: #000;
+    text-align: center;
+    font-size: 12px;
+    line-height: 16px;
+    text-decoration: underline;
 
-  @include on-desktop {
-    font-size: 16px;
-    line-height: 24px;
+    @include on-desktop {
+      font-size: 16px;
+      line-height: 24px;
+    }
   }
-}
   &__buttons {
     display: flex;
     flex-direction: column;
     gap: 16px;
     align-items: center;
+  }
+
+  &__price {
+    font-weight: 700;
   }
 }

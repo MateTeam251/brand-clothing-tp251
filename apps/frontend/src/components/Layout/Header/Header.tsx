@@ -18,6 +18,8 @@ import cartActive from '../../../shared/assets/icons/cart-active.svg';
 export const Header: React.FC = () => {
   const dispatch = useAppDispatch();
   const { currency, language } = useAppSelector((state) => state.settings);
+  const cartItems = useAppSelector((state) => state.cart.items);
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const { t, i18n } = useTranslation();
   const location = useLocation();
   
@@ -123,6 +125,7 @@ export const Header: React.FC = () => {
               <li>
                 <Link className={styles['header__icon-button']} to="/cart" aria-label="Cart">
                   <img className={styles['header__icon']} src={location.pathname === '/cart' ? cartActive : CartIcon} alt="" />
+                  {cartCount > 0 && <span className={styles['header__cart-count']}>{cartCount}</span>}
                 </Link>
               </li>
               <li>
