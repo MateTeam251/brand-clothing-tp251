@@ -9,6 +9,8 @@ import { useState } from 'react';
 import arrowBottom from '../../shared/assets/icons/arrow-bottom.svg';
 import classNames from 'classnames';
 import type { CartElement } from '../../shared/types/Cart';
+import minusIcon from '../../shared/assets/icons/minus.svg';
+import plusIcon from '../../shared/assets/icons/plus.svg';
 
 const ALL_SIZES: Size[] = ['2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
@@ -21,18 +23,19 @@ type CartItemProps = {
 };
 
 export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChange }: CartItemProps) => {
-  const { currency, language } = useAppSelector((state) => state.settings);
+  const { currency } = useAppSelector((state) => state.settings);
   const { t } = useTranslation();
   const [isDropdownOpened, setIsDropdownOpened] = useState(false);
 
   const rawPrice = Number(item.discounted_price ?? item.price ?? 0);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat(language === 'ua' ? 'uk-UA' : 'en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
-      maximumFractionDigits: 2,
-    }).format(price);
+  new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    currencyDisplay: 'narrowSymbol',
+    maximumFractionDigits: 0,
+  }).format(price);
 
   return (
     <article className={styles.card}>
@@ -99,13 +102,25 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
           )}
         </div>
 
-        <p className={styles.card__delivery}>{t('cart-item-desc')}</p>
+        <p className={styles.card__delivery}>{t('cart.cart_item_desc')}</p>
 
         <div className={styles.card__footer}>
           <div className={styles.card__counter}>
-            <button className={styles.card__counterBtn} onClick={onDecrement} disabled={item.quantity <= 1}>-</button>
+            <button className={styles.card__counterBtn} onClick={onDecrement} disabled={item.quantity <= 1}>
+              <img
+                className={styles.card__btnIcon}
+                src={minusIcon}
+                alt="-"
+              />
+            </button>
             <span className={styles.card__counterValue}>{item.quantity}</span>
-            <button className={styles.card__counterBtn} onClick={onIncrement}>+</button>
+            <button className={styles.card__counterBtn} onClick={onIncrement}>
+              <img
+                className={styles.card__btnIcon}
+                src={plusIcon}
+                alt="+"
+              />
+            </button>
           </div>
 
           <span className={styles.card__price}>

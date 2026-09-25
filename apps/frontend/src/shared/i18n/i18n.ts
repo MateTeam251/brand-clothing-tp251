@@ -33,6 +33,7 @@ i18n.use(initReactI18next).init({
         payment: 'Payment',
         close: 'Close',
         delete: 'Delete',
+        size: 'Size',
         header: {
           catalog: 'Catalog',
           about: 'About',
@@ -86,8 +87,9 @@ i18n.use(initReactI18next).init({
           quantity: 'Quantity',
           total: 'Total:',
           empty: 'Cart is empty',
-          size: 'Size',
-          'cart-item-desc': 'Free shipping and returns',
+          products: 'Products',
+          delivery_details: 'Calculated at checkout',
+          cart_item_desc: 'Made to order in 5-8 days',
         },
         checkout: {
           contacts: 'Contact information',
@@ -146,6 +148,7 @@ i18n.use(initReactI18next).init({
         shipping: 'Доставка',
         close: 'Закрити',
         delete: 'Видалити',
+        size: 'Розмір',
         header: {
           catalog: 'Каталог',
           about: 'Про нас',
@@ -197,10 +200,11 @@ i18n.use(initReactI18next).init({
         cart: {
           title: 'Кошик',
           quantity: 'Кількість',
-          total: 'Всього:',
+          products: 'Товари',
+          total: 'Разом:',
           empty: 'Кошик порожній',
-          size: 'Розмір',
-          'cart-item-desc': 'Безкоштовна доставка та повернення',
+          delivery_details: 'Розрахунок при оформленні',
+          cart_item_desc: 'Під замовлення 5-8 днів'
         },
         checkout: {
           contacts: 'Контактна інформація',
