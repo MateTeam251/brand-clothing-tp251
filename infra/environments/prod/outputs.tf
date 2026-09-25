@@ -35,3 +35,11 @@ output "cloudfront_domain_name" {
   description = "Point your DNS (or just visit directly for now) at this — the *.cloudfront.net URL until Route 53 is set up."
   value       = module.storage.cloudfront_domain_name
 }
+
+output "ecr_repository_urls" {
+  value = module.ecr.repository_urls
+}
+
+output "ecr_push_role_arn" {
+  value = module.ecr.push_role_arn
+}

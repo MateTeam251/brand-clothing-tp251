@@ -40,6 +40,15 @@ module "cicd_oidc" {
   create_oidc_provider = var.create_oidc_provider
 }
 
+module "ecr" {
+  source = "../../modules/ecr"
+
+  project_name      = var.project_name
+  github_org        = var.github_org
+  github_repo       = var.github_repo
+  oidc_provider_arn = module.cicd_oidc.oidc_provider_arn
+}
+
 ########################################################################
 # Budget alert — sequencing step 1 in infrastructure-plan.md, done here
 # in Terraform rather than by hand so it's version-controlled and
