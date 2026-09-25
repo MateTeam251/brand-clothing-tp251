@@ -84,7 +84,7 @@ export const CartPage = () => {
               <div className={styles['cart__box']}>
                 <div className={styles['cart__total-row']}>
                   <span>{t('cart.products')} ({totalCount})</span>
-                  <span>{formatPrice(totalPrice)}</span>
+                <span className={styles['cart__price']}>{formatPrice(totalPrice)}</span>
                 </div>
                 <div className={styles['cart__total-row']}>
                   <span>{t('delivery')}</span>
@@ -93,7 +93,7 @@ export const CartPage = () => {
                 <div className={styles['cart__divider']}>
                   <div className={styles['cart__total-row']}>
                     <span>{t('cart.total')}</span>
-                    <span>{formatPrice(totalPrice)}</span>
+                    <span className={styles['cart__price']}>{formatPrice(totalPrice)}</span>
                   </div>
                 </div>
               </div>

@@ -22,6 +22,7 @@
 
   &__select-button,
   &__icon-button {
+    position: relative;
     border: 0;
     padding: 0;
     background: transparent;
@@ -160,6 +161,22 @@
   &__logo-link {
     display: block;
     justify-self: center;
+  }
+
+  &__cart-count {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: #000;
+    color: $dominant;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
