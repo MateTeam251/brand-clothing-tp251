@@ -27,8 +27,9 @@
   padding: 48px;
   background: #fff;
   border-radius: 24px 24px 0 0;
-  max-height: 90vh;
+  height: 90%;
   overflow-y: auto;
+  transition: transform 0.2s ease-out;
 
   @include on-desktop {
     max-width: 380px;
@@ -100,5 +101,17 @@
     text-decoration: underline;
     font-size: 14px;
     align-self: center;
+  }
+
+  &__handle {
+    width: 40px;
+    height: 4px;
+    background: $color-inactive;
+    border-radius: 999px;
+    margin: 0 auto 16px;
+
+    @include on-desktop {
+      display: none;
+    }
   }
 }
