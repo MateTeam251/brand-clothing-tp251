@@ -24,10 +24,15 @@ interface SortProps {
   onClose: () => void;
 }
 
-export const Sort = ({ currentValue, onClose }: SortProps) => {
+export const Sort = ({ currentValue, onApply, onClose }: SortProps) => {
   const { t } = useTranslation();
   const [draftValue, setDraftValue] = useState<SortValue>(currentValue);
   const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeToClose(onClose);
+
+  const handleApply = () => {
+    onApply(draftValue);
+    onClose();
+  };
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -39,24 +44,31 @@ export const Sort = ({ currentValue, onClose }: SortProps) => {
         onTouchEnd={handleTouchEnd}
         style={{ transform: `translateY(${dragOffset}px)` }}
       >
-        <div className={styles.sort__handle} />
-        <h2 className={styles.sort__title}>{t('catalog_page.sort_title')}</h2>
+        <div className={styles.sort__wrapper}>
+          <div className={styles.sort__handle} />
+          <h2 className={styles.sort__title}>{t('catalog_page.sort_title')}</h2>
 
-        <p className={styles.sort__label}>{t('catalog_page.sort_label')}</p>
+          <div className={styles.sort__block}>
+            <p className={styles.sort__label}>{t('catalog_page.sort_label')}</p>
 
-        <div className={styles.sort__options}>
-          {SORT_OPTIONS.map((option) => (
-            <label key={option.value} className={styles.sort__option}>
-              <input
-                type="radio"
-                name="sort"
-                checked={draftValue === option.value}
-                onChange={() => setDraftValue(option.value)}
-                className={styles.sort__radio}
-              />
-              <span>{t(option.labelKey)}</span>
-            </label>
-          ))}
+            <div className={styles.sort__options}>
+              {SORT_OPTIONS.map((option) => (
+                <label key={option.value} className={styles.sort__option}>
+                  <input
+                    type="radio"
+                    name="sort"
+                    checked={draftValue === option.value}
+                    onChange={() => setDraftValue(option.value)}
+                    className={styles.sort__radio}
+                  />
+                  <span>{t(option.labelKey)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <button type="button" className={styles.sort__apply} onClick={handleApply}>
+            {t('catalog_page.apply')}
+          </button>
         </div>
       </div>
     </div>

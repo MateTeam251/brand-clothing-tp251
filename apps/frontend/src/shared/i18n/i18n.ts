@@ -72,6 +72,7 @@ i18n.use(initReactI18next).init({
           bestseller: 'Bestseller',
           bestseller_only: 'Bestsellers only',
           save: 'Save',
+          reset_filters: 'Reset filters'
         },
         product: {
           cart_btn: 'Add to cart',
@@ -187,6 +188,7 @@ i18n.use(initReactI18next).init({
           bestseller: 'Бестселер',
           bestseller_only: 'Тільки бестселери',
           save: 'Зберегти',
+          reset_filters: 'Скинути фільтри'
         },
         product: {
           cart_btn: 'Додати до кошика',
