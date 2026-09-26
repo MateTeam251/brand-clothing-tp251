@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { useGetCollectionsQuery } from '../../shared/api/collectionsApi';
 import styles from './Filters.module.scss';
+import { useSwipeToClose } from '../../shared/hooks/useSwipeToClose';
 
 export interface FiltersValue {
   types: string[];
@@ -35,6 +36,7 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
   const language = useAppSelector((state) => state.settings.language);
   const { data: collectionsData } = useGetCollectionsQuery({ lang: language });
   const [draftValue, setDraftValue] = useState<FiltersValue>(currentValue);
+  const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeToClose(onClose);
 
   const toggleType = (type: string) => {
     setDraftValue((prev) => ({
@@ -72,7 +74,15 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.filters} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.filters}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ transform: `translateY(${dragOffset}px)` }}
+      >
+        <div className={styles.filters__handle} />
         <h2 className={styles.filters__title}>{t('catalog_page.filter_title')}</h2>
 
         <p className={styles.filters__sectionLabel}>{t('catalog_page.category')}</p>

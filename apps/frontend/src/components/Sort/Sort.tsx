@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './Sort.module.scss';
+import { useSwipeToClose } from '../../shared/hooks/useSwipeToClose';
 
 export type SortValue = '' | '-price' | 'price' | '-created_at' | 'created_at';
 
@@ -26,10 +27,19 @@ interface SortProps {
 export const Sort = ({ currentValue, onClose }: SortProps) => {
   const { t } = useTranslation();
   const [draftValue, setDraftValue] = useState<SortValue>(currentValue);
+  const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeToClose(onClose);
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.sort} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.sort}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ transform: `translateY(${dragOffset}px)` }}
+      >
+        <div className={styles.sort__handle} />
         <h2 className={styles.sort__title}>{t('catalog_page.sort_title')}</h2>
 
         <p className={styles.sort__label}>{t('catalog_page.sort_label')}</p>
