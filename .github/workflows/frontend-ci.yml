@@ -7,16 +7,18 @@ on:
     paths:
       - "apps/frontend/**"
       - ".github/workflows/frontend-ci.yml"
+  # No path filter on PRs: this is a required check, and a required check
+  # that never runs would block the PR forever.
   pull_request:
     branches: [main, develop]
-    paths:
-      - "apps/frontend/**"
-      - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+permissions:
+  contents: read
 
 defaults:
   run:
@@ -24,7 +26,9 @@ defaults:
 
 jobs:
   build:
+    name: Frontend lint & build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout

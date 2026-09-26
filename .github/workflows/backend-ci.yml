@@ -7,25 +7,24 @@ on:
     paths:
       - "apps/backend/**"
       - ".github/workflows/backend-ci.yml"
+  # No path filter on PRs: this is a required check, and a required check
+  # that never runs would block the PR forever.
   pull_request:
     branches: [main, develop]
-    paths:
-      - "apps/backend/**"
-      - ".github/workflows/backend-ci.yml"
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: apps/backend
 
 env:
-  # Dummy values only — never real secrets. Good enough for `manage.py check`,
-  # migration checks and the existing test suite (payments tests override
-  # WAYFORPAY_* themselves via override_settings).
   SECRET_KEY: ci-dummy-secret-key
   DEBUG: "False"
   POSTGRES_DB: brand_clothing_db
@@ -36,7 +35,9 @@ env:
 
 jobs:
   test:
+    name: Backend tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       postgres:
