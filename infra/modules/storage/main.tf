@@ -262,7 +262,7 @@ resource "aws_cloudfront_distribution" "frontend" {
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "frontend-s3"
     viewer_protocol_policy = "redirect-to-https"
-    compress                = true
+    compress               = true
 
     forwarded_values {
       query_string = false
@@ -273,12 +273,12 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   ordered_cache_behavior {
-    path_pattern            = "/media/*"
-    allowed_methods         = ["GET", "HEAD"]
-    cached_methods          = ["GET", "HEAD"]
-    target_origin_id        = "media-s3"
-    viewer_protocol_policy  = "redirect-to-https"
-    compress                = true
+    path_pattern           = "/media/*"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "media-s3"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
 
     forwarded_values {
       query_string = false

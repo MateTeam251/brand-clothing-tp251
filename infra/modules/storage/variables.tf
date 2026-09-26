@@ -17,6 +17,6 @@ variable "app_iam_role_arn" {
     exists. Once compute is built, pass its role ARN here and re-apply;
     the policies below activate automatically.
   EOT
-  type    = string
-  default = null
+  type        = string
+  default     = null
 }

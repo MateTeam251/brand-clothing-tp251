@@ -123,11 +123,11 @@ resource "aws_vpc_security_group_ingress_rule" "app_exporters_from_monitoring" {
   for_each = toset(["9100", "9187", "8080"]) # node_exporter, postgres_exporter, cAdvisor
 
   security_group_id            = aws_security_group.app.id
-  description                   = "Exporter scrape (port ${each.value}) - monitoring instance only"
+  description                  = "Exporter scrape (port ${each.value}) - monitoring instance only"
   referenced_security_group_id = aws_security_group.monitoring.id
-  from_port                     = tonumber(each.value)
-  to_port                       = tonumber(each.value)
-  ip_protocol                   = "tcp"
+  from_port                    = tonumber(each.value)
+  to_port                      = tonumber(each.value)
+  ip_protocol                  = "tcp"
 }
 
 # No ingress rule for port 22 anywhere in this module — deliberate.
@@ -155,11 +155,11 @@ resource "aws_vpc_security_group_egress_rule" "app_egress_v6" {
 
 resource "aws_vpc_security_group_ingress_rule" "monitoring_loki_from_app" {
   security_group_id            = aws_security_group.monitoring.id
-  description                   = "promtail (app instance) to Loki"
+  description                  = "promtail (app instance) to Loki"
   referenced_security_group_id = aws_security_group.app.id
-  from_port                     = 3100
-  to_port                       = 3100
-  ip_protocol                   = "tcp"
+  from_port                    = 3100
+  to_port                      = 3100
+  ip_protocol                  = "tcp"
 }
 
 # No ingress rule for 3000 (Grafana), 9090 (Prometheus) or 22 (SSH).
