@@ -67,10 +67,14 @@ resource "aws_s3_bucket" "media" {
 resource "aws_s3_bucket_public_access_block" "media" {
   bucket = aws_s3_bucket.media.id
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls  = true
+  ignore_public_acls = true
+
+  # TEMPORARY: allows the public-read bucket policy statement below.
+  # Set both back to true (and remove TemporaryPublicRead) before go-live;
+  # media should be served through CloudFront only.
+  block_public_policy     = false
+  restrict_public_buckets = false
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
@@ -180,27 +184,10 @@ resource "aws_s3_bucket_policy" "backups" {
   policy = data.aws_iam_policy_document.backups_bucket_policy[0].json
 }
 
-# Media: get + put for the app role (product image uploads).
+# Media bucket policy. Always exists, so CloudFront can read media even
+# before the compute module (and its App-EC2-Role) exists. The app-role
+# statement is added only once app_iam_role_arn is set.
 data "aws_iam_policy_document" "media_bucket_policy" {
-  count = var.app_iam_role_arn == null ? 0 : 1
-
-  statement {
-    sid    = "AppRoleGetPut"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = [var.app_iam_role_arn]
-    }
-
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-    ]
-
-    resources = ["${aws_s3_bucket.media.arn}/*"]
-  }
-
   statement {
     sid    = "CloudFrontOAC"
     effect = "Allow"
@@ -219,12 +206,50 @@ data "aws_iam_policy_document" "media_bucket_policy" {
       values   = [aws_cloudfront_distribution.frontend.arn]
     }
   }
+
+  # TEMPORARY: public read of media objects (GetObject only, no listing).
+  # Remove before go-live, together with the public access block change above.
+  statement {
+    sid    = "TemporaryPublicRead"
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.media.arn}/*"]
+  }
+
+  dynamic "statement" {
+    for_each = var.app_iam_role_arn == null ? [] : [var.app_iam_role_arn]
+    content {
+      sid    = "AppRoleGetPut"
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [statement.value]
+      }
+
+      actions = [
+        "s3:GetObject",
+        "s3:PutObject",
+      ]
+
+      resources = ["${aws_s3_bucket.media.arn}/*"]
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "media" {
-  count  = var.app_iam_role_arn == null ? 0 : 1
   bucket = aws_s3_bucket.media.id
-  policy = data.aws_iam_policy_document.media_bucket_policy[0].json
+  policy = data.aws_iam_policy_document.media_bucket_policy.json
+
+  # The policy has public statements, so S3 rejects it while the public
+  # access block still blocks public policies. Apply the block change first.
+  depends_on = [aws_s3_bucket_public_access_block.media]
 }
 
 ########################################################################
