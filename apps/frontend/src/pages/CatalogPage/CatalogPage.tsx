@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
 import { ProductCard } from '../../components/ProductCard/ProductCard';
@@ -25,21 +25,17 @@ const EMPTY_FILTERS: FiltersValue = {
   isBestseller: false,
 };
 
-export const CatalogPage = () => {
+interface CatalogListProps {
+  currency: string;
+  sortValue: SortValue;
+  filtersValue: FiltersValue;
+  debouncedSearch: string;
+}
+
+const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch }: CatalogListProps) => {
   const { t } = useTranslation();
+  const [pages, setPages] = useState<ProductListItem[][]>([]);
   const [offset, setOffset] = useState(0);
-  const [accumulatedProducts, setAccumulatedProducts] = useState<ProductListItem[]>([]);
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const [sortValue, setSortValue] = useState<SortValue>('');
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [filtersValue, setFiltersValue] = useState<FiltersValue>(EMPTY_FILTERS);
-  const [searchInput, setSearchInput] = useState('');
-  const debouncedSearch = useDebounce(searchInput, 500);
-
-  const currency = useAppSelector((state) => state.settings.currency);
-
-  const isFiltersActive =
-    filtersValue.types.length > 0 || filtersValue.collections.length > 0 || filtersValue.isBestseller;
 
   const { data, isLoading, isFetching, error } = useGetProductsQuery({
     limit: PRODUCTS_LIMIT,
@@ -52,26 +48,68 @@ export const CatalogPage = () => {
     search: debouncedSearch || undefined,
   });
 
-  useEffect(() => {
-    if (!data) {
-      return;
-    }
+  // "Похідне" значення — обчислюється прямо під час рендеру, без useEffect/setState
+  const currentPageIndex = offset / PRODUCTS_LIMIT;
+  const allPages = data && pages[currentPageIndex] !== data.results
+    ? [...pages.slice(0, currentPageIndex), data.results]
+    : pages;
 
-    if (offset === 0) {
-      setAccumulatedProducts(data.results);
-    } else {
-      setAccumulatedProducts((prev) => [...prev, ...data.results]);
-    }
-  }, [data, offset]);
-
-  useEffect(() => {
-    setOffset(0);
-    setAccumulatedProducts([]);
-  }, [currency, sortValue, filtersValue, debouncedSearch]);
+  const products = allPages.flat();
 
   const handleLoadMore = () => {
+    if (data) {
+      setPages(allPages);
+    }
     setOffset((prev) => prev + PRODUCTS_LIMIT);
   };
+
+  if (isLoading && offset === 0) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <ErrorState />;
+  }
+
+  if (products.length === 0) {
+    return <EmptyState message={t('catalog_page.empty_search')} />;
+  }
+
+  return (
+    <>
+      <div className={styles.catalog__grid}>
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+
+      {data?.next && (
+        <button
+          type="button"
+          className={styles.catalog__loadMore}
+          onClick={handleLoadMore}
+          disabled={isFetching}
+        >
+          {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
+        </button>
+      )}
+    </>
+  );
+};
+
+export const CatalogPage = () => {
+  const { t } = useTranslation();
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [sortValue, setSortValue] = useState<SortValue>('');
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [filtersValue, setFiltersValue] = useState<FiltersValue>(EMPTY_FILTERS);
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  const currency = useAppSelector((state) => state.settings.currency);
+
+  const isFiltersActive =
+    filtersValue.types.length > 0 || filtersValue.collections.length > 0 || filtersValue.isBestseller;
 
   const handleOpenSort = () => {
     setIsSortOpen(true);
@@ -83,15 +121,7 @@ export const CatalogPage = () => {
     setIsSortOpen(false);
   };
 
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    return <ErrorState />;
-  }
-
-  const products = accumulatedProducts.length > 0 ? accumulatedProducts : data?.results ?? [];
+  const listKey = `${currency}-${sortValue}-${filtersValue.types.join(',')}-${filtersValue.collections.join(',')}-${filtersValue.isBestseller}-${debouncedSearch}`;
 
   return (
     <div className={styles.catalog}>
@@ -99,7 +129,6 @@ export const CatalogPage = () => {
 
       <div className={styles.catalog__controls}>
         <Search value={searchInput} onChange={setSearchInput} />
-
         <div className={styles.catalog__actions}>
           <button
             type="button"
@@ -132,28 +161,13 @@ export const CatalogPage = () => {
         />
       )}
 
-      {products.length === 0 ? (
-        <EmptyState message={t('catalog_page.empty_search')} />
-      ) : (
-        <>
-          <div className={styles.catalog__grid}>
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-
-          {data?.next && (
-            <button
-              type="button"
-              className={styles.catalog__loadMore}
-              onClick={handleLoadMore}
-              disabled={isFetching}
-            >
-              {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
-            </button>
-          )}
-        </>
-      )}
+      <CatalogList
+        key={listKey}
+        currency={currency}
+        sortValue={sortValue}
+        filtersValue={filtersValue}
+        debouncedSearch={debouncedSearch}
+      />
     </div>
   );
 };
