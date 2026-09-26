@@ -47,7 +47,7 @@ export const CatalogPage = () => {
     currency,
     ordering: sortValue || undefined,
     type: filtersValue.types.length > 0 ? filtersValue.types.join(',') : undefined,
-    collections: filtersValue.collections.length > 0 ? filtersValue.collections.join(',') : undefined,
+    collection: filtersValue.collections.length > 0 ? filtersValue.collections.join(',') : undefined,
     is_bestseller: filtersValue.isBestseller || undefined,
     search: debouncedSearch || undefined,
   });

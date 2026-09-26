@@ -27,6 +27,9 @@
   padding: 24px;
   background: #fff;
   border-radius: 24px 24px 0 0;
+  font-family: 'Bodoni', 'Cambria', serif;
+  padding: 48px;
+  
 
   @include on-desktop {
     max-width: 380px;
@@ -34,20 +37,36 @@
     box-shadow: 0px 0px 15px 0px rgba(171, 152, 152, 0.2);
   }
 
+  &__wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
   &__title {
-    margin: 0 0 24px;
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 40px;
   }
 
   &__label {
+    margin: 0;
     font-weight: 500;
-    margin-bottom: 16px;
+    font-size: 20px;
+    line-height: 24px;
   }
 
-  &__options {
+  &__block {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    margin-bottom: 32px;
+  }
+
+  &__options {
+    font-family: 'Cambria', serif;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
   &__option {
@@ -58,10 +77,38 @@
   }
 
   &__radio {
-    width: 20px;
-    height: 20px;
-    accent-color: $accent;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid $color-inactive;
+  position: relative;
+  cursor: pointer;
+  margin: 0;
+
+  @include on-desktop {
+    width: 26px;
+    height: 26px;
   }
+
+  &:checked {
+    background: $accent;
+    border-color: $accent;
+  }
+
+  &:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #000;
+  }
+}
 
   &__apply {
     padding: 16px;

@@ -23,30 +23,43 @@ interface SortProps {
   onClose: () => void;
 }
 
-export const Sort = ({ currentValue, onClose }: SortProps) => {
+export const Sort = ({ currentValue, onApply, onClose }: SortProps) => {
   const { t } = useTranslation();
   const [draftValue, setDraftValue] = useState<SortValue>(currentValue);
+
+  const handleApply = () => {
+    onApply(draftValue);
+    onClose();
+  };
 
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.sort} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.sort__title}>{t('catalog_page.sort_title')}</h2>
+        <div className={styles.sort__wrapper}>
 
-        <p className={styles.sort__label}>{t('catalog_page.sort_label')}</p>
+          <h2 className={styles.sort__title}>{t('catalog_page.sort_title')}</h2>
+          
+        <div className={styles.sort__block}>
+          <p className={styles.sort__label}>{t('catalog_page.sort_label')}</p>
 
-        <div className={styles.sort__options}>
-          {SORT_OPTIONS.map((option) => (
-            <label key={option.value} className={styles.sort__option}>
-              <input
-                type="radio"
-                name="sort"
-                checked={draftValue === option.value}
-                onChange={() => setDraftValue(option.value)}
-                className={styles.sort__radio}
-              />
-              <span>{t(option.labelKey)}</span>
-            </label>
-          ))}
+          <div className={styles.sort__options}>
+            {SORT_OPTIONS.map((option) => (
+              <label key={option.value} className={styles.sort__option}>
+                <input
+                  type="radio"
+                  name="sort"
+                  checked={draftValue === option.value}
+                  onChange={() => setDraftValue(option.value)}
+                  className={styles.sort__radio}
+                />
+                <span>{t(option.labelKey)}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <button type="button" className={styles.sort__apply} onClick={handleApply}>
+          {t('catalog_page.apply')}
+        </button>
         </div>
       </div>
     </div>

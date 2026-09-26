@@ -75,47 +75,56 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
       <div className={styles.filters} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.filters__title}>{t('catalog_page.filter_title')}</h2>
 
-        <p className={styles.filters__sectionLabel}>{t('catalog_page.category')}</p>
-        <div className={styles.filters__options}>
-          {CATEGORY_OPTIONS.map((option) => (
-            <label key={option.value} className={styles.filters__option}>
-              <input
-                type="checkbox"
-                checked={draftValue.types.includes(option.value)}
-                onChange={() => toggleType(option.value)}
-                className={styles.filters__checkbox}
-              />
-              <span>{t(option.labelKey)}</span>
-            </label>
-          ))}
-        </div>
+        <div className={styles.filters__wrapper}>
+          <div className={styles.filters__section}>
+            <p className={styles.filters__sectionLabel}>{t('catalog_page.category')}</p>
+            <div className={styles.filters__options}>
+            {CATEGORY_OPTIONS.map((option) => (
+              <label key={option.value} className={styles.filters__option}>
+                <input
+                  type="checkbox"
+                  checked={draftValue.types.includes(option.value)}
+                  onChange={() => toggleType(option.value)}
+                  className={styles.filters__checkbox}
+                  />
+                <span>{t(option.labelKey)}</span>
+              </label>
+            ))}
+            </div>
+          </div>
 
-        <p className={styles.filters__sectionLabel}>{t('catalog_page.collections')}</p>
-        <div className={styles.filters__options}>
-          {collectionsData?.results.map((collection) => (
-            <label key={collection.slug} className={styles.filters__option}>
-              <input
-                type="checkbox"
-                checked={draftValue.collections.includes(collection.slug)}
-                onChange={() => toggleCollection(collection.slug)}
-                className={styles.filters__checkbox}
-              />
-              <span>{collection.name}</span>
-            </label>
-          ))}
-        </div>
+          <div className={styles.filters__section}>
+            <p className={styles.filters__sectionLabel}>{t('catalog_page.collections')}</p>
+            <div className={styles.filters__options}>
+              {collectionsData?.results.map((collection) => (
+                <label key={collection.slug} className={styles.filters__option}>
+                  <input
+                    type="checkbox"
+                    checked={draftValue.collections.includes(collection.slug)}
+                    onChange={() => toggleCollection(collection.slug)}
+                    className={styles.filters__checkbox}
+                  />
+                  <span>{collection.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-        <p className={styles.filters__sectionLabel}>{t('catalog_page.bestseller')}</p>
-        <div className={styles.filters__options}>
-          <label className={styles.filters__option}>
-            <input
-              type="checkbox"
-              checked={draftValue.isBestseller}
-              onChange={toggleBestseller}
-              className={styles.filters__checkbox}
-            />
-            <span>{t('catalog_page.bestseller_only')}</span>
-          </label>
+          <div className={styles.filters__section}>
+            <p className={styles.filters__sectionLabel}>{t('catalog_page.bestseller')}</p>
+            <div className={styles.filters__options}>
+              <label className={styles.filters__option}>
+                <input
+                  type="checkbox"
+                  checked={draftValue.isBestseller}
+                  onChange={toggleBestseller}
+                  className={styles.filters__checkbox}
+                />
+                <span>{t('catalog_page.bestseller_only')}</span>
+              </label>
+            </div>
+          </div>
+
         </div>
 
         <button type="button" className={styles.filters__apply} onClick={handleApply}>

@@ -50,7 +50,6 @@ export interface ProductDetails {
   discounted_price: string | null;
   is_bestseller: boolean;
   images: ProductImage[];
-  available_colors: AvailableColor[];
   is_available: boolean;
   size_guide: SizeGuide;
   is_favorite: boolean;
@@ -59,7 +58,7 @@ export interface ProductDetails {
 export interface ProductQueryParams {
   lang?: string;
   currency?: string;
-  collections?: string;
+  collection?: string;
   type?: string;
   is_bestseller?: boolean;
   search?: string;
