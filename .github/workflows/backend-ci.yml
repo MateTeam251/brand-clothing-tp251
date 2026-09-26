@@ -7,25 +7,24 @@ on:
     paths:
       - "apps/backend/**"
       - ".github/workflows/backend-ci.yml"
+  # No path filter on PRs: this is a required check, and a required check
+  # that never runs would block the PR forever.
   pull_request:
     branches: [main, develop]
-    paths:
-      - "apps/backend/**"
-      - ".github/workflows/backend-ci.yml"
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: apps/backend
 
 env:
-  # Dummy values only — never real secrets. Good enough for `manage.py check`,
-  # migration checks and the existing test suite (payments tests override
-  # WAYFORPAY_* themselves via override_settings).
   SECRET_KEY: ci-dummy-secret-key
   DEBUG: "False"
   POSTGRES_DB: brand_clothing_db
@@ -36,7 +35,9 @@ env:
 
 jobs:
   test:
+    name: Backend tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -64,8 +65,9 @@ jobs:
           cache: "pip"
           cache-dependency-path: apps/backend/requirements.txt
 
+      # pytest-cov is CI-only, so it stays out of the production requirements.txt.
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest-cov
 
       - name: Django system check
         run: python manage.py check
@@ -73,5 +75,21 @@ jobs:
       - name: Check for missing migrations
         run: python manage.py makemigrations --check --dry-run
 
-      - name: Run tests
-        run: pytest -v
+      - name: Run tests with coverage
+        run: pytest -v --cov --cov-report=term --cov-report=xml
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          echo "## Backend coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          coverage report >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: apps/backend/coverage.xml
+          if-no-files-found: ignore

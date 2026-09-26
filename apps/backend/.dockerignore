@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+coverage.xml
+*/tests/
+*/tests.py
+Dockerfile
+docker-compose*.yml
