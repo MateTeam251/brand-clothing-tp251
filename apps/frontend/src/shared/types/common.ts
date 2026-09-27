@@ -5,13 +5,5 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
-export type Size =
-  | '2XS'
-  | 'XS'
-  | 'S'
-  | 'M'
-  | 'L'
-  | 'XL'
-  | '2XL'
-  | '3XL'
-  | '4XL';
+export const SIZES = ['2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'] as const;
+export type Size = (typeof SIZES)[number];

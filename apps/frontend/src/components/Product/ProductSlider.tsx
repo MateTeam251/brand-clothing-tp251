@@ -11,9 +11,15 @@ type ProductSliderProps = {
   title: string;
   queryParams: ProductQueryParams;
   viewAllTo?: string;
+  showViewAll?: boolean;
 };
 
-export const ProductSlider = ({ title, queryParams, viewAllTo = '/catalog?ordering=-is_bestseller' }: ProductSliderProps) => {
+export const ProductSlider = ({
+  title,
+  queryParams,
+  viewAllTo = '/catalog?ordering=-is_bestseller',
+  showViewAll = true,
+}: ProductSliderProps) => {
   const { t } = useTranslation();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const dragStartX = useRef(0);
@@ -70,9 +76,11 @@ export const ProductSlider = ({ title, queryParams, viewAllTo = '/catalog?orderi
         <h2 id='product-slider-title' className={styles.slider__title}>
           {title}
         </h2>
-        <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--desktop']}`} to={viewAllTo}>
+        {showViewAll && (
+          <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--desktop']}`} to={viewAllTo}>
           {t('view-all')}
-        </Link>
+          </Link>
+        )}
       </div>
 
       {isLoading && <p className={styles.slider__status}>Loading...</p>}
@@ -99,9 +107,11 @@ export const ProductSlider = ({ title, queryParams, viewAllTo = '/catalog?orderi
         </div>
       ) : null}
 
-      <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--mobile']}`} to={viewAllTo}>
-        {t('view-all')}
-      </Link>
+      {showViewAll && (
+        <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--mobile']}`} to={viewAllTo}>
+          {t('view-all')}
+        </Link>
+      )}
     </section>
   );
 };

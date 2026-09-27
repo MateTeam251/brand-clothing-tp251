@@ -3,6 +3,12 @@ import { baseQuery } from './api';
 import type { PaginatedResponse } from '../types/common';
 import type { ProductDetails, ProductListItem, ProductQueryParams } from '../types/products';
 
+export interface AvailabilityRequestBody {
+  product: number;
+  name: string;
+  phone_number: string;
+}
+
 export const productsApi = createApi({
   reducerPath: 'productsApi',
   baseQuery,
@@ -22,7 +28,18 @@ export const productsApi = createApi({
       }),
       providesTags: ['Products'],
     }),
+    submitAvailabilityRequest: builder.mutation<AvailabilityRequestBody, AvailabilityRequestBody>({
+      query: (body) => ({
+        url: 'products/availability-requests/',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useGetProductsQuery, useGetProductByIdQuery } = productsApi;
+export const {
+  useGetProductsQuery,
+  useGetProductByIdQuery,
+  useSubmitAvailabilityRequestMutation
+} = productsApi;
