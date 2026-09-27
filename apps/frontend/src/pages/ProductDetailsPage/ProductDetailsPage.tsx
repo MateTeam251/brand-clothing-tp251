@@ -194,13 +194,14 @@ export const ProductDetailsPage = () => {
           </div>
         </div>
 
-        <ProductSlider
-          title={t('product.slider_title')}
-          queryParams={{ currency, lang: language }}
-          showViewAll={false}
-        />
+        <div className={styles.details__recommended}>
+          <ProductSlider
+            title={t('product.slider_title')}
+            queryParams={{ currency, lang: language }}
+            showViewAll={false}
+          />
+        </div>
       </div>
-
     </div>
   );
 };
