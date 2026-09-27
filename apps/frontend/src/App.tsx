@@ -21,6 +21,7 @@ import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { Header } from './components/Layout/Header';
 import { Footer } from './components/Layout/Footer';
+import { ScrollToTop } from './components/ScrollToTop';
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Header />
 
           <main className="app-shell__content">
+            <ScrollToTop />
             <Routes>
               <Route path='/' element={<HomePage />} />
               <Route path='/catalog' element={<CatalogPage />} />

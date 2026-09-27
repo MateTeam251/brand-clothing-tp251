@@ -102,7 +102,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
           )}
         </div>
 
-        <p className={styles.card__delivery}>{t('cart.cart_item_desc')}</p>
+        <p className={styles.card__delivery}>{t('cart_item_desc')}</p>
 
         <div className={styles.card__footer}>
           <div className={styles.card__counter}>

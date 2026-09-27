@@ -23,7 +23,7 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action: PayloadAction<CartElement>) => {
       const existingItem = state.items.find(
-        item => item.id === action.payload.id && item.size === action.payload.size
+        item => item.product === action.payload.product && item.size === action.payload.size
       );
 
       if (existingItem) {
@@ -56,7 +56,6 @@ const cartSlice = createSlice({
     changeSize: (state, action: PayloadAction<{ id: string | number; oldSize: string | Size; newSize: string | Size }>) => {
       const { id, oldSize, newSize } = action.payload;
 
-      // Шукаємо точний рядок за його унікальним id та старим розміром
       const itemIndex = state.items.findIndex(
         item => item.id === id && item.size === oldSize
       );

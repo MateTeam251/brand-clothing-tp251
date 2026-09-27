@@ -1,0 +1,89 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.gallery {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+
+  @include on-desktop {
+    flex-direction: row;
+  }
+
+  &__thumbnails {
+    display: none;
+
+    @include on-desktop {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  &__thumbnail {
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    cursor: pointer;
+    background: none;
+    padding: 0;
+
+    img {
+      width: 60px;
+      height: 80px;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+    }
+
+    &--active {
+      border-color: #000;
+    }
+
+    @include on-desktop {
+      &--active {
+        border-color: #000;
+      }
+    }
+  }
+
+  &__mainImage {
+    position: relative;
+    flex: 1;
+    aspect-ratio: 3 / 4;
+    // overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__imagePlaceholder {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: $color-inactive;
+  }
+
+  &__dots {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+
+    @include on-desktop {
+      display: none;
+    }
+  }
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $light-gray;
+
+    &--active {
+      background: #000;
+    }
+  }
+}

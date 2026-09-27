@@ -2,6 +2,10 @@
 @import './variables.scss';
 @import './mixins.scss';
 
+* {
+  box-sizing: border-box;
+}
+
 @font-face {
     font-family: 'Bodoni';
     src: url('../../shared/assets/fonts/Bodoni/BodoniflfRoman.ttf') format('truetype');
