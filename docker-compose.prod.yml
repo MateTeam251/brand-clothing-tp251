@@ -24,7 +24,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    mem_limit: 768m
+    mem_limit: ${DB_MEM_LIMIT:-768m}
     logging: *logging
 
   web:
@@ -44,7 +44,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    mem_limit: 768m
+    mem_limit: ${WEB_MEM_LIMIT:-768m}
     logging: *logging
 
   nginx:

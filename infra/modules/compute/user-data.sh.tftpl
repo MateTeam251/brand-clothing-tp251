@@ -28,17 +28,30 @@ aws ec2 associate-address --region "$REGION" \
 log "EIP associated"
 
 # --- Data volume ------------------------------------------------------------
-# After an instance replacement the old one may hold the volume for a while.
-for _ in $(seq 1 60); do
-  STATE=$(aws ec2 describe-volumes --region "$REGION" --volume-ids "$VOLUME_ID" \
-    --query 'Volumes[0].State' --output text)
-  [ "$STATE" = "available" ] && break
-  log "data volume is $STATE, waiting"
-  sleep 10
-done
-aws ec2 attach-volume --region "$REGION" --volume-id "$VOLUME_ID" \
-  --instance-id "$INSTANCE_ID" --device /dev/sdf >/dev/null
+attached_to() {
+  aws ec2 describe-volumes --region "$REGION" --volume-ids "$VOLUME_ID" \
+    --query 'Volumes[0].Attachments[0].InstanceId' --output text
+}
+
+# Idempotent: the AWS CLI retries a slow AttachVolume call, and the retry
+# fails with VolumeInUse although the first call already attached the volume
+# to THIS instance. So check who holds the volume instead of trusting the
+# call's exit code.
+if [ "$(attached_to)" != "$INSTANCE_ID" ]; then
+  # After an instance replacement the old one may hold the volume for a while.
+  for _ in $(seq 1 60); do
+    STATE=$(aws ec2 describe-volumes --region "$REGION" --volume-ids "$VOLUME_ID" \
+      --query 'Volumes[0].State' --output text)
+    [ "$STATE" = "available" ] && break
+    log "data volume is $STATE, waiting"
+    sleep 10
+  done
+  aws ec2 attach-volume --region "$REGION" --volume-id "$VOLUME_ID" \
+    --instance-id "$INSTANCE_ID" --device /dev/sdf >/dev/null \
+    || log "attach-volume returned an error, checking the actual attachment"
+fi
 aws ec2 wait volume-in-use --region "$REGION" --volume-ids "$VOLUME_ID"
+[ "$(attached_to)" = "$INSTANCE_ID" ] || { log "data volume is attached to another instance"; exit 1; }
 
 # Nitro instances expose EBS as NVMe; this stable name contains the volume ID.
 DEVICE="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_$${VOLUME_ID/-/}"

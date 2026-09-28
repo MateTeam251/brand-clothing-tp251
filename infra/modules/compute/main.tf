@@ -99,7 +99,9 @@ resource "aws_launch_template" "app" {
 # and user-data re-attaches the data volume and the EIP.
 resource "aws_autoscaling_group" "app" {
   name                      = "${var.project_name}-app"
-  min_size                  = var.instance_count
+  # With a schedule the ASG may sit at 0 overnight, so min is 0 and the
+  # scheduled actions own desired_capacity.
+  min_size                  = var.schedule == null ? var.instance_count : 0
   max_size                  = var.instance_count
   desired_capacity          = var.instance_count
   vpc_zone_identifier       = [var.subnet_id]
@@ -110,4 +112,35 @@ resource "aws_autoscaling_group" "app" {
     id      = aws_launch_template.app.id
     version = aws_launch_template.app.latest_version
   }
+
+  # Scheduled actions change desired_capacity; don't fight them on every apply.
+  lifecycle {
+    ignore_changes = [desired_capacity]
+  }
+}
+
+# Optional working-hours schedule (staging). The data volume and EIP stay;
+# the morning boot re-runs user-data and re-attaches both.
+resource "aws_autoscaling_schedule" "start" {
+  count = var.schedule == null ? 0 : 1
+
+  scheduled_action_name  = "start-working-hours"
+  autoscaling_group_name = aws_autoscaling_group.app.name
+  recurrence             = var.schedule.start_cron
+  time_zone              = var.schedule.time_zone
+  min_size               = 0
+  max_size               = var.instance_count
+  desired_capacity       = var.instance_count
+}
+
+resource "aws_autoscaling_schedule" "stop" {
+  count = var.schedule == null ? 0 : 1
+
+  scheduled_action_name  = "stop-after-hours"
+  autoscaling_group_name = aws_autoscaling_group.app.name
+  recurrence             = var.schedule.stop_cron
+  time_zone              = var.schedule.time_zone
+  min_size               = 0
+  max_size               = var.instance_count
+  desired_capacity       = 0
 }
