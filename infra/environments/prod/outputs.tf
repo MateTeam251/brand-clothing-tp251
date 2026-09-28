@@ -47,3 +47,8 @@ output "ecr_push_role_arn" {
 output "app_public_ip" {
   value = module.compute.app_public_ip
 }
+
+output "deploy_role_arn" {
+  description = "GitHub Environment \"production\" -> variable AWS_DEPLOY_ROLE_ARN."
+  value       = module.deploy_role.role_arn
+}
