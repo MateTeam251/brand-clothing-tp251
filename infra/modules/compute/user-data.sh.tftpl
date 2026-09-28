@@ -115,6 +115,11 @@ ECR_REGISTRY="${ecr_registry}"
 APP_DIR=/opt/brand-clothing
 cd "$APP_DIR"
 
+# One deploy at a time: boot and a CI deploy (or two CI runs) can overlap.
+# A second run waits up to 10 min for the first, then fails instead of racing it.
+exec 9>/var/lock/brand-clothing-deploy.lock
+flock -w 600 9 || { echo "[deploy] another deploy is still running, giving up"; exit 1; }
+
 # Values in single quotes so compose takes them literally
 # (a "$" inside a secret would otherwise be interpolated).
 aws ssm get-parameters-by-path --region "$REGION" --path "$SSM_PATH/" \
