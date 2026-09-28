@@ -1,8 +1,8 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from products.models import Product
 from core.enums import Size
-from time import timezone
 
 
 class CartStatusEnum(models.TextChoices):
