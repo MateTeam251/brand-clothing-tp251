@@ -55,6 +55,8 @@ mkdir -p /data
 grep -q "UUID=$UUID" /etc/fstab || echo "UUID=$UUID /data xfs defaults,nofail 0 2" >> /etc/fstab
 mountpoint -q /data || mount /data
 mkdir -p /data/postgres
+mkdir -p /data/app-logs
+chown 10001:10001 /data/app-logs   # uid of the "app" user in the backend image
 log "data volume mounted on /data"
 
 # --- Swap: safety net on a 2 GB instance -----------------------------------
