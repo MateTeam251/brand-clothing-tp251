@@ -20,3 +20,13 @@ variable "app_iam_role_arn" {
   type        = string
   default     = null
 }
+
+variable "app_role_enabled" {
+  description = <<-EOT
+    Turns on the app-role bucket policies. A plain bool because count and
+    for_each must be known at plan time, and app_iam_role_arn isn't until
+    the role is created.
+  EOT
+  type        = bool
+  default     = false
+}
