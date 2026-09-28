@@ -20,10 +20,8 @@ module "storage" {
   project_name  = var.project_name
   bucket_suffix = var.bucket_suffix
 
-  # app_iam_role_arn intentionally left unset (null) — the compute
-  # module that creates App-EC2-Role doesn't exist yet in this pass.
-  # Once it does, pass its ARN here and re-apply; the bucket policies
-  # in the storage module activate automatically.
+  app_role_enabled = true
+  app_iam_role_arn = module.compute.app_role_arn
 }
 
 module "cicd_oidc" {
@@ -53,6 +51,19 @@ module "ecr" {
   # Not secret - GitHub exposes both IDs publicly.
   github_owner_id = "327962530"
   github_repo_id  = "1350646589"
+}
+
+module "compute" {
+  source = "../../modules/compute"
+
+  project_name       = var.project_name
+  subnet_id          = module.network.public_subnet_id
+  security_group_id  = module.network.app_security_group_id
+  media_bucket_arn   = module.storage.media_bucket_arn
+  backups_bucket_arn = module.storage.backups_bucket_arn
+
+  # 0 until user-data lands
+  instance_count = 0
 }
 
 ########################################################################

@@ -43,3 +43,7 @@ output "ecr_repository_urls" {
 output "ecr_push_role_arn" {
   value = module.ecr.push_role_arn
 }
+
+output "app_public_ip" {
+  value = module.compute.app_public_ip
+}

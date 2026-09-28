@@ -157,7 +157,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "backups" {
 # so the policy simply doesn't attach until app_iam_role_arn is set
 # (compute module doesn't exist yet in this "foundation" pass).
 data "aws_iam_policy_document" "backups_bucket_policy" {
-  count = var.app_iam_role_arn == null ? 0 : 1
+  count = var.app_role_enabled ? 1 : 0
 
   statement {
     sid    = "AppRolePutOnly"
@@ -179,7 +179,7 @@ data "aws_iam_policy_document" "backups_bucket_policy" {
 }
 
 resource "aws_s3_bucket_policy" "backups" {
-  count  = var.app_iam_role_arn == null ? 0 : 1
+  count  = var.app_role_enabled ? 1 : 0
   bucket = aws_s3_bucket.backups.id
   policy = data.aws_iam_policy_document.backups_bucket_policy[0].json
 }
@@ -223,7 +223,7 @@ data "aws_iam_policy_document" "media_bucket_policy" {
   }
 
   dynamic "statement" {
-    for_each = var.app_iam_role_arn == null ? [] : [var.app_iam_role_arn]
+    for_each = var.app_role_enabled ? [var.app_iam_role_arn] : []
     content {
       sid    = "AppRoleGetPut"
       effect = "Allow"
