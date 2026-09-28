@@ -47,6 +47,12 @@ module "ecr" {
   github_org        = var.github_org
   github_repo       = var.github_repo
   oidc_provider_arn = module.cicd_oidc.oidc_provider_arn
+
+  # The org's OIDC tokens carry numeric IDs in the sub claim
+  # (repo:MateTeam251@<org id>/brand-clothing-tp251@<repo id>:ref:...).
+  # Not secret - GitHub exposes both IDs publicly.
+  github_owner_id = "327962530"
+  github_repo_id  = "1350646589"
 }
 
 ########################################################################
