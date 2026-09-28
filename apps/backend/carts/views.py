@@ -1,24 +1,19 @@
 from rest_framework import mixins, viewsets
 from rest_framework.response import Response
 
-from carts.models import Cart, CartItem, CartStatusEnum
+from carts.models import CartItem
 from carts.serializers import CartSerializer, CartItemWriteSerializer
+from carts.services import get_or_create_active_cart_for
 
 
 def get_or_create_active_cart(request):
     if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(user=request.user, status=CartStatusEnum.ACTIVE)
-        return cart
+        return get_or_create_active_cart_for(user=request.user)
 
     if not request.session.session_key:
         request.session.create()
 
-    cart, _ = Cart.objects.get_or_create(
-        session_key=request.session.session_key,
-        user__isnull=True,
-        status=CartStatusEnum.ACTIVE,
-    )
-    return cart
+    return get_or_create_active_cart_for(session_key=request.session.session_key)
 
 
 class CartViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
