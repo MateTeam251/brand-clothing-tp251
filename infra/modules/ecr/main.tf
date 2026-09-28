@@ -1,3 +1,11 @@
+locals {
+  github_repo_subject = (
+    var.github_owner_id == null
+    ? "repo:${var.github_org}/${var.github_repo}"
+    : "repo:${var.github_org}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}"
+  )
+}
+
 resource "aws_ecr_repository" "this" {
   for_each = var.repositories
 
@@ -50,7 +58,7 @@ data "aws_iam_policy_document" "push_trust" {
       variable = "token.actions.githubusercontent.com:sub"
       values = [
         for b in var.push_branches :
-        "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/${b}"
+        "${local.github_repo_subject}:ref:refs/heads/${b}"
       ]
     }
   }

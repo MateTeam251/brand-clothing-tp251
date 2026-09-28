@@ -31,3 +31,15 @@ variable "push_branches" {
   type        = list(string)
   default     = ["develop", "main"]
 }
+
+variable "github_owner_id" {
+  description = "Numeric GitHub org ID. Set when the org's OIDC sub claim includes IDs (repo:org@id/repo@id:...)."
+  type        = string
+  default     = null
+}
+
+variable "github_repo_id" {
+  description = "Numeric GitHub repo ID, used together with github_owner_id."
+  type        = string
+  default     = null
+}
