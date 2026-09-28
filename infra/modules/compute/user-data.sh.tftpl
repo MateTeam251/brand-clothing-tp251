@@ -1,7 +1,7 @@
 #!/bin/bash
 # App instance bootstrap. Rendered by Terraform (templatefile) and run once on
 # first boot by cloud-init. Output: /var/log/cloud-init-output.log
-# Note: "$${...}" is Terraform's escape for a literal bash "${...}".
+# Note: a double dollar sign before a brace is the Terraform escape for a literal bash brace expansion.
 set -euo pipefail
 
 REGION="${region}"
