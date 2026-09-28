@@ -38,8 +38,10 @@ jobs:
         include:
           - image: backend
             context: apps/backend
+            file: apps/backend/Dockerfile.prod
           - image: db
             context: db
+            file: db/Dockerfile
 
     env:
       # Push only from develop/main, never from PRs. This matches the ECR push role's trust policy.
@@ -72,6 +74,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
           platforms: linux/arm64
           push: ${{ env.SHOULD_PUSH == 'true' }}
           tags: ${{ env.SHOULD_PUSH == 'true' && format('{0}/brand-clothing-{1}:{2}', steps.ecr.outputs.registry, matrix.image, github.sha) || format('brand-clothing-{0}:ci', matrix.image) }}

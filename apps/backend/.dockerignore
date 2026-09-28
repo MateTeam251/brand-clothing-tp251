@@ -8,5 +8,5 @@ __pycache__/
 coverage.xml
 */tests/
 */tests.py
-Dockerfile
+Dockerfile*
 docker-compose*.yml
