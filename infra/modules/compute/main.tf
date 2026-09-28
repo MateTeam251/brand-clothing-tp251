@@ -72,8 +72,9 @@ resource "aws_launch_template" "app" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name = "${var.project_name}-app"
-      Role = local.role_tag
+      Name          = "${var.project_name}-app"
+      Role          = local.role_tag
+      SessionAccess = "developers" # devs' Session Manager policy matches this tag
     }
   }
 
