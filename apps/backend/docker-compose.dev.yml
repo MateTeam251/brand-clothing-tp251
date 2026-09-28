@@ -44,6 +44,36 @@ services:
       redis:
         condition: service_started
 
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: brand_clothing_celery_worker
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: brand_clothing_celery_beat
+    # Schedule state file in /tmp so it does not land in the mounted source folder
+    command: celery -A config beat -l info -s /tmp/celerybeat-schedule
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
   mailhog:
     image: mailhog/mailhog
     container_name: brand_clothing_mailhog
