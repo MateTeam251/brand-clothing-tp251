@@ -7,6 +7,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('products', '0011_remove_productimage_color_remove_productcolor_color_and_more'),
+        # OrderItem.fabric must be removed before the Fabric model is deleted
+        ('orders', '0003_remove_orderitem_fabric_and_more'),
     ]
 
     operations = [
