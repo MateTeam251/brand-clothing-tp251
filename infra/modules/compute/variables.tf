@@ -54,8 +54,18 @@ variable "ssm_parameter_path" {
   default     = "/brand-clothing/prod"
 }
 
-variable "user_data" {
-  description = "Plain-text user-data script (base64-encoded here). Null until PR 2."
+variable "compose_file" {
+  description = "Contents of docker-compose.prod.yml, written to the instance by user-data."
   type        = string
-  default     = null
+}
+
+variable "nginx_conf" {
+  description = "Contents of nginx/default.conf."
+  type        = string
+}
+
+variable "compose_version" {
+  description = "Docker Compose plugin release (AL2023 doesn't package it)."
+  type        = string
+  default     = "v2.39.2"
 }

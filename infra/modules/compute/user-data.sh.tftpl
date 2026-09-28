@@ -1,0 +1,104 @@
+#!/bin/bash
+# App instance bootstrap. Rendered by Terraform (templatefile) and run once on
+# first boot by cloud-init. Output: /var/log/cloud-init-output.log
+# Note: "$${...}" is Terraform's escape for a literal bash "${...}".
+set -euo pipefail
+
+REGION="${region}"
+VOLUME_ID="${data_volume_id}"
+EIP_ALLOCATION_ID="${eip_allocation_id}"
+SSM_PATH="${ssm_parameter_path}"
+ECR_REGISTRY="${ecr_registry}"
+COMPOSE_VERSION="${compose_version}"
+APP_DIR=/opt/brand-clothing
+
+log() { echo "[bootstrap] $(date -u +%H:%M:%S) $*"; }
+
+# --- Instance identity (IMDSv2) ------------------------------------------
+TOKEN=$(curl -sf -X PUT http://169.254.169.254/latest/api/token \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+INSTANCE_ID=$(curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/instance-id)
+log "instance $INSTANCE_ID"
+
+# --- Elastic IP -------------------------------------------------------------
+aws ec2 associate-address --region "$REGION" \
+  --instance-id "$INSTANCE_ID" --allocation-id "$EIP_ALLOCATION_ID" \
+  --allow-reassociation >/dev/null
+log "EIP associated"
+
+# --- Data volume ------------------------------------------------------------
+# After an instance replacement the old one may hold the volume for a while.
+for _ in $(seq 1 60); do
+  STATE=$(aws ec2 describe-volumes --region "$REGION" --volume-ids "$VOLUME_ID" \
+    --query 'Volumes[0].State' --output text)
+  [ "$STATE" = "available" ] && break
+  log "data volume is $STATE, waiting"
+  sleep 10
+done
+aws ec2 attach-volume --region "$REGION" --volume-id "$VOLUME_ID" \
+  --instance-id "$INSTANCE_ID" --device /dev/sdf >/dev/null
+aws ec2 wait volume-in-use --region "$REGION" --volume-ids "$VOLUME_ID"
+
+# Nitro instances expose EBS as NVMe; this stable name contains the volume ID.
+DEVICE="/dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_$${VOLUME_ID/-/}"
+for _ in $(seq 1 30); do [ -e "$DEVICE" ] && break; sleep 2; done
+[ -e "$DEVICE" ] || { log "device $DEVICE did not appear"; exit 1; }
+
+# Format ONLY a brand-new empty volume. A volume with a filesystem is never touched.
+if ! blkid "$DEVICE" >/dev/null 2>&1; then
+  log "empty volume, creating xfs"
+  mkfs.xfs "$DEVICE"
+fi
+UUID=$(blkid -s UUID -o value "$DEVICE")
+mkdir -p /data
+grep -q "UUID=$UUID" /etc/fstab || echo "UUID=$UUID /data xfs defaults,nofail 0 2" >> /etc/fstab
+mountpoint -q /data || mount /data
+mkdir -p /data/postgres
+log "data volume mounted on /data"
+
+# --- Swap: safety net on a 2 GB instance -----------------------------------
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=1024 status=none
+  chmod 600 /swapfile
+  mkswap /swapfile >/dev/null
+  echo "/swapfile none swap sw 0 0" >> /etc/fstab
+fi
+swapon --show | grep -q /swapfile || swapon /swapfile
+
+# --- Docker + Compose plugin -----------------------------------------------
+dnf install -y -q docker
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -sfL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+  "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-linux-aarch64"
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+systemctl enable --now docker
+log "$(docker compose version)"
+
+# --- App files --------------------------------------------------------------
+mkdir -p "$APP_DIR/nginx"
+
+cat > "$APP_DIR/docker-compose.yml" <<'COMPOSE'
+${compose_file}
+COMPOSE
+
+cat > "$APP_DIR/nginx/default.conf" <<'NGINX'
+${nginx_conf}
+NGINX
+
+# .env from SSM. Values in single quotes so compose takes them literally
+# (a "$" inside a secret would otherwise be interpolated).
+aws ssm get-parameters-by-path --region "$REGION" --path "$SSM_PATH/" \
+  --with-decryption --query 'Parameters[].[Name,Value]' --output text \
+  | while IFS=$'\t' read -r NAME VALUE; do
+      printf "%s='%s'\n" "$${NAME##*/}" "$VALUE"
+    done > "$APP_DIR/.env"
+chmod 600 "$APP_DIR/.env"
+log ".env written ($(wc -l < "$APP_DIR/.env") variables)"
+
+# --- Start -------------------------------------------------------------------
+aws ecr get-login-password --region "$REGION" \
+  | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+cd "$APP_DIR"
+docker compose up -d
+log "done"
