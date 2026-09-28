@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 from datetime import timedelta
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -240,8 +241,36 @@ WAYFORPAY_CHECK_STATUS_URL = os.environ.get(
     default="https://api.wayforpay.com/api",
 )
 
+# CELERY
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_DB = os.getenv("REDIS_DB", "0")
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}")
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_IGNORE_RESULT = True
+
+CELERY_BEAT_SCHEDULE = {
+    "mark-abandoned-carts": {
+        "task": "carts.tasks.mark_abandoned_carts_task",
+        "schedule": crontab(minute=0),  # hourly
+    },
+    "weekly-cart-report": {
+        "task": "carts.tasks.send_weekly_cart_report_task",
+        "schedule": crontab(minute=0, hour=3, day_of_week="monday"),  # previous Mon-Sun week
+    },
+}
+
+# CART ANALYTICS
+# A cart is abandoned when it has items, no checkout, and was not changed for this long.
+CART_ABANDON_AFTER_HOURS = int(os.getenv("CART_ABANDON_AFTER_HOURS", "24"))
+
+# Private bucket for analyst reports. Intentionally no default: the media bucket is public.
+ANALYTICS_REPORTS_BUCKET = os.getenv("ANALYTICS_REPORTS_BUCKET")
+ANALYTICS_REPORTS_PREFIX = os.getenv("ANALYTICS_REPORTS_PREFIX", "reports/carts")
+
 # Site URL
-SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
+SITE_URL =os.environ.get("SITE_URL", "http://127.0.0.1:8000")
 
 #LOGS
 LOGS_DIR = BASE_DIR / "logs"
