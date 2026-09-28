@@ -24,13 +24,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv()
 
+
+def env_bool(name, default):
+    return os.getenv(name, default).lower() in ("true", "1", "yes")
+
+
+def env_list(name, default=""):
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool("DEBUG", "True")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
+
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
+
+# nginx terminates HTTPS in prod and forwards the original scheme
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
@@ -164,6 +178,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 #LOCALSTORAGES
 
@@ -216,12 +231,15 @@ AWS_SES_REGION_NAME = os.getenv("AWS_SES_REGION_NAME", "eu-central-1")
 AWS_SES_REGION_ENDPOINT = f"email.{AWS_SES_REGION_NAME}.amazonaws.com"
 AWS_SES_AUTO_THROTTLE = None  # skip a quota lookup before every send; not needed at shop volume
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOWED_ORIGINS = env_list(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
 
-ACTIVATION_URL_BASE = "http://127.0.0.1:8000/api/users/activate"
+# Site URL
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+
+ACTIVATION_URL_BASE = f"{SITE_URL}/api/users/activate"
 
 # WAYFORPAY
 WAYFORPAY_MERCHANT_ACCOUNT = os.environ.get("WAYFORPAY_MERCHANT_ACCOUNT")
@@ -239,9 +257,6 @@ WAYFORPAY_CHECK_STATUS_URL = os.environ.get(
     "WAYFORPAY_CHECK_STATUS_URL",
     default="https://api.wayforpay.com/api",
 )
-
-# Site URL
-SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000")
 
 #LOGS
 LOGS_DIR = BASE_DIR / "logs"
