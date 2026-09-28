@@ -69,6 +69,19 @@ module "compute" {
   instance_count = 1
 }
 
+# GitHub Actions deploys to prod only from jobs in the "production"
+# GitHub Environment (restricted to main in the repo settings).
+module "deploy_role" {
+  source = "../../modules/deploy-role"
+
+  name               = "${var.project_name}-github-deploy-prod"
+  oidc_provider_arn  = module.cicd_oidc.oidc_provider_arn
+  github_subject     = "repo:${var.github_org}@327962530/${var.github_repo}@1350646589"
+  github_environment = "production"
+  ssm_parameter_path = "/brand-clothing/prod"
+  instance_role_tag  = module.compute.role_tag
+}
+
 ########################################################################
 # Budget alert — sequencing step 1 in infrastructure-plan.md, done here
 # in Terraform rather than by hand so it's version-controlled and

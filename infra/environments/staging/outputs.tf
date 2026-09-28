@@ -21,3 +21,8 @@ output "frontend_bucket_name" {
 output "cloudfront_domain_name" {
   value = module.storage.cloudfront_domain_name
 }
+
+output "deploy_role_arn" {
+  description = "GitHub Environment \"staging\" -> variable AWS_DEPLOY_ROLE_ARN."
+  value       = module.deploy_role.role_arn
+}
