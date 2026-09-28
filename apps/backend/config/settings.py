@@ -169,8 +169,9 @@ STATIC_URL = 'static/'
 
 USE_LOCALSTACK = os.getenv("USE_LOCALSTACK", "True").lower() in ("true", "1", "yes")
 
-# No defaults: in production credentials come from the EC2 instance role (S3 and SES).
-# Local dev with LocalStack sets both to "test" in .env.
+# Intentionally no default. In production these are NOT set: boto3 then uses the
+# EC2 instance role for S3 and SES. Any value here (even "test") overrides the role
+# and breaks uploads and emails. Local dev sets both to "test" in .env for LocalStack.
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "brand-clothing-media")
