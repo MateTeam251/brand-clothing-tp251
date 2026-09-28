@@ -69,3 +69,19 @@ variable "compose_version" {
   type        = string
   default     = "v2.39.2"
 }
+
+variable "ecr_repository_prefix" {
+  description = "Prefix of the ECR repos to pull from (<prefix>-backend, <prefix>-db). Defaults to project_name; staging sets it to the prod prefix to share images."
+  type        = string
+  default     = null
+}
+
+variable "schedule" {
+  description = "Optional working-hours schedule. Cron in the given IANA time zone, e.g. start \"0 8 * * MON-FRI\", stop \"0 20 * * MON-FRI\", \"Europe/Kyiv\". Null = always on."
+  type = object({
+    start_cron = string
+    stop_cron  = string
+    time_zone  = string
+  })
+  default = null
+}

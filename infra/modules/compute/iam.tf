@@ -5,6 +5,7 @@ locals {
   account_id = data.aws_caller_identity.current.account_id
   region     = data.aws_region.current.name
   role_tag   = "${var.project_name}-app"
+  ecr_prefix = coalesce(var.ecr_repository_prefix, var.project_name)
 }
 
 data "aws_iam_policy_document" "assume_ec2" {
@@ -43,7 +44,7 @@ data "aws_iam_policy_document" "app" {
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchCheckLayerAvailability",
     ]
-    resources = ["arn:aws:ecr:${local.region}:${local.account_id}:repository/${var.project_name}-*"]
+    resources = ["arn:aws:ecr:${local.region}:${local.account_id}:repository/${local.ecr_prefix}-*"]
   }
 
   # .env is rendered from these at boot. SecureStrings use the AWS-managed
