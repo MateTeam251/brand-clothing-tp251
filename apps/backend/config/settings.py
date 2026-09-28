@@ -169,8 +169,10 @@ STATIC_URL = 'static/'
 
 USE_LOCALSTACK = os.getenv("USE_LOCALSTACK", "True").lower() in ("true", "1", "yes")
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "test")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "test")
+# No defaults: in production credentials come from the EC2 instance role (S3 and SES).
+# Local dev with LocalStack sets both to "test" in .env.
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "brand-clothing-media")
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
 
@@ -198,13 +200,20 @@ STORAGES = {
 
 MANAGER_NOTIFICATION_EMAIL = os.getenv("MANAGER_NOTIFICATION_EMAIL")
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# Local dev keeps SMTP as before; production sets EMAIL_BACKEND=django_ses.SESBackend.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("true", "1", "yes")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+
+# Amazon SES (only used when EMAIL_BACKEND=django_ses.SESBackend).
+# Credentials come from the EC2 instance role, nothing is stored.
+AWS_SES_REGION_NAME = os.getenv("AWS_SES_REGION_NAME", "eu-central-1")
+AWS_SES_REGION_ENDPOINT = f"email.{AWS_SES_REGION_NAME}.amazonaws.com"
+AWS_SES_AUTO_THROTTLE = None  # skip a quota lookup before every send; not needed at shop volume
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
