@@ -42,7 +42,16 @@ resource "aws_launch_template" "app" {
   image_id               = nonsensitive(data.aws_ssm_parameter.al2023_arm64.value)
   instance_type          = var.instance_type
   vpc_security_group_ids = [var.security_group_id]
-  user_data              = var.user_data == null ? null : base64encode(var.user_data)
+  user_data = base64encode(templatefile("${path.module}/user-data.sh.tftpl", {
+    region             = local.region
+    data_volume_id     = aws_ebs_volume.data.id
+    eip_allocation_id  = aws_eip.app.allocation_id
+    ssm_parameter_path = var.ssm_parameter_path
+    ecr_registry       = "${local.account_id}.dkr.ecr.${local.region}.amazonaws.com"
+    compose_version    = var.compose_version
+    compose_file       = var.compose_file
+    nginx_conf         = var.nginx_conf
+  }))
   update_default_version = true
 
   iam_instance_profile {

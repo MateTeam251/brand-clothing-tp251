@@ -31,12 +31,14 @@ services:
     image: ${ECR_REGISTRY}/brand-clothing-backend:${IMAGE_TAG}
     container_name: brand_clothing_web
     restart: always
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             exec gunicorn config.wsgi:application --bind 0.0.0.0:8000
-             --workers 2 --timeout 60 --access-logfile -"
+    # One line on purpose: a folded multi-line command keeps line breaks and
+    # turns a failed migrate into a misleading "command not found" (exit 127).
+    command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60 --access-logfile -"]
     env_file:
       - .env
+    volumes:
+      # error.log / payments.log survive container recreation (every deploy).
+      - /data/app-logs:/app/logs
     expose:
       - "8000"
     depends_on:

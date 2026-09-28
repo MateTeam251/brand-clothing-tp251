@@ -6,3 +6,4 @@ db/postgresql.conf text eol=lf
 db/scripts/crontab text eol=lf
 docker-compose.prod.yml text eol=lf
 nginx/*.conf            text eol=lf
+*.tftpl                 text eol=lf

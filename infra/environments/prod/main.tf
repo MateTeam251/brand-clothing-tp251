@@ -62,8 +62,11 @@ module "compute" {
   media_bucket_arn   = module.storage.media_bucket_arn
   backups_bucket_arn = module.storage.backups_bucket_arn
 
-  # 0 until user-data lands
-  instance_count = 0
+  # Read from the repo root and embedded in user-data.
+  compose_file = file("${path.root}/../../../docker-compose.prod.yml")
+  nginx_conf   = file("${path.root}/../../../nginx/default.conf")
+
+  instance_count = 1
 }
 
 ########################################################################
