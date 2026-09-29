@@ -231,15 +231,23 @@ jobs:
       - name: Smoke check
         if: steps.deploy.outputs.skipped != 'true'
         run: |
-          # Any answer below 500 means nginx -> gunicorn -> Django is up.
-          # (400 is expected until ALLOWED_HOSTS is set; tighten to 200 then.)
+          # The admin login page needs nginx -> gunicorn -> Django -> DB,
+          # ALLOWED_HOSTS and templates to work; it must return exactly 200.
+          # Its CSS must come back too (static files via WhiteNoise).
+          URL="$APP_URL/api/admin/login/"
           for _ in $(seq 1 12); do
-            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$APP_URL/" || true)
-            echo "HTTP $CODE"
-            if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 500 ]; then exit 0; fi
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
+            echo "$URL -> HTTP $CODE"
+            if [ "$CODE" = "200" ]; then
+              CSS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$APP_URL/static/admin/css/base.css" || true)
+              echo "$APP_URL/static/admin/css/base.css -> HTTP $CSS"
+              [ "$CSS" = "200" ] && exit 0
+              echo "::error::Static files are not served"
+              exit 1
+            fi
             sleep 5
           done
-          echo "::error::$APP_URL did not answer (or only with 5xx) within 60s"
+          echo "::error::$URL did not return 200 within 60s"
           exit 1
 
       - name: Summary
