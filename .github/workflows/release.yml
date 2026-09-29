@@ -76,14 +76,33 @@ jobs:
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # backend: tagged with the commit SHA (every release).
+      # db: tagged with the git tree hash of db/, so it only changes (and Postgres
+      # only restarts) when something in db/ changed. Existing tag -> skip the build.
+      - name: Choose tag
+        id: tag
+        run: |
+          if [ "${{ matrix.image }}" = "db" ]; then
+            TAG=$(git rev-parse HEAD:db)
+            if aws ecr describe-images --repository-name brand-clothing-db \
+                 --image-ids imageTag="$TAG" > /dev/null 2>&1; then
+              echo "db image $TAG already in ECR (db/ unchanged), skipping build"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            TAG=${{ github.sha }}
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
       - name: Build and push
+        if: steps.tag.outputs.skip != 'true'
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
           platforms: linux/arm64
           push: true
-          tags: ${{ steps.ecr.outputs.registry }}/brand-clothing-${{ matrix.image }}:${{ github.sha }}
+          tags: ${{ steps.ecr.outputs.registry }}/brand-clothing-${{ matrix.image }}:${{ steps.tag.outputs.tag }}
           provenance: false
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
