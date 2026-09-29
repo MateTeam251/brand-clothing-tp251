@@ -2,11 +2,9 @@ name: Backend CI
 run-name: ${{ github.actor }} - ${{ github.head_ref || github.ref_name }} - ${{ github.sha }}
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - "apps/backend/**"
-      - ".github/workflows/backend-ci.yml"
+  # Pushes to develop/main run these tests through release.yml (workflow_call),
+  # right before building and deploying.
+  workflow_call:
   # No path filter on PRs: this is a required check, and a required check
   # that never runs would block the PR forever.
   pull_request:
