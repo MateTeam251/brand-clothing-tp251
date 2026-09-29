@@ -212,9 +212,16 @@ jobs:
             exit 1
           fi
 
-          echo "----- deploy.sh output -----"
-          aws ssm list-command-invocations --command-id "$CMD_ID" --details \
-            --query 'CommandInvocations[].CommandPlugins[0].Output' --output text || true
+          # get-command-invocation returns up to 24k chars (list-* only ~2.5k).
+          for INSTANCE in $(aws ssm list-command-invocations --command-id "$CMD_ID" \
+                              --query 'CommandInvocations[].InstanceId' --output text); do
+            echo "----- deploy.sh on $INSTANCE -----"
+            aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE" \
+              --query StandardOutputContent --output text || true
+            echo "----- stderr (warnings, pull/up progress) -----"
+            aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE" \
+              --query StandardErrorContent --output text || true
+          done
 
           if [ "$STATUS" != "Success" ]; then
             echo "::error::deploy.sh finished with status $STATUS"
