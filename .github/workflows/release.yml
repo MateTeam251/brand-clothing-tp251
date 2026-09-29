@@ -1,0 +1,215 @@
+name: Release
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+      && format('Deploy {0} to {1} ({2})', inputs.image_tag, inputs.environment, github.actor)
+      || format('Release {0} - {1}', github.ref_name, github.sha) }}
+
+# develop -> staging, main -> production, automatically on every push (merge).
+# Manual "Run workflow" = deploy an existing image (rollback / redeploy).
+#   Staging:    run it on branch develop.
+#   Production: run it on branch main (the environment only allows main).
+
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy
+        type: choice
+        options: [staging, production]
+        required: true
+      image_tag:
+        description: Full 40-char git SHA whose images are already in ECR
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  # 1. Tests on the merged code (same workflow as the PR check).
+  test:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/backend-ci.yml
+
+  # 2. Build arm64 images and push them to ECR, tagged with the commit SHA.
+  build:
+    name: build (${{ matrix.image }})
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write # OIDC -> ECR push role (trusted for develop/main only)
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - image: backend
+            context: apps/backend
+            file: apps/backend/Dockerfile.prod
+          - image: db
+            context: db
+            file: db/Dockerfile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The t4g instances are ARM (Graviton). QEMU lets the x86 runner build arm64 images.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.ecr.outputs.registry }}/brand-clothing-${{ matrix.image }}:${{ github.sha }}
+          provenance: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  # 3. Point SSM at the new tag and run deploy.sh on the instance via SSM Run Command.
+  deploy:
+    name: deploy (${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }})
+    needs: build
+    # Push: only after a successful build. Manual run: build is skipped, images already exist.
+    if: >-
+      !cancelled() &&
+      (github.event_name == 'workflow_dispatch' || needs.build.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # OIDC -> the environment's deploy role
+
+    # The deploy role trusts only jobs running in this GitHub Environment,
+    # and the Environment only accepts its branch (staging: develop, production: main).
+    environment:
+      name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+      url: ${{ vars.APP_URL }}
+
+    # One deploy per environment at a time; a newer one waits, it doesn't cancel a running deploy.
+    concurrency:
+      group: deploy-${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+      cancel-in-progress: false
+
+    env:
+      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+      IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.sha }}
+      APP_ROLE_TAG: ${{ vars.APP_ROLE_TAG }}
+      APP_URL: ${{ vars.APP_URL }}
+
+    steps:
+      - name: Check inputs
+        run: |
+          if ! [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::image_tag must be a full 40-character git SHA, got '$IMAGE_TAG'"
+            exit 1
+          fi
+          if [ -z "$APP_ROLE_TAG" ] || [ -z "$APP_URL" ]; then
+            echo "::error::Environment '$ENVIRONMENT' is missing the APP_ROLE_TAG or APP_URL variable"
+            exit 1
+          fi
+          # SSM path per environment: /brand-clothing/prod or /brand-clothing/staging
+          if [ "$ENVIRONMENT" = "production" ]; then SSM_PATH=/brand-clothing/prod; else SSM_PATH=/brand-clothing/staging; fi
+          echo "SSM_PATH=$SSM_PATH" >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Set IMAGE_TAG in SSM
+        run: |
+          aws ssm put-parameter --name "$SSM_PATH/IMAGE_TAG" --type String \
+            --value "$IMAGE_TAG" --overwrite > /dev/null
+          echo "$SSM_PATH/IMAGE_TAG = $IMAGE_TAG"
+
+      - name: Run deploy.sh on the instance
+        id: deploy
+        run: |
+          set -euo pipefail
+          CMD_ID=$(aws ssm send-command \
+            --document-name AWS-RunShellScript \
+            --targets "Key=tag:Role,Values=${APP_ROLE_TAG}" \
+            --parameters 'commands=["/opt/brand-clothing/deploy.sh"],executionTimeout=["900"]' \
+            --comment "deploy ${IMAGE_TAG:0:7} run ${GITHUB_RUN_ID}" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $CMD_ID"
+
+          STATUS=Pending
+          for _ in $(seq 1 90); do
+            sleep 10
+            STATUS=$(aws ssm list-commands --command-id "$CMD_ID" --query 'Commands[0].Status' --output text)
+            echo "status: $STATUS"
+            case "$STATUS" in Pending|InProgress|Delayed) ;; *) break ;; esac
+          done
+
+          TARGETS=$(aws ssm list-commands --command-id "$CMD_ID" --query 'Commands[0].TargetCount' --output text)
+          if [ "$TARGETS" = "0" ]; then
+            if [ "$ENVIRONMENT" = "staging" ]; then
+              # Staging runs weekdays 08-20 Kyiv. IMAGE_TAG is already in SSM,
+              # so the next morning boot starts this version by itself.
+              echo "::warning::No running staging instance (outside working hours?). It will start $IMAGE_TAG on its next boot."
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::No instance with Role=$APP_ROLE_TAG is running"
+            exit 1
+          fi
+
+          echo "----- deploy.sh output -----"
+          aws ssm list-command-invocations --command-id "$CMD_ID" --details \
+            --query 'CommandInvocations[].CommandPlugins[0].Output' --output text || true
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "::error::deploy.sh finished with status $STATUS"
+            exit 1
+          fi
+
+      - name: Smoke check
+        if: steps.deploy.outputs.skipped != 'true'
+        run: |
+          # Any answer below 500 means nginx -> gunicorn -> Django is up.
+          # (400 is expected until ALLOWED_HOSTS is set; tighten to 200 then.)
+          for _ in $(seq 1 12); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$APP_URL/" || true)
+            echo "HTTP $CODE"
+            if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 500 ]; then exit 0; fi
+            sleep 5
+          done
+          echo "::error::$APP_URL did not answer (or only with 5xx) within 60s"
+          exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deploy to \`$ENVIRONMENT\`"
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Image tag | \`$IMAGE_TAG\` |"
+            echo "| URL | $APP_URL |"
+            echo "| Result | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
