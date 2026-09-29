@@ -139,6 +139,12 @@ jobs:
       APP_URL: ${{ vars.APP_URL }}
 
     steps:
+      # Full history, so the db tag can be computed for any commit (also rollbacks).
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Check inputs
         run: |
           if ! [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]; then
@@ -152,6 +158,11 @@ jobs:
           # SSM path per environment: /brand-clothing/prod or /brand-clothing/staging
           if [ "$ENVIRONMENT" = "production" ]; then SSM_PATH=/brand-clothing/prod; else SSM_PATH=/brand-clothing/staging; fi
           echo "SSM_PATH=$SSM_PATH" >> "$GITHUB_ENV"
+          if ! DB_IMAGE_TAG=$(git rev-parse "$IMAGE_TAG:db" 2>/dev/null); then
+            echo "::error::Commit $IMAGE_TAG not found in this repository"
+            exit 1
+          fi
+          echo "DB_IMAGE_TAG=$DB_IMAGE_TAG" >> "$GITHUB_ENV"
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -159,11 +170,14 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Set IMAGE_TAG in SSM
+      - name: Set image tags in SSM
         run: |
           aws ssm put-parameter --name "$SSM_PATH/IMAGE_TAG" --type String \
             --value "$IMAGE_TAG" --overwrite > /dev/null
-          echo "$SSM_PATH/IMAGE_TAG = $IMAGE_TAG"
+          aws ssm put-parameter --name "$SSM_PATH/DB_IMAGE_TAG" --type String \
+            --value "$DB_IMAGE_TAG" --overwrite > /dev/null
+          echo "$SSM_PATH/IMAGE_TAG    = $IMAGE_TAG"
+          echo "$SSM_PATH/DB_IMAGE_TAG = $DB_IMAGE_TAG"
 
       - name: Run deploy.sh on the instance
         id: deploy
@@ -229,6 +243,7 @@ jobs:
             echo "| | |"
             echo "|---|---|"
             echo "| Image tag | \`$IMAGE_TAG\` |"
+            echo "| DB image tag | \`${DB_IMAGE_TAG:-n/a}\` |"
             echo "| URL | $APP_URL |"
             echo "| Result | ${{ job.status }} |"
           } >> "$GITHUB_STEP_SUMMARY"
