@@ -6,7 +6,9 @@ x-logging: &logging
 
 services:
   db:
-    image: ${ECR_REGISTRY}/brand-clothing-db:${IMAGE_TAG}
+    # Own tag (git tree hash of db/), changes only when db/ changes, so a normal
+    # release doesn't restart Postgres. Set by the release pipeline.
+    image: ${ECR_REGISTRY}/brand-clothing-db:${DB_IMAGE_TAG}
     container_name: brand_clothing_db
     restart: always
     environment:

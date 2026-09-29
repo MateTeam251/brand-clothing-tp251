@@ -15,10 +15,15 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # settings.py creates /app/logs at startup; /app itself is root-owned.
+# /app/staticfiles receives collectstatic output (served by WhiteNoise).
 RUN useradd --system --uid 10001 --no-create-home app \
-    && mkdir -p /app/logs \
-    && chown app:app /app/logs
+    && mkdir -p /app/logs /app/staticfiles \
+    && chown app:app /app/logs /app/staticfiles
 USER app
+
+# Static files are baked into the image. Settings only need a SECRET_KEY to load;
+# this dummy value exists only in this build step, never at runtime.
+RUN SECRET_KEY=collectstatic-only python manage.py collectstatic --noinput
 
 EXPOSE 8000
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2"]
