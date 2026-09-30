@@ -113,7 +113,12 @@ i18n.use(initReactI18next).init({
           contacts: 'Contact information',
           comment: 'Order comment',
         },
-        about_page: {},
+        about_page: {
+          title: 'About Us',
+          intro: "We don't believe you need a special occasion to look beautiful. The Art. The Artist is clothing for girls and women who don't save their best outfits for later. Who get dressed like it's a celebration — even if it's just an ordinary Tuesday, coffee with a friend, or running errands.",
+          production_title: 'Production',
+          production_text: "We're not a basics brand. We're about mood — about pieces that make you feel like the main character of your own day. Real people stand behind this brand, not just a store. We run a small family production in Mykolaiv. We're just getting started, but we'd be glad to have you along for the journey.",
+        },
         account: {
           info: 'Personal information',
           favorites: 'Favorites',
@@ -246,7 +251,12 @@ i18n.use(initReactI18next).init({
           contacts: 'Контактна інформація',
           comment: 'Коментар до замовлення',
         },
-        about_page: {},
+        about_page: {
+          title: 'Про нас',
+          intro: 'Ми не вважаємо, що для того щоб виглядати красиво, потрібен особливий привід. The Art. The Artist — це одяг для дівчат та жінок, які не відкладають вбрання на потім. Які одягаються так, ніби сьогодні свято — навіть якщо це звичайний вівторок, зустріч з подругою, забіг по магазинах.',
+          production_title: 'Виробництво',
+          production_text: 'Ми не база. Ми про настрій. Про речі, в яких ти відчуваєш себе головною героїнею власного дня. За брендом стоять живі люди, а не просто магазин. Ми маємо невеличке сімейне виробництво в Миколаєві. Наш бренд тільки на старті, але ми будемо раді, якщо ти пройдеш цей шлях з нами.',
+        },
         account: {
           info: 'Особиста інформація',
           favorites: 'Обране',
