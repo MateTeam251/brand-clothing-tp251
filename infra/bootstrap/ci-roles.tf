@@ -91,7 +91,9 @@ data "aws_iam_policy_document" "apply_trust" {
 # --- Shared guardrails (explicit Deny beats any Allow) --------------------
 
 data "aws_iam_policy_document" "guardrails" {
-  # Terraform never manages app secrets; CI must not be able to read them.
+  # App secrets live under /brand-clothing/<env>/secrets/ and are never managed
+  # by Terraform; CI must not be able to read them. Plain config parameters
+  # (/brand-clothing/<env>/NAME) are Terraform-managed, so plans may read those.
   statement {
     sid    = "NoAppSecrets"
     effect = "Deny"
@@ -101,7 +103,7 @@ data "aws_iam_policy_document" "guardrails" {
       "ssm:GetParametersByPath",
       "ssm:GetParameterHistory",
     ]
-    resources = ["arn:aws:ssm:*:${local.account_id}:parameter/brand-clothing/*"]
+    resources = ["arn:aws:ssm:*:${local.account_id}:parameter/brand-clothing/*/secrets/*"]
   }
 
   # Customer data: database backups and uploaded media.
