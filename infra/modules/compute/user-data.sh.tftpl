@@ -122,7 +122,9 @@ flock -w 600 9 || { echo "[deploy] another deploy is still running, giving up"; 
 
 # Values in single quotes so compose takes them literally
 # (a "$" inside a secret would otherwise be interpolated).
-aws ssm get-parameters-by-path --region "$REGION" --path "$SSM_PATH/" \
+# --recursive: secrets live one level down (<path>/secrets/NAME); the
+# basename strip below turns "secrets/SECRET_KEY" into SECRET_KEY as well.
+aws ssm get-parameters-by-path --region "$REGION" --path "$SSM_PATH/" --recursive \
   --with-decryption --query 'Parameters[].[Name,Value]' --output text \
   | while IFS=$'\t' read -r NAME VALUE; do
       printf "%s='%s'\n" "$${NAME##*/}" "$VALUE"
