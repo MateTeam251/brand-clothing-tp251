@@ -167,16 +167,56 @@
     position: absolute;
     bottom: -4px;
     right: -4px;
-    background: #000;
-    color: $dominant;
-    font-size: 10px;
-    font-weight: 600;
+    color: #000;
+    background: $accent;
     min-width: 16px;
     height: 16px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    @include mixins.text-style($font-body, 10px, 24px, 600);
+
+    &--active {
+      background: #000;
+      color: $dominant;
+  }
+}
+  &__search-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+    padding: 16px;
+    border: 1px solid $light-gray;
+    border-radius: 1000px;
+  }
+
+  &__search-form-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  &__search-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #000;
+    font-family: 'Cambria', serif;
+    font-size: 16px;
+
+    &::placeholder {
+      color: $color-inactive;
+    }
+    
+    &__iconClose {
+      width: 14px;
+      height: 14px;
+    }
   }
 }
 
@@ -211,6 +251,11 @@
 
     &__actions {
       display: flex;
+    }
+
+    &__main--search {
+      grid-template-columns: auto 1fr auto;
+      column-gap: 40px;
     }
   }
 }

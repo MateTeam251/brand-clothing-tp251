@@ -5,25 +5,34 @@
   position: relative;
   width: 100vw;
   margin: 0;
+  padding-inline: 16px;
+
+  @include flex(column, 72px);
 
   &__wrapper {
     position: relative;
     background-image: url('./home_bg-phone.png');
     min-height: 504px;
     background-repeat: no-repeat;
-    width: 100%;
     background-size: cover;
+
+    width: 100vw;
+    margin-inline: -16px;
 
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
-    padding: 0 16px 28px;
-    box-sizing: border-box;
 
     @include on-desktop {
       background-image: url('./home_bg-desktop.png');
     }
+  }
+
+  &__wrapperContainer {
+    margin-bottom: 96px;
+    padding-inline: 16px;
+    width: 100%;
   }
 
   &__btn {
@@ -33,7 +42,6 @@
     width: 100%;
     max-width: 100%;
     padding: 12px 28px;
-    margin-bottom: 8px;
     text-align: center;
     background-color: $accent;
     color: #000;
@@ -44,7 +52,6 @@
     font-size: 16px;
     line-height: 24px;
     text-decoration: none;
-    box-sizing: border-box;
     cursor: pointer;
     position: relative;
     z-index: 1;
@@ -61,7 +68,7 @@
   &__searchWrap {
     position: fixed;
     right: 16px;
-    bottom: 28px;
+    bottom: 228px;
     z-index: 20;
     display: flex;
     justify-content: flex-end;
@@ -76,17 +83,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     padding: 0;
     border: none;
     border-radius: 50%;
-    background-color: #fff;
+    background-color: $secondary;
     cursor: pointer;
 
     img {
-      width: 22px;
-      height: 22px;
+      width: 16px;
+      height: 16px;
       display: block;
     }
   }

@@ -36,7 +36,7 @@ export const HomePage = () => {
   }, [isSearchOpen]);
 
   const handleCollectionClick = () => {
-    navigate('/catalog?collection=autumn');
+    navigate('/catalog?collection=i-am-an-autumn');
   };
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -56,9 +56,11 @@ export const HomePage = () => {
   return (
     <div className={styles.home}>
       <div className={styles['home__wrapper']}>
-        <button type='button' className={styles['home__btn']} onClick={handleCollectionClick}>
-          {t('autumn-collection')}
-        </button>
+        <div className={styles['home__wrapperContainer']}>
+          <button type='button' className={styles['home__btn']} onClick={handleCollectionClick}>
+            {t('autumn-collection')}
+          </button>
+        </div>
 
         <div ref={searchWrapperRef} className={styles['home__searchWrap']}>
           {!isSearchOpen ? (
@@ -99,7 +101,9 @@ export const HomePage = () => {
         title={t('bestsellers')}
         queryParams={{ ordering: '-is_bestseller', limit: 4 }}
       />
+
       <CollectionSlider title={t('new-collections')} />
+
       <ProductSlider 
         title={t('catalog')}
         queryParams={{ ordering: '?', limit: 4 }}

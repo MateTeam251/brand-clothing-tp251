@@ -1,77 +1,41 @@
-import { useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetCollectionsQuery } from '../../shared/api/collectionsApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { Collection } from '../../shared/types/products';
 import fallbackImage from '../../shared/assets/images/autumn-collection.png';
-import summerImage from '../../shared/assets/images/summer-collection.png';
 import styles from './CollectionSlider.module.scss';
+import { useDragScroll } from '../../shared/hooks/useDragScroll';
+import summerImage from '../../shared/assets/images/summer-collection.png';
+import autumnImage from '../../shared/assets/images/autumn-collection.png';
 
 type CollectionSliderProps = {
   title: string;
 };
 
 const CollectionCard = ({ collection }: { collection: Collection }) => {
-  const image = collection.slug === 'summer' ? summerImage : fallbackImage;
-
+  const getCollectionImage = (slug: string) => {
+  if (slug === 'forever-summer') return summerImage;
+  if (slug === 'i-am-an-autumn') return autumnImage;
+    return fallbackImage;
+    
+};
   return (
     <article className={styles.slider__item}>
       <Link className={styles.card} to={`/catalog?collection=${encodeURIComponent(collection.slug)}`}>
-        <img className={styles.card__image} src={image} alt={collection.name} />
+        <img className={styles.card__image} src={getCollectionImage(collection.slug)} alt={collection.name} />
       <h3 className={styles.card__title}>{collection.name}</h3>
       <p className={styles.card__description}>{collection.description}</p>
       </Link>
     </article>
-  );
-};
+  );}
 
 export const CollectionSlider = ({ title }: CollectionSliderProps) => {
   const { t } = useTranslation();
   const language = useAppSelector((state) => state.settings.language);
-  const sliderRef = useRef<HTMLDivElement | null>(null);
-  const dragStartX = useRef(0);
-  const dragStartScrollLeft = useRef(0);
-  const isDragging = useRef(false);
-  const hasDragged = useRef(false);
+  const { ref: sliderRef, handlePointerDown, handlePointerMove, handlePointerUp, handleClickCapture } =
+  useDragScroll<HTMLDivElement>();
   const { data, isLoading, isError } = useGetCollectionsQuery({ lang: language });
-
-  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    const slider = sliderRef.current;
-    if (!slider) return;
-    if (slider.scrollWidth <= slider.clientWidth) return;
-
-    isDragging.current = true;
-    hasDragged.current = false;
-    dragStartX.current = event.clientX;
-    dragStartScrollLeft.current = slider.scrollLeft;
-    slider.setPointerCapture(event.pointerId);
-    slider.classList.add('is-dragging');
-  };
-
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !sliderRef.current) return;
-    const distance = event.clientX - dragStartX.current;
-    if (Math.abs(distance) > 5) hasDragged.current = true;
-    sliderRef.current.scrollLeft = dragStartScrollLeft.current - distance;
-  };
-
-  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const slider = sliderRef.current;
-    if (!slider || !isDragging.current) return;
-    isDragging.current = false;
-    slider.releasePointerCapture(event.pointerId);
-    slider.classList.remove('is-dragging');
-  };
-
-  const handleTrackClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (hasDragged.current) {
-      event.preventDefault();
-      event.stopPropagation();
-      hasDragged.current = false;
-    }
-  };
 
   return (
     <section className={styles.slider} aria-labelledby='collections-slider-title'>
@@ -96,7 +60,7 @@ export const CollectionSlider = ({ title }: CollectionSliderProps) => {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          onClick={handleTrackClick}
+          onClickCapture={handleClickCapture}
         >
           {data.results.map((collection) => (
             <CollectionCard collection={collection} key={collection.id} />
