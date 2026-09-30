@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Header.module.scss';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../shared/hooks/reduxHooks';
 import { setCurrency, setLanguage } from '../../../app/store/reducers/settingsSlice';
 import { useTranslation } from 'react-i18next';
-
 import Logo from '../../../shared/assets/images/logotype.png';
 
 import BurgerIcon from '../../../shared/assets/icons/burger.svg';
@@ -14,6 +13,7 @@ import UserIcon from '../../../shared/assets/icons/user.svg';
 import SearchIcon from '../../../shared/assets/icons/search.svg';
 import closeIcon from '../../../shared/assets/icons/close.svg';
 import cartActive from '../../../shared/assets/icons/cart-active.svg';
+import { useDebouncedSearchParam } from '../../../shared/hooks/useDebouncedSearchParam';
 
 export const Header: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -22,8 +22,42 @@ export const Header: React.FC = () => {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const { t, i18n } = useTranslation();
   const location = useLocation();
-  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
+  const [searchValue, setSearchValue] = useDebouncedSearchParam('search');
+
+  if (prevPathname !== location.pathname) {
+    setPrevPathname(location.pathname);
+
+    if (location.pathname !== '/catalog') {
+      setIsSearchOpen(false);
+      setSearchValue('');
+    }
+  }
+
+  const handleSearchOpen = () => {
+    if (location.pathname !== '/catalog') {
+      navigate('/catalog');
+    }
+
+    setIsSearchOpen(true);
+  };
+
+  const handleSearchClose = () => {
+    setIsSearchOpen(false);
+    setSearchValue('');
+  };
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const value = searchValue.trim();
+    navigate(value ? `/catalog?search=${encodeURIComponent(value)}` : '/catalog');
+  };
+  const isCartPage = location.pathname === '/cart';
 
   const handleLanguageChange = (nextLanguage: 'ua' | 'en') => {
     dispatch(setLanguage(nextLanguage));
@@ -64,13 +98,13 @@ export const Header: React.FC = () => {
           </div>
         </div>
         <hr className={styles['header__divider']} />
-        <div className={`${styles['header__main']} container`}>
+        <div className={`${styles['header__main']} ${isSearchOpen ? styles['header__main--search'] : ''} container`}>
           <nav className={`${styles['header__nav']} ${styles['header__nav--desktop']}`} aria-label="Main navigation">
             <ul className={styles['header__list']}>
               <li><Link className={styles['header__link']} to="/catalog">{t('catalog')}</Link></li>
               <li><Link className={styles['header__link']} to="/about">{t('about')}</Link></li>
-              <li><Link className={styles['header__link']} to="/catalog?filter=bestsellers">{t('bestsellers')}</Link></li>
-              <li><Link className={styles['header__link']} to="/collections">{t('collections')}</Link></li>
+              <li><Link className={styles['header__link']} to="/catalog?is_bestseller=true">{t('bestsellers')}</Link></li>
+              {/* <li><Link className={styles['header__link']} to="/collections">{t('collections')}</Link></li> */}
             </ul>
           </nav>
           <nav className={`${styles['header__nav']} ${styles['header__nav--mobile']}`} aria-label="Mobile navigation">
@@ -91,9 +125,37 @@ export const Header: React.FC = () => {
               </li>
             </ul>
           </nav>
-          <Link className={styles['header__logo-link']} to="/" aria-label="Home">
-            <img className={styles['header__logo']} src={Logo} alt="Logotype" />
-          </Link>
+          {isSearchOpen ? (
+            <form className={styles['header__search-form']} onSubmit={handleSearchSubmit}>
+              <img className={styles['header__search-form-icon']} src={SearchIcon} alt="" aria-hidden="true" />
+              <input
+                className={styles['header__search-input']}
+                type="text"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    handleSearchClose();
+                  }
+                }}
+                placeholder={t('catalog_page.search_placeholder')}
+                aria-label={t('catalog_page.search_placeholder')}
+                autoFocus
+              />
+              <button
+                type="button"
+                className={styles['header__icon-button']}
+                onClick={handleSearchClose}
+                aria-label={t('close')}
+              >
+                <img className={styles['header__iconClose']} src={closeIcon} alt="" aria-hidden="true" />
+              </button>
+            </form>
+          ) : (
+            <Link className={styles['header__logo-link']} to="/" aria-label="Home">
+              <img className={styles['header__logo']} src={Logo} alt="Logotype" />
+            </Link>
+          )}
           <nav className={`${styles['header__nav']} ${styles['header__nav--account']}`} aria-label="Account navigation">
             <div className={styles['header__actions'] }>
               <div className={styles['header__currency']}>
@@ -109,7 +171,11 @@ export const Header: React.FC = () => {
             </div>
             <ul className={styles['header__list']}>
               <li>
-                <button className={`${styles['header__icon-button']} ${styles['header__search-button']}`} aria-label="Search">
+                <button
+                  className={`${styles['header__icon-button']} ${styles['header__search-button']}`}
+                  aria-label="Search"
+                  onClick={handleSearchOpen}
+                >
                   <img className={styles['header__icon']} src={SearchIcon} alt="" aria-hidden="true" />
                 </button>
               </li>
@@ -124,8 +190,14 @@ export const Header: React.FC = () => {
               </li>
               <li>
                 <Link className={styles['header__icon-button']} to="/cart" aria-label="Cart">
-                  <img className={styles['header__icon']} src={location.pathname === '/cart' ? cartActive : CartIcon} alt="" />
-                  {cartCount > 0 && <span className={styles['header__cart-count']}>{cartCount}</span>}
+                  <img className={styles['header__icon']} src={isCartPage ? cartActive : CartIcon} alt="" />
+                  {cartCount > 0 && <span
+                    className={`${styles['header__cart-count']} ${
+                        isCartPage ? styles['header__cart-count--active'] : ''
+                      }`}
+                  >
+                    {cartCount}
+                  </span>}
                 </Link>
               </li>
               <li>

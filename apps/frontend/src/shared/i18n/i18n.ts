@@ -13,7 +13,7 @@ i18n.use(initReactI18next).init({
         catalog: 'Catalog',
         about: 'About Us',
         instagram: 'Instagram',
-        care: 'Care',
+        care: 'Garment Care',
         delivery: 'Delivery',
         refund: "Refund's",
         privacy: 'Privacy policy',
