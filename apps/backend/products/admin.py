@@ -40,8 +40,22 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
-    list_display = ("name", "slug", "created_at")
+    list_display = ("name", "slug", "image_preview", "created_at")
     search_fields = ("name",)
+    readonly_fields = ("image_preview_large",)
+    fields = ("name", "slug", "image", "description_ua", "description_eng")
+
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 40px;" />', obj.image.url)
+        return "—"
+    image_preview.short_description = "Фото"
+
+    def image_preview_large(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 200px;" />', obj.image.url)
+        return "Фото ще не завантажено"
+    image_preview_large.short_description = "Превʼю"
 
 
 @admin.register(SizeGuide)

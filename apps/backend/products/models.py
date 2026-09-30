@@ -14,6 +14,7 @@ class Collection(models.Model):
     description_ua = models.TextField(blank=True)
     description_eng = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to="collections/", blank=True, default="")
 
     def __str__(self):
         return self.name
