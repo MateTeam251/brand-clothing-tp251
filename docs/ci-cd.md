@@ -1,33 +1,54 @@
-# CI Pipeline
+# CI/CD
+
+Two kinds of workflows: **checks** on pull requests, and the **release** pipeline on `develop` / `main`.
+Release and rollback steps: [releasing.md](releasing.md).
 
 ## Workflows
 
-| File | Triggers on | Runs |
+| File | Runs on | What it does |
 |---|---|---|
-| `backend-ci.yml` | `apps/backend/**` | `manage.py check`, migration check, `pytest` |
-| `frontend-ci.yml` | `apps/frontend/**` | `npm run lint`, `npm run build` |
-| `docker-build.yml` | `apps/backend/**` | Docker image build (no push) |
+| `backend-ci.yml` | PR into `develop`/`main` (every PR, no path filter); called by `release.yml` | `manage.py check`, missing-migrations check, `pytest` with coverage report |
+| `frontend-ci.yml` | PR into `develop`/`main`; push to `develop`/`main` touching `apps/frontend/**` | `npm run lint`, `npm run build` (includes type-check) |
+| `docker-build.yml` | PR touching `apps/backend/**` or `db/**` | Builds the production images (arm64), no push |
+| `release.yml` | Push (merge) to `develop` or `main`; manual | Test → build & push images → deploy → smoke check |
 
-## Triggers
+All of them can also be started by hand: **Actions → workflow → Run workflow**.
 
-- Push to `main` or `develop`
-- Pull request into `main` or `develop`
-- Manual: **Run workflow** button in the Actions tab (ignores path filters, runs on any branch)
+## Release pipeline
+
+```
+merge to develop ──► test ──► build ──► deploy staging    ──► smoke check
+merge to main    ──► test ──► build ──► deploy production ──► smoke check
+```
+
+- **test**: the same `backend-ci.yml` as on PRs, on the merged code.
+- **build**: arm64 images pushed to ECR. `brand-clothing-backend` is tagged with the commit SHA; `brand-clothing-db` with the git hash of `db/` and only rebuilt when `db/` changes.
+- **deploy**: writes `IMAGE_TAG` / `DB_IMAGE_TAG` to SSM and runs `deploy.sh` on the instance via SSM Run Command (no SSH). The job's log shows the full `deploy.sh` output.
+- **smoke check**: `/api/admin/login/` and its CSS must return 200 within 60 s.
+- **Manual run** (rollback / redeploy): pick `environment` and an existing `image_tag`; test and build are skipped.
+
+Staging runs on weekdays 08:00–20:00 Kyiv time. A deploy outside those hours is skipped with a warning, not an error: `IMAGE_TAG` is already updated, so the instance starts the new version on its next boot.
 
 ## Run naming
 
-`<actor> - <branch> - <commit SHA>`
+- Checks: `<actor> - <branch> - <commit SHA>`
+- Release: `Release <branch> - <SHA>`; manual: `Deploy <SHA> to <environment> (<actor>)`
 
 ## Concurrency
 
-New push to the same branch cancels that branch's in-progress run. `main` and `develop` runs always complete.
+- Checks: a new push to the same branch/PR cancels the running check. Runs on `develop` and `main` always complete.
+- Deploys: one per environment at a time. A second deploy waits; a running deploy is never cancelled.
 
-## Merge status
+## Access and secrets
 
-Not enforced yet — branch protection isn't configured, so a red check doesn't currently block a merge.
+- **No AWS keys in GitHub.** Workflows get short-lived credentials via OIDC:
+  - ECR push role: only from `develop` / `main`.
+  - Deploy roles: one per environment, only from jobs in the GitHub Environment `staging` (branch `develop`) or `production` (branch `main`).
+- GitHub Environment variables: `AWS_DEPLOY_ROLE_ARN`, `APP_ROLE_TAG`, `APP_URL`. Repo variables: `AWS_REGION`, `AWS_ECR_PUSH_ROLE_ARN`.
+- App configuration lives in SSM Parameter Store (`/brand-clothing/<env>/`), managed in `infra/environments/<env>/app-config.tf`. Secrets are under `/brand-clothing/<env>/secrets/` and are never in git, Terraform or GitHub.
+- Backend CI uses dummy `SECRET_KEY` / Postgres credentials for its throwaway test database. `payments` tests override `WAYFORPAY_*` via `override_settings` — no real credentials involved.
 
-No coverage gate. `pytest` fails only on a failing test, not on missing coverage.
+## Merge rules
 
-## Secrets
-
-Backend job uses dummy `SECRET_KEY`/Postgres credentials, scoped to the CI database only. `payments` tests override `WAYFORPAY_*` via `override_settings` — no real credentials involved.
+- PRs into `develop`; releases are PRs `develop` → `main`, **merge commit only** (see [releasing.md](releasing.md#rules)).
+- No coverage gate: `pytest` fails only on a failing test, not on missing coverage.
