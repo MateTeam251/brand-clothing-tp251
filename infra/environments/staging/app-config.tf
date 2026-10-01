@@ -31,10 +31,3 @@ resource "aws_ssm_parameter" "app_config" {
   type  = "String"
   value = each.value
 }
-
-# Adopt the params created by hand (one-time; delete this block after apply).
-import {
-  for_each = local.app_config
-  to       = aws_ssm_parameter.app_config[each.key]
-  id       = "/brand-clothing/staging/${each.key}"
-}
