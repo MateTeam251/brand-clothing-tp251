@@ -22,6 +22,7 @@ variable "budget_limit_usd" {
 variable "budget_alert_email" {
   description = "Email address to notify when the budget threshold is forecast to be exceeded."
   type        = string
+  sensitive   = true # plans are posted as PR comments in a public repo
 }
 
 variable "github_org" {
