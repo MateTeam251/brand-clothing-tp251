@@ -50,8 +50,8 @@ resource "aws_iam_role" "this" {
 
 data "aws_iam_policy_document" "deploy" {
   statement {
-    sid       = "SetImageTag"
-    actions   = ["ssm:PutParameter", "ssm:GetParameter"]
+    sid     = "SetImageTag"
+    actions = ["ssm:PutParameter", "ssm:GetParameter"]
     resources = [
       "arn:aws:ssm:${local.region}:${local.account_id}:parameter${var.ssm_parameter_path}/IMAGE_TAG",
       "arn:aws:ssm:${local.region}:${local.account_id}:parameter${var.ssm_parameter_path}/DB_IMAGE_TAG",

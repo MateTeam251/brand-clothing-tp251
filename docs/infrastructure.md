@@ -25,7 +25,7 @@ Both environments are built from the same modules and share only the ECR images.
 | Resource | Details |
 |---|---|
 | Auto Scaling group | 1 instance; self-heals; replaced via instance refresh |
-| Launch template | Amazon Linux 2023 arm64 (latest AMI), user-data installs Docker + Compose and writes `deploy.sh` |
+| Launch template | Amazon Linux 2023 arm64, AMI pinned (`ami_id`, bumped by PR), user-data installs Docker + Compose and writes `deploy.sh` |
 | Root volume | gp3, encrypted, 16 GB prod / 12 GB staging |
 | Data volume | gp3, encrypted, 20 GB prod / 10 GB staging, mounted at `/data` (Postgres data, app logs). `prevent_destroy` |
 | Elastic IP | re-attached on every boot. `prevent_destroy` |
@@ -77,8 +77,8 @@ CloudFront: one distribution per environment, default `*.cloudfront.net` certifi
 | `brand-clothing-github-actions-ecr-push` | release build (`develop`, `main`) | push to ECR |
 | `brand-clothing-staging-github-deploy` | release deploy, GitHub Environment `staging` | set image tags, run `deploy.sh` on staging |
 | `brand-clothing-github-deploy-prod` | release deploy, GitHub Environment `production` | same, prod |
-| `brand-clothing-terraform-plan` | Terraform CI (planned) | read-only, no secrets |
-| `brand-clothing-terraform-apply-{staging,production}` | Terraform CI (planned), `infra-*` Environments | apply, with guardrails (no secrets, no state deletion, no human IAM) |
+| `brand-clothing-terraform-plan` | `terraform.yml` PR plans | read-only, no secrets |
+| `brand-clothing-terraform-apply-{staging,production}` | `terraform.yml` applies, `infra-*` Environments | apply, with guardrails (no secrets, no state deletion, no human IAM) |
 | `brand-clothing-github-actions-terraform-plan` | nothing | old, to remove |
 
 GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys in GitHub.
@@ -101,4 +101,4 @@ GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys i
 
 ## Not in use yet
 
-Domain + Route 53, HTTPS certificate, SES email (console backend for now), Redis + Celery, Grafana Cloud agent, Terraform CI workflow.
+Domain + Route 53, HTTPS certificate, SES email (console backend for now), Redis + Celery, Grafana Cloud agent.

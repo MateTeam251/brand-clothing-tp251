@@ -67,6 +67,9 @@ module "compute" {
   nginx_conf   = file("${path.root}/../../../nginx/default.conf")
 
   instance_count = 1
+
+  # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
+  ami_id = "ami-0540ba4e636bf2faf"
 }
 
 # GitHub Actions deploys to prod only from jobs in the "production"
