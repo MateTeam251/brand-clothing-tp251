@@ -16,7 +16,9 @@ COPY . .
 
 # settings.py creates /app/logs at startup; /app itself is root-owned.
 # /app/staticfiles receives collectstatic output (served by WhiteNoise).
-RUN useradd --system --uid 10001 --no-create-home app \
+# A home directory, because gunicorn writes a control socket to $HOME at
+# startup ("Control server error: Permission denied: '/home/app'" without it).
+RUN useradd --system --uid 10001 --create-home --home-dir /home/app app \
     && mkdir -p /app/logs /app/staticfiles \
     && chown app:app /app/logs /app/staticfiles
 USER app
