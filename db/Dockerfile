@@ -16,9 +16,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends cron tini ca-ce
 COPY scripts/wal-g-backup.sh /usr/local/bin/wal-g-backup.sh
 RUN chmod +x /usr/local/bin/wal-g-backup.sh
 
+# Only /etc/cron.d (system crontab with a user field). Installing the same
+# file as root's personal crontab too (`crontab <file>`) made cron run the
+# user field as the command, so each night also logged a bogus failed run.
 COPY scripts/crontab /etc/cron.d/wal-g-backup
-RUN chmod 0644 /etc/cron.d/wal-g-backup \
-    && crontab /etc/cron.d/wal-g-backup
+RUN chmod 0644 /etc/cron.d/wal-g-backup
 
 RUN touch /var/log/wal-g-backup.log && chown postgres:postgres /var/log/wal-g-backup.log
 
