@@ -38,6 +38,10 @@ services:
     command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60 --access-logfile -"]
     env_file:
       - .env
+    environment:
+      # .env holds every SSM parameter, incl. the Grafana agent token. The app
+      # doesn't need it; "environment" overrides env_file, so blank it here.
+      GRAFANA_CLOUD_TOKEN: ""
     volumes:
       # error.log / payments.log survive container recreation (every deploy).
       - /data/app-logs:/app/logs
@@ -61,3 +65,126 @@ services:
       - web
     mem_limit: 64m
     logging: *logging
+
+  # Grafana Alloy: pushes host metrics and container logs to Grafana Cloud.
+  # Outbound HTTPS only, no ports. Values come from SSM via .env
+  # (app-config.tf; the token from secrets/GRAFANA_CLOUD_TOKEN).
+  alloy:
+    image: grafana/alloy:v1.11.0
+    container_name: brand_clothing_alloy
+    restart: always
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    configs:
+      - source: alloy
+        target: /etc/alloy/config.alloy
+    environment:
+      DEPLOY_ENV: ${DEPLOY_ENV:-unknown}
+      GRAFANA_PROM_URL: ${GRAFANA_PROM_URL:-}
+      GRAFANA_PROM_USER: ${GRAFANA_PROM_USER:-}
+      GRAFANA_LOKI_URL: ${GRAFANA_LOKI_URL:-}
+      GRAFANA_LOKI_USER: ${GRAFANA_LOKI_USER:-}
+      GRAFANA_CLOUD_TOKEN: ${GRAFANA_CLOUD_TOKEN:-}
+    volumes:
+      # Host metrics (read-only views of the host).
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+      # Container discovery + logs. Note: Docker socket access is root-equivalent.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    mem_limit: ${ALLOY_MEM_LIMIT:-160m}
+    logging: *logging
+
+configs:
+  alloy:
+    # Alloy config, inline so it ships with this file (embedded in user-data).
+    # No "$" in here: compose would interpolate it (write "$$" if ever needed).
+    content: |
+      logging {
+        level = "warn"
+      }
+
+      // ---- Metrics: CPU, memory, disk (/ and /data), network ----
+      prometheus.exporter.unix "host" {
+        procfs_path    = "/host/proc"
+        sysfs_path     = "/host/sys"
+        rootfs_path    = "/host/root"
+        set_collectors = ["cpu", "meminfo", "filesystem", "loadavg", "netdev", "diskstats", "pressure", "time", "uname"]
+      }
+
+      prometheus.scrape "host" {
+        targets         = prometheus.exporter.unix.host.targets
+        forward_to      = [prometheus.relabel.instance.receiver]
+        scrape_interval = "60s"
+      }
+
+      prometheus.relabel "instance" {
+        forward_to = [prometheus.remote_write.cloud.receiver]
+
+        rule {
+          target_label = "instance"
+          replacement  = sys.env("DEPLOY_ENV")
+        }
+      }
+
+      prometheus.remote_write "cloud" {
+        external_labels = { env = sys.env("DEPLOY_ENV") }
+
+        endpoint {
+          url = sys.env("GRAFANA_PROM_URL")
+
+          basic_auth {
+            username = sys.env("GRAFANA_PROM_USER")
+            password = sys.env("GRAFANA_CLOUD_TOKEN")
+          }
+        }
+      }
+
+      // ---- Logs: stdout/stderr of web, nginx, db ----
+      discovery.docker "containers" {
+        host = "unix:///var/run/docker.sock"
+      }
+
+      discovery.relabel "containers" {
+        targets = discovery.docker.containers.targets
+
+        rule {
+          source_labels = ["__meta_docker_container_name"]
+          regex         = "/brand_clothing_(web|nginx|db)"
+          action        = "keep"
+        }
+
+        rule {
+          source_labels = ["__meta_docker_container_name"]
+          regex         = "/brand_clothing_(.+)"
+          target_label  = "container"
+        }
+      }
+
+      loki.source.docker "containers" {
+        host       = "unix:///var/run/docker.sock"
+        targets    = discovery.relabel.containers.output
+        forward_to = [loki.process.scrub.receiver]
+      }
+
+      loki.process "scrub" {
+        forward_to = [loki.write.cloud.receiver]
+
+        // The "payments" logger prints WayForPay callback data (names, emails,
+        // phones). It stays on the instance (/data/app-logs/payments.log) only.
+        stage.drop {
+          expression = "^\\[payments"
+        }
+      }
+
+      loki.write "cloud" {
+        external_labels = { env = sys.env("DEPLOY_ENV") }
+
+        endpoint {
+          url = sys.env("GRAFANA_LOKI_URL")
+
+          basic_auth {
+            username = sys.env("GRAFANA_LOKI_USER")
+            password = sys.env("GRAFANA_CLOUD_TOKEN")
+          }
+        }
+      }

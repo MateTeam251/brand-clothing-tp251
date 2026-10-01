@@ -33,7 +33,7 @@ Both environments are built from the same modules and share only the ECR images.
 | IAM role | instance role: SSM Session Manager, S3 media/backups, read own SSM path, ECR pull |
 | Schedule | staging only: ASG scheduled actions start/stop |
 
-On the instance (`docker-compose.prod.yml`): **nginx** (public, port 80) → **web** (Django + gunicorn, WhiteNoise for static) → **db** (Postgres 16 + WAL-G, custom image).
+On the instance (`docker-compose.prod.yml`): **nginx** (public, port 80) → **web** (Django + gunicorn, WhiteNoise for static) → **db** (Postgres 16 + WAL-G, custom image), plus **alloy** (Grafana agent, outbound only).
 
 ## Network (`modules/network`)
 
@@ -95,8 +95,8 @@ GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys i
 |---|---|
 | AWS Budget | `brand-clothing-monthly-cap`, $30: email at 80% forecast and 100% actual |
 | IAM users / groups | *manual* |
-| Monitoring | Grafana Cloud free tier (planned, not set up yet) |
+| Monitoring | Grafana Cloud (stack `sturdyscone1696`, AWS eu-central-1). Alloy container on each instance pushes host metrics + web/nginx/db logs (payments logger dropped). Token: `secrets/GRAFANA_CLOUD_TOKEN` (*manual*), write-only access policy `brand-clothing-agent-write` |
 
 ## Not in use yet
 
-Domain + Route 53, HTTPS certificate, SES email (console backend for now), Redis + Celery, Grafana Cloud agent.
+Domain + Route 53, HTTPS certificate, SES email (console backend for now), Redis + Celery.
