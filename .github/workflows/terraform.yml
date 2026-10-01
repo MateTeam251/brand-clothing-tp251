@@ -79,11 +79,19 @@ jobs:
         run: terraform fmt -check -recursive -diff ../..
 
       - name: Init
-        run: >-
-          terraform init
-          -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
-          -backend-config="dynamodb_table=${{ vars.TF_LOCK_TABLE }}"
-          -backend-config="region=${{ vars.AWS_REGION }}"
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
+        run: |
+          # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
+          BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
+          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
+          [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
+          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
+          terraform init \
+            -backend-config="bucket=$BUCKET" \
+            -backend-config="dynamodb_table=$TABLE" \
+            -backend-config="region=$AWS_REGION"
 
       - name: Validate
         run: terraform validate -no-color
@@ -117,9 +125,9 @@ jobs:
             if (start > 0) out = out.slice(start);
             if (out.length > 60000) out = out.slice(0, 60000) + '\n\n... (truncated, full plan in the job log)';
             const summary = (out.match(/Plan: .*|No changes\..*/) || ['see log'])[0];
-            const status = code === '1' ? '❌ failed' : code === '2' ? '📝 changes' : '✅ no changes';
+            const status = code === '1' ? '(failed)' : code === '2' ? '(changes)' : '(no changes)';
             const marker = `<!-- terraform-plan-${env} -->`;
-            const body = `${marker}\n### Terraform plan: \`${env}\` ${status}\n${summary}\n\n<details><summary>Show plan</summary>\n\n\`\`\`\n${out}\n\`\`\`\n</details>\n\n_Commit ${context.sha.slice(0, 7)} · [run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`;
+            const body = `${marker}\n### Terraform plan: \`${env}\` ${status}\n${summary}\n\n<details><summary>Show plan</summary>\n\n\`\`\`\n${out}\n\`\`\`\n</details>\n\n_Commit ${context.sha.slice(0, 7)} - [run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`;
             const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: context.issue.number, per_page: 100 });
             const old = comments.find(c => c.body.startsWith(marker));
             if (old) await github.rest.issues.updateComment({ ...context.repo, comment_id: old.id, body });
@@ -162,11 +170,19 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Init
-        run: >-
-          terraform init
-          -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
-          -backend-config="dynamodb_table=${{ vars.TF_LOCK_TABLE }}"
-          -backend-config="region=${{ vars.AWS_REGION }}"
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
+        run: |
+          # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
+          BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
+          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
+          [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
+          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
+          terraform init \
+            -backend-config="bucket=$BUCKET" \
+            -backend-config="dynamodb_table=$TABLE" \
+            -backend-config="region=$AWS_REGION"
 
       - name: Plan
         run: terraform plan -no-color -lock-timeout=5m -out=tfplan
