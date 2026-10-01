@@ -41,7 +41,6 @@ On the instance (`docker-compose.prod.yml`): **nginx** (public, port 80) → **w
 |---|---|
 | VPC + public subnet + internet gateway | no NAT gateway, no private subnets |
 | Security group `app` | in: 80, 443 from anywhere (IPv4/IPv6). **No SSH** — access via SSM Session Manager |
-| Security group `monitoring` + exporter rules (9100, 9187, 8080) | left over from the self-hosted monitoring plan, unused. To remove |
 
 ## Storage (`modules/storage`)
 
@@ -79,7 +78,6 @@ CloudFront: one distribution per environment, default `*.cloudfront.net` certifi
 | `brand-clothing-github-deploy-prod` | release deploy, GitHub Environment `production` | same, prod |
 | `brand-clothing-terraform-plan` | `terraform.yml` PR plans | read-only, no secrets |
 | `brand-clothing-terraform-apply-{staging,production}` | `terraform.yml` applies, `infra-*` Environments | apply, with guardrails (no secrets, no state deletion, no human IAM) |
-| `brand-clothing-github-actions-terraform-plan` | nothing | old, to remove |
 
 GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys in GitHub.
 
