@@ -11,6 +11,7 @@ Release and rollback steps: [releasing.md](releasing.md).
 | `frontend-ci.yml` | PR into `develop`/`main`; push to `develop`/`main` touching `apps/frontend/**` | `npm run lint`, `npm run build` (includes type-check) |
 | `docker-build.yml` | PR touching `apps/backend/**` or `db/**` | Builds the production images (arm64), no push |
 | `release.yml` | Push (merge) to `develop` or `main`; manual | Test → build & push images → deploy → smoke check |
+| `terraform.yml` | PR / push touching `infra/environments/**`, `infra/modules/**`, `docker-compose.prod.yml`, `nginx/**`; manual | PR: fmt, validate, plan for staging + prod as a PR comment. Merge to `develop`: apply staging. Merge to `main`: apply prod after approval. Then instance refresh if the launch template changed |
 
 All of them can also be started by hand: **Actions → workflow → Run workflow**.
 
@@ -28,6 +29,15 @@ merge to main    ──► test ──► build ──► deploy production ─�
 - **Manual run** (rollback / redeploy): pick `environment` and an existing `image_tag`; test and build are skipped.
 
 Staging runs on weekdays 08:00–20:00 Kyiv time. A deploy outside those hours is skipped with a warning, not an error: `IMAGE_TAG` is already updated, so the instance starts the new version on its next boot.
+
+## Terraform pipeline
+
+- **PR**: the read-only plan role plans both environments; each plan is one PR comment, updated on every push. Review it like code: it's exactly what will change in AWS.
+- **Merge**: `develop` → apply staging (GitHub Environment `infra-staging`), `main` → apply prod (`infra-production`, needs approval). Apply roles can't read app secrets, touch the CI roles or human IAM.
+- **Instance refresh**: if the running instance is on an older launch template version (user-data, compose, nginx or AMI changed), the workflow replaces it and waits for `/api/admin/login/` → 200. Staging outside working hours: skipped, the next boot uses the new version.
+- Applies and app deploys share a concurrency group per environment, so they never run on the same instance at once.
+- `infra/bootstrap` (state bucket, CI roles) is applied by hand only, never by CI.
+- AMI is pinned (`ami_id` in each environment's `main.tf`); bump it by PR.
 
 ## Run naming
 
@@ -50,5 +60,6 @@ Staging runs on weekdays 08:00–20:00 Kyiv time. A deploy outside those hours i
 
 ## Merge rules
 
+- Branch protection ruleset on `develop` and `main`: PR required, required checks **Backend tests** and **Frontend lint & build**.
 - PRs into `develop`; releases are PRs `develop` → `main`, **merge commit only** (see [releasing.md](releasing.md#rules)).
 - No coverage gate: `pytest` fails only on a failing test, not on missing coverage.

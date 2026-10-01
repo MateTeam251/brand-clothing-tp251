@@ -19,6 +19,13 @@ locals {
     AWS_STORAGE_BUCKET_NAME = module.storage.media_bucket_name
     WALG_S3_PREFIX          = "s3://${module.storage.backups_bucket_name}/wal-g"
     ECR_REGISTRY            = "875476618056.dkr.ecr.eu-central-1.amazonaws.com"
+
+    # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
+    DEPLOY_ENV        = "prod"
+    GRAFANA_PROM_URL  = "https://prometheus-prod-65-prod-eu-west-2.grafana.net/api/prom/push"
+    GRAFANA_PROM_USER = "3626625"
+    GRAFANA_LOKI_URL  = "https://logs-prod-012.grafana.net/loki/api/v1/push"
+    GRAFANA_LOKI_USER = "1808980"
   }
 }
 

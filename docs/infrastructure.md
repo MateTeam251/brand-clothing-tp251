@@ -25,7 +25,7 @@ Both environments are built from the same modules and share only the ECR images.
 | Resource | Details |
 |---|---|
 | Auto Scaling group | 1 instance; self-heals; replaced via instance refresh |
-| Launch template | Amazon Linux 2023 arm64 (latest AMI), user-data installs Docker + Compose and writes `deploy.sh` |
+| Launch template | Amazon Linux 2023 arm64, AMI pinned (`ami_id`, bumped by PR), user-data installs Docker + Compose and writes `deploy.sh` |
 | Root volume | gp3, encrypted, 16 GB prod / 12 GB staging |
 | Data volume | gp3, encrypted, 20 GB prod / 10 GB staging, mounted at `/data` (Postgres data, app logs). `prevent_destroy` |
 | Elastic IP | re-attached on every boot. `prevent_destroy` |
@@ -33,7 +33,7 @@ Both environments are built from the same modules and share only the ECR images.
 | IAM role | instance role: SSM Session Manager, S3 media/backups, read own SSM path, ECR pull |
 | Schedule | staging only: ASG scheduled actions start/stop |
 
-On the instance (`docker-compose.prod.yml`): **nginx** (public, port 80) → **web** (Django + gunicorn, WhiteNoise for static) → **db** (Postgres 16 + WAL-G, custom image).
+On the instance (`docker-compose.prod.yml`): **nginx** (public, port 80) → **web** (Django + gunicorn, WhiteNoise for static) → **db** (Postgres 16 + WAL-G, custom image), plus **alloy** (Grafana agent, outbound only).
 
 ## Network (`modules/network`)
 
@@ -41,7 +41,6 @@ On the instance (`docker-compose.prod.yml`): **nginx** (public, port 80) → **w
 |---|---|
 | VPC + public subnet + internet gateway | no NAT gateway, no private subnets |
 | Security group `app` | in: 80, 443 from anywhere (IPv4/IPv6). **No SSH** — access via SSM Session Manager |
-| Security group `monitoring` + exporter rules (9100, 9187, 8080) | left over from the self-hosted monitoring plan, unused. To remove |
 
 ## Storage (`modules/storage`)
 
@@ -77,9 +76,8 @@ CloudFront: one distribution per environment, default `*.cloudfront.net` certifi
 | `brand-clothing-github-actions-ecr-push` | release build (`develop`, `main`) | push to ECR |
 | `brand-clothing-staging-github-deploy` | release deploy, GitHub Environment `staging` | set image tags, run `deploy.sh` on staging |
 | `brand-clothing-github-deploy-prod` | release deploy, GitHub Environment `production` | same, prod |
-| `brand-clothing-terraform-plan` | Terraform CI (planned) | read-only, no secrets |
-| `brand-clothing-terraform-apply-{staging,production}` | Terraform CI (planned), `infra-*` Environments | apply, with guardrails (no secrets, no state deletion, no human IAM) |
-| `brand-clothing-github-actions-terraform-plan` | nothing | old, to remove |
+| `brand-clothing-terraform-plan` | `terraform.yml` PR plans | read-only, no secrets |
+| `brand-clothing-terraform-apply-{staging,production}` | `terraform.yml` applies, `infra-*` Environments | apply, with guardrails (no secrets, no state deletion, no human IAM) |
 
 GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys in GitHub.
 
@@ -97,8 +95,8 @@ GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys i
 |---|---|
 | AWS Budget | `brand-clothing-monthly-cap`, $30: email at 80% forecast and 100% actual |
 | IAM users / groups | *manual* |
-| Monitoring | Grafana Cloud free tier (planned, not set up yet) |
+| Monitoring | Grafana Cloud (stack `sturdyscone1696`, AWS eu-central-1). Alloy container on each instance pushes host metrics + web/nginx/db logs (payments logger dropped). Token: `secrets/GRAFANA_CLOUD_TOKEN` (*manual*), write-only access policy `brand-clothing-agent-write` |
 
 ## Not in use yet
 
-Domain + Route 53, HTTPS certificate, SES email (console backend for now), Redis + Celery, Grafana Cloud agent, Terraform CI workflow.
+Domain + Route 53, HTTPS certificate, SES email (console backend for now), Redis + Celery.

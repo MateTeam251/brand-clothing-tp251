@@ -12,6 +12,15 @@ variable "security_group_id" {
   type        = string
 }
 
+variable "ami_id" {
+  description = <<-EOT
+    Amazon Linux 2023 arm64 AMI. Pinned on purpose: a new AMI means a new
+    instance, so it's bumped by PR, not whenever Amazon publishes one.
+    Newest: aws ssm get-parameter --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64 --query Parameter.Value --output text
+  EOT
+  type        = string
+}
+
 variable "instance_type" {
   type    = string
   default = "t4g.small"

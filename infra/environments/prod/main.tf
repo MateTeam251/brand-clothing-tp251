@@ -27,10 +27,6 @@ module "storage" {
 module "cicd_oidc" {
   source = "../../modules/cicd-oidc"
 
-  project_name = var.project_name
-  github_org   = var.github_org
-  github_repo  = var.github_repo
-
   # First apply in a fresh AWS account: leave this true. If this AWS
   # account already has a GitHub OIDC provider from another project,
   # set create_oidc_provider = false and pass its ARN via
@@ -67,6 +63,9 @@ module "compute" {
   nginx_conf   = file("${path.root}/../../../nginx/default.conf")
 
   instance_count = 1
+
+  # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
+  ami_id = "ami-0540ba4e636bf2faf"
 }
 
 # GitHub Actions deploys to prod only from jobs in the "production"
