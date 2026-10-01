@@ -134,7 +134,7 @@ jobs:
             else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
 
   apply:
-    name: apply (${{ github.ref_name == 'main' && 'prod' || 'staging' }})
+    name: apply # environment (infra-staging / infra-production) shows next to the job
     if: >-
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       (github.ref_name == 'develop' || github.ref_name == 'main')
