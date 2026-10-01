@@ -29,10 +29,3 @@ resource "aws_ssm_parameter" "app_config" {
   type  = "String"
   value = each.value
 }
-
-# Adopt the params created by hand (one-time; delete this block after apply).
-import {
-  for_each = { for k, v in local.app_config : k => v if k != "EMAIL_BACKEND" } # EMAIL_BACKEND is new in prod
-  to       = aws_ssm_parameter.app_config[each.key]
-  id       = "/brand-clothing/prod/${each.key}"
-}
