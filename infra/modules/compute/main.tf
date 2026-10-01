@@ -92,7 +92,7 @@ resource "aws_launch_template" "app" {
 # Self-healing single instance: if it dies, the ASG launches a replacement,
 # and user-data re-attaches the data volume and the EIP.
 resource "aws_autoscaling_group" "app" {
-  name                      = "${var.project_name}-app"
+  name = "${var.project_name}-app"
   # With a schedule the ASG may sit at 0 overnight, so min is 0 and the
   # scheduled actions own desired_capacity.
   min_size                  = var.schedule == null ? var.instance_count : 0
