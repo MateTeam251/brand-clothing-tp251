@@ -1,20 +1,3 @@
-variable "project_name" {
-  type    = string
-  default = "brand-clothing"
-}
-
-variable "github_org" {
-  description = "GitHub org/user that owns the repo."
-  type        = string
-  default     = "MateTeam251"
-}
-
-variable "github_repo" {
-  description = "GitHub repo name (without org prefix)."
-  type        = string
-  default     = "brand-clothing-tp251"
-}
-
 variable "create_oidc_provider" {
   description = <<-EOT
     Whether to create the GitHub Actions OIDC provider in this AWS
