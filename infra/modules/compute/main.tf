@@ -2,12 +2,6 @@ data "aws_subnet" "app" {
   id = var.subnet_id
 }
 
-# Latest Amazon Linux 2023 arm64 AMI. A new AMI only updates the launch
-# template; the running instance is untouched until it's replaced.
-data "aws_ssm_parameter" "al2023_arm64" {
-  name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
-}
-
 resource "aws_eip" "app" {
   domain = "vpc"
 
@@ -39,7 +33,7 @@ resource "aws_ebs_volume" "data" {
 
 resource "aws_launch_template" "app" {
   name_prefix            = "${var.project_name}-app-"
-  image_id               = nonsensitive(data.aws_ssm_parameter.al2023_arm64.value)
+  image_id               = var.ami_id
   instance_type          = var.instance_type
   vpc_security_group_ids = [var.security_group_id]
   user_data = base64encode(templatefile("${path.module}/user-data.sh.tftpl", {
