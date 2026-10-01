@@ -1,0 +1,1 @@
+export { PasswordForgotPage } from './PasswordForgotPage';

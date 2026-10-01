@@ -1,0 +1,104 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.form {
+  @include flex(12px);
+  
+  padding: 16px;
+  border: 1px solid $light-gray;
+  border-radius: 8px;
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    @include on-desktop {
+      flex-direction: row;
+    }
+  }
+
+  &__title {
+    font-family: 'Bodoni', serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0;
+
+    @include on-desktop {
+      font-size: 20px;
+    }
+  }
+
+  &__input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 44px;
+    border: 1px solid $light-gray;
+    border-radius: 6px;
+    background-color: $dominant;
+    padding: 13px 12px;
+    font-family: 'Cambria', serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: $gray90;
+
+    @include on-desktop {
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+
+  &__inputError {
+    border-color: $error;
+  }
+
+  &__errorText {
+    color: $error;
+    font-size: 12px;
+    margin: -8px 0 0;
+  }
+
+  &__error {
+    color: $error;
+    font-size: 13px;
+  }
+
+  &__submitBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__submitBtn {
+    height: 48px;
+    background-color: #fff;
+    border: 1px solid $light-gray;
+    border-radius: 100px;
+    padding: 12px 24px;
+    font-family: 'Bodoni', serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+
+    &:hover {
+      background-color: $accent;
+    }
+
+    @include on-desktop {
+      font-size: 20px;
+    }
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 13px;
+    color: $color-inactive;
+
+    @include on-desktop {
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+}

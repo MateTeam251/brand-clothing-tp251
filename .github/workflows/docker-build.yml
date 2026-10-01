@@ -1,0 +1,62 @@
+name: Docker Build
+run-name: ${{ github.actor }} - ${{ github.head_ref || github.ref_name }} - ${{ github.sha }}
+
+# PR check only: proves both images still build for arm64. Building and
+# pushing for deploys happens in release.yml after the tests pass.
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/backend/**"
+      - "db/**"
+      - ".github/workflows/docker-build.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: backend
+            context: apps/backend
+            file: apps/backend/Dockerfile.prod
+          - image: db
+            context: db
+            file: db/Dockerfile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The t4g instances are ARM (Graviton). QEMU lets the x86 runner build arm64 images.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          platforms: linux/arm64
+          push: false
+          tags: brand-clothing-${{ matrix.image }}:ci
+          provenance: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}

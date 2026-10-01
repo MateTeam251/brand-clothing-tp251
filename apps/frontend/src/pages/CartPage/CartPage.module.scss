@@ -1,0 +1,176 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.cart {
+  background-color: $dominant;
+  padding: 40px 16px 72px;
+
+  @include on-desktop {
+    padding: 72px 40px 120px;
+  }
+
+  &__wrapper {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    @include on-desktop {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 100px;
+      row-gap: 64px;
+    }
+  }
+
+  &__title {
+    font-size: 20px;
+    font-weight: 500;
+    color: #111;
+    text-align: center;
+    margin: 0;
+
+    @include on-desktop {
+      grid-column: span 2;
+      font-size: 24px;
+      text-align: left; 
+    }
+  }
+
+  &__empty {
+    padding: 40px 0;
+    text-align: center;
+    color: #666;
+    font-size: 16px;
+  }
+
+  &__content {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    @include on-desktop {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 64px;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    @include on-desktop {
+      max-width: 650px;
+      flex-grow: 1;
+    }
+  }
+
+  &__bottom {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    @include on-desktop {
+      gap: 32px;
+      grid-column: 2;
+      margin-left: auto;
+      width: 100%;
+      max-width: 553px;
+    }
+  }
+
+  &__summary {
+    font-family: 'Cambria', serif;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: none;
+    border-radius: 16px;
+
+    @include on-desktop {
+      border: 1px solid $light-gray;
+    }
+}
+
+&__box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @include on-desktop {
+    padding: 16px $light-gray;
+    border-radius: 16px;
+  }
+}
+
+  &__total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #000;
+  }
+
+  &__divider {
+    border-top: 1px solid $light-gray;
+    padding-top: 16px;
+
+    .cart__total-row {
+      font-size: 16px;
+      font-weight: 600;
+
+      span:last-child {
+        font-size: 18px;
+      }
+    }
+  }
+
+  &__checkout-btn {
+    width: 100%;
+    background-color: $accent;
+    font-family: 'Bodoni', serif;
+    color: #000;
+    border: none;
+    border-radius: 100px;
+    padding: 14px;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 24px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: $pink100;
+    }
+  }
+
+  &__continue-btn {
+    font-family: 'Cambria', serif;
+    color: #000;
+    text-align: center;
+    font-size: 12px;
+    line-height: 16px;
+    text-decoration: underline;
+
+    @include on-desktop {
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+  &__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  &__price {
+    font-weight: 700;
+  }
+}

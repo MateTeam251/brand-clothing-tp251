@@ -1,0 +1,264 @@
+name: Release
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+      && format('Deploy {0} to {1} ({2})', inputs.image_tag, inputs.environment, github.actor)
+      || format('Release {0} - {1}', github.ref_name, github.sha) }}
+
+# develop -> staging, main -> production, automatically on every push (merge).
+# Manual "Run workflow" = deploy an existing image (rollback / redeploy).
+#   Staging:    run it on branch develop.
+#   Production: run it on branch main (the environment only allows main).
+
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Where to deploy
+        type: choice
+        options: [staging, production]
+        required: true
+      image_tag:
+        description: Full 40-char git SHA whose images are already in ECR
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  # 1. Tests on the merged code (same workflow as the PR check).
+  test:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/backend-ci.yml
+
+  # 2. Build arm64 images and push them to ECR, tagged with the commit SHA.
+  build:
+    name: build (${{ matrix.image }})
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write # OIDC -> ECR push role (trusted for develop/main only)
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - image: backend
+            context: apps/backend
+            file: apps/backend/Dockerfile.prod
+          - image: db
+            context: db
+            file: db/Dockerfile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The t4g instances are ARM (Graviton). QEMU lets the x86 runner build arm64 images.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ECR_PUSH_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # backend: tagged with the commit SHA (every release).
+      # db: tagged with the git tree hash of db/, so it only changes (and Postgres
+      # only restarts) when something in db/ changed. Existing tag -> skip the build.
+      - name: Choose tag
+        id: tag
+        run: |
+          if [ "${{ matrix.image }}" = "db" ]; then
+            TAG=$(git rev-parse HEAD:db)
+            if aws ecr describe-images --repository-name brand-clothing-db \
+                 --image-ids imageTag="$TAG" > /dev/null 2>&1; then
+              echo "db image $TAG already in ECR (db/ unchanged), skipping build"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            TAG=${{ github.sha }}
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        if: steps.tag.outputs.skip != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.ecr.outputs.registry }}/brand-clothing-${{ matrix.image }}:${{ steps.tag.outputs.tag }}
+          provenance: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  # 3. Point SSM at the new tag and run deploy.sh on the instance via SSM Run Command.
+  deploy:
+    name: deploy (${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }})
+    needs: build
+    # Push: only after a successful build. Manual run: build is skipped, images already exist.
+    if: >-
+      !cancelled() &&
+      (github.event_name == 'workflow_dispatch' || needs.build.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # OIDC -> the environment's deploy role
+
+    # The deploy role trusts only jobs running in this GitHub Environment,
+    # and the Environment only accepts its branch (staging: develop, production: main).
+    environment:
+      name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+      url: ${{ vars.APP_URL }}
+
+    # One deploy per environment at a time; a newer one waits, it doesn't cancel a running deploy.
+    concurrency:
+      group: deploy-${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+      cancel-in-progress: false
+
+    env:
+      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+      IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.sha }}
+      APP_ROLE_TAG: ${{ vars.APP_ROLE_TAG }}
+      APP_URL: ${{ vars.APP_URL }}
+
+    steps:
+      # Full history, so the db tag can be computed for any commit (also rollbacks).
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check inputs
+        run: |
+          if ! [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::image_tag must be a full 40-character git SHA, got '$IMAGE_TAG'"
+            exit 1
+          fi
+          if [ -z "$APP_ROLE_TAG" ] || [ -z "$APP_URL" ]; then
+            echo "::error::Environment '$ENVIRONMENT' is missing the APP_ROLE_TAG or APP_URL variable"
+            exit 1
+          fi
+          # SSM path per environment: /brand-clothing/prod or /brand-clothing/staging
+          if [ "$ENVIRONMENT" = "production" ]; then SSM_PATH=/brand-clothing/prod; else SSM_PATH=/brand-clothing/staging; fi
+          echo "SSM_PATH=$SSM_PATH" >> "$GITHUB_ENV"
+          if ! DB_IMAGE_TAG=$(git rev-parse "$IMAGE_TAG:db" 2>/dev/null); then
+            echo "::error::Commit $IMAGE_TAG not found in this repository"
+            exit 1
+          fi
+          echo "DB_IMAGE_TAG=$DB_IMAGE_TAG" >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Set image tags in SSM
+        run: |
+          aws ssm put-parameter --name "$SSM_PATH/IMAGE_TAG" --type String \
+            --value "$IMAGE_TAG" --overwrite > /dev/null
+          aws ssm put-parameter --name "$SSM_PATH/DB_IMAGE_TAG" --type String \
+            --value "$DB_IMAGE_TAG" --overwrite > /dev/null
+          echo "$SSM_PATH/IMAGE_TAG    = $IMAGE_TAG"
+          echo "$SSM_PATH/DB_IMAGE_TAG = $DB_IMAGE_TAG"
+
+      - name: Run deploy.sh on the instance
+        id: deploy
+        run: |
+          set -euo pipefail
+          CMD_ID=$(aws ssm send-command \
+            --document-name AWS-RunShellScript \
+            --targets "Key=tag:Role,Values=${APP_ROLE_TAG}" \
+            --parameters 'commands=["/opt/brand-clothing/deploy.sh"],executionTimeout=["900"]' \
+            --comment "deploy ${IMAGE_TAG:0:7} run ${GITHUB_RUN_ID}" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $CMD_ID"
+
+          STATUS=Pending
+          for _ in $(seq 1 90); do
+            sleep 10
+            STATUS=$(aws ssm list-commands --command-id "$CMD_ID" --query 'Commands[0].Status' --output text)
+            echo "status: $STATUS"
+            case "$STATUS" in Pending|InProgress|Delayed) ;; *) break ;; esac
+          done
+
+          TARGETS=$(aws ssm list-commands --command-id "$CMD_ID" --query 'Commands[0].TargetCount' --output text)
+          if [ "$TARGETS" = "0" ]; then
+            if [ "$ENVIRONMENT" = "staging" ]; then
+              # Staging runs weekdays 08-20 Kyiv. IMAGE_TAG is already in SSM,
+              # so the next morning boot starts this version by itself.
+              echo "::warning::No running staging instance (outside working hours?). It will start $IMAGE_TAG on its next boot."
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::No instance with Role=$APP_ROLE_TAG is running"
+            exit 1
+          fi
+
+          # get-command-invocation returns up to 24k chars (list-* only ~2.5k).
+          for INSTANCE in $(aws ssm list-command-invocations --command-id "$CMD_ID" \
+                              --query 'CommandInvocations[].InstanceId' --output text); do
+            echo "----- deploy.sh on $INSTANCE -----"
+            aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE" \
+              --query StandardOutputContent --output text || true
+            echo "----- stderr (warnings, pull/up progress) -----"
+            aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE" \
+              --query StandardErrorContent --output text || true
+          done
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "::error::deploy.sh finished with status $STATUS"
+            exit 1
+          fi
+
+      - name: Smoke check
+        if: steps.deploy.outputs.skipped != 'true'
+        run: |
+          # The admin login page needs nginx -> gunicorn -> Django -> DB,
+          # ALLOWED_HOSTS and templates to work; it must return exactly 200.
+          # Its CSS must come back too (static files via WhiteNoise).
+          URL="$APP_URL/api/admin/login/"
+          for _ in $(seq 1 12); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
+            echo "$URL -> HTTP $CODE"
+            if [ "$CODE" = "200" ]; then
+              CSS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$APP_URL/static/admin/css/base.css" || true)
+              echo "$APP_URL/static/admin/css/base.css -> HTTP $CSS"
+              [ "$CSS" = "200" ] && exit 0
+              echo "::error::Static files are not served"
+              exit 1
+            fi
+            sleep 5
+          done
+          echo "::error::$URL did not return 200 within 60s"
+          exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deploy to \`$ENVIRONMENT\`"
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Image tag | \`$IMAGE_TAG\` |"
+            echo "| DB image tag | \`${DB_IMAGE_TAG:-n/a}\` |"
+            echo "| URL | $APP_URL |"
+            echo "| Result | ${{ job.status }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

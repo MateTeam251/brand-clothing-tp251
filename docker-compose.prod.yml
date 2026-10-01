@@ -1,0 +1,63 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    # Own tag (git tree hash of db/), changes only when db/ changes, so a normal
+    # release doesn't restart Postgres. Set by the release pipeline.
+    image: ${ECR_REGISTRY}/brand-clothing-db:${DB_IMAGE_TAG}
+    container_name: brand_clothing_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      WALG_S3_PREFIX: ${WALG_S3_PREFIX}
+      AWS_REGION: ${AWS_REGION:-eu-central-1}
+      PGHOST: /var/run/postgresql
+      PGDATABASE: ${POSTGRES_DB}
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    mem_limit: ${DB_MEM_LIMIT:-768m}
+    logging: *logging
+
+  web:
+    image: ${ECR_REGISTRY}/brand-clothing-backend:${IMAGE_TAG}
+    container_name: brand_clothing_web
+    restart: always
+    # One line on purpose: a folded multi-line command keeps line breaks and
+    # turns a failed migrate into a misleading "command not found" (exit 127).
+    command: ["sh", "-c", "python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60 --access-logfile -"]
+    env_file:
+      - .env
+    volumes:
+      # error.log / payments.log survive container recreation (every deploy).
+      - /data/app-logs:/app/logs
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: ${WEB_MEM_LIMIT:-768m}
+    logging: *logging
+
+  nginx:
+    image: public.ecr.aws/nginx/nginx:1.28-alpine
+    container_name: brand_clothing_nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+    mem_limit: 64m
+    logging: *logging

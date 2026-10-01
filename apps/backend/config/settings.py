@@ -24,13 +24,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv()
 
+
+def env_bool(name, default):
+    return os.getenv(name, default).lower() in ("true", "1", "yes")
+
+
+def env_list(name, default=""):
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool("DEBUG", "True")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
+
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
+
+# nginx terminates HTTPS in prod and forwards the original scheme
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
@@ -46,12 +60,20 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "drf_spectacular",
     "products",
     "users",
+    "orders",
+    "payments",
+    "favorites",
+    "carts",
+    "storages",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Serves collected static files (admin, Swagger UI) straight from gunicorn.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -88,6 +110,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 12,
 }
 
 SPECTACULAR_SETTINGS = {
@@ -114,8 +138,8 @@ DATABASES = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=100), #change later. Made it 100 days for developing
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=100), #change later. Made it 100 days for developing
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
@@ -156,23 +180,148 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
+#LOCALSTORAGES
+
+USE_LOCALSTACK = os.getenv("USE_LOCALSTACK", "True").lower() in ("true", "1", "yes")
+
+# Intentionally no default. In production these are NOT set: boto3 then uses the
+# EC2 instance role for S3 and SES. Any value here (even "test") overrides the role
+# and breaks uploads and emails. Local dev sets both to "test" in .env for LocalStack.
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "brand-clothing-media")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
+
+if USE_LOCALSTACK:
+    AWS_S3_ENDPOINT_URL = "http://localstack:4566"
+    AWS_S3_URL_PROTOCOL = "http:"
+    AWS_S3_CUSTOM_DOMAIN = f"localhost:4566/{AWS_STORAGE_BUCKET_NAME}"
+else:
+    AWS_S3_ENDPOINT_URL = None
+
+AWS_DEFAULT_ACL = None
+AWS_S3_FILE_OVERWRITE = False
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        # Gzip/Brotli-compressed copies, no manifest (tests don't need collectstatic).
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
+MANAGER_NOTIFICATION_EMAIL = os.getenv("MANAGER_NOTIFICATION_EMAIL")
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# Local dev keeps SMTP as before; production sets EMAIL_BACKEND=django_ses.SESBackend.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("true", "1", "yes")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# Amazon SES (only used when EMAIL_BACKEND=django_ses.SESBackend).
+# Credentials come from the EC2 instance role, nothing is stored.
+AWS_SES_REGION_NAME = os.getenv("AWS_SES_REGION_NAME", "eu-central-1")
+AWS_SES_REGION_ENDPOINT = f"email.{AWS_SES_REGION_NAME}.amazonaws.com"
+AWS_SES_AUTO_THROTTLE = None  # skip a quota lookup before every send; not needed at shop volume
 
-ACTIVATION_URL_BASE = "http://127.0.0.1:8000/api/users/activate"
+CORS_ALLOWED_ORIGINS = env_list(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
+
+# Site URL
+SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+
+ACTIVATION_URL_BASE = f"{SITE_URL}/api/users/activate"
+
+# WAYFORPAY
+WAYFORPAY_MERCHANT_ACCOUNT = os.environ.get("WAYFORPAY_MERCHANT_ACCOUNT")
+WAYFORPAY_SECRET_KEY = os.environ.get("WAYFORPAY_SECRET_KEY")
+WAYFORPAY_MERCHANT_DOMAIN = os.environ.get("WAYFORPAY_MERCHANT_DOMAIN")
+WAYFORPAY_SERVICE_URL = os.environ.get("WAYFORPAY_SERVICE_URL")
+WAYFORPAY_RETURN_URL = os.environ.get("WAYFORPAY_RETURN_URL")
+
+WAYFORPAY_API_URL = os.environ.get(
+    "WAYFORPAY_API_URL",
+    default="https://secure.wayforpay.com/pay",
+)
+
+WAYFORPAY_CHECK_STATUS_URL = os.environ.get(
+    "WAYFORPAY_CHECK_STATUS_URL",
+    default="https://api.wayforpay.com/api",
+)
+
+#LOGS
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} [{levelname}] {name} (Line: {lineno}): {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{name}] {levelname}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "level": "INFO",
+        },
+        "error_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "verbose",
+            "filename": LOGS_DIR / "error.log",
+            "level": "ERROR",
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 5,
+            "encoding": "utf-8",
+        },
+        "payments_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "verbose",
+            "filename": LOGS_DIR / "payments.log",
+            "level": "INFO",
+            "maxBytes": 1024 * 1024 * 5,
+            "backupCount": 10,
+            "encoding": "utf-8",
+        },
+    },
+    "root": {
+        "level": "INFO",
+        "handlers": ["console", "error_file"],
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "error_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "payments": {
+            "handlers": ["console", "error_file", "payments_file"],
+            "level": "INFO",
+            "propagate": False,
+        }
+    },
+}

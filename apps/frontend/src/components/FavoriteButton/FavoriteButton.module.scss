@@ -1,0 +1,26 @@
+@use '../../app/styles/variables.scss' as *;
+
+.favoriteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &__circle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid $light-gray;
+  }
+
+  &__icon {
+    width: 24px;
+    height: 24px;
+  }
+}

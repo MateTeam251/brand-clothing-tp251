@@ -1,0 +1,93 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-decoration: none;
+  color: inherit;
+
+  &__imageWrapper {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__imagePlaceholder {
+    width: 100%;
+    height: 100%;
+    background: $color-inactive;
+  }
+
+  &__favorite {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  &__favoriteIcon,
+  &__favoriteIconActive {
+    width: 20px;
+    height: 20px;
+  }
+
+  &__info {
+    width: 100%;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    @include on-desktop {
+      align-items: start;
+    }
+  }
+
+  &__name {
+    margin: 0;
+    font-family: 'Bodoni', serif;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 24px;
+    letter-spacing: 0%;
+
+  @include on-desktop {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}
+
+  &__priceRow {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+  }
+
+  &__price {
+    font-family: 'Cambria', serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0%;
+
+    @include on-desktop {
+      font-size: 20px;
+    }
+}
+
+  &__priceOld {
+    text-decoration: line-through;
+    color: $color-inactive;
+  }
+}
