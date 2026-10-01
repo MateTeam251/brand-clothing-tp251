@@ -26,8 +26,8 @@ locals {
     GRAFANA_PROM_USER = "3626625"
     GRAFANA_LOKI_URL  = "https://logs-prod-012.grafana.net/loki/api/v1/push"
     GRAFANA_LOKI_USER = "1808980"
-    WEB_MEM_LIMIT           = "400m"
-    DB_MEM_LIMIT            = "350m"
+    WEB_MEM_LIMIT     = "400m"
+    DB_MEM_LIMIT      = "350m"
   }
 }
 
