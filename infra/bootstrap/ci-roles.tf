@@ -106,7 +106,7 @@ data "aws_iam_policy_document" "guardrails" {
     resources = ["arn:aws:ssm:*:${local.account_id}:parameter/brand-clothing/*/secrets/*"]
   }
 
-  # Customer data: database backups and uploaded media.
+  # Customer/business data: database backups, uploaded media, analyst reports.
   statement {
     sid     = "NoCustomerData"
     effect  = "Deny"
@@ -114,6 +114,7 @@ data "aws_iam_policy_document" "guardrails" {
     resources = [
       "arn:aws:s3:::brand-clothing*-db-backups-wal-*/*",
       "arn:aws:s3:::brand-clothing*-media-*/*",
+      "arn:aws:s3:::brand-clothing*-reports-*/*",
     ]
   }
 
