@@ -3,7 +3,6 @@ from decimal import Decimal
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
-from carts.models import CartStatusEnum
 from core.enums import Currency
 from orders.email_services import send_order_created_email
 from orders.models import OrderItem, Order, OrderStatus
@@ -173,8 +172,7 @@ def checkout(*, cart, checkout_data):
         payment=payment,
     )
 
-    cart.status = CartStatusEnum.CONVERTED
-    cart.save(update_fields=["status"])
+    cart.mark_converted()
 
     return order, payment, payment_url
 
