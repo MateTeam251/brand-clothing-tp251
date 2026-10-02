@@ -1,1 +1,5 @@
-0 3 * * * postgres /usr/local/bin/wal-g-backup.sh >> /var/log/wal-g-backup.log 2>&1
+# System crontab (/etc/cron.d format: the 6th field is the user).
+# Runs as root only to reach the container's stdout (/proc/1/fd/1 = tini's
+# stdout = `docker logs`, picked up by Grafana Alloy); the backup itself runs
+# as postgres via gosu. Output also kept in /var/log/wal-g-backup.log.
+0 3 * * * root gosu postgres /usr/local/bin/wal-g-backup.sh 2>&1 | tee -a /var/log/wal-g-backup.log > /proc/1/fd/1

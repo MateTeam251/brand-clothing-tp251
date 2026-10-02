@@ -19,6 +19,10 @@ services:
       AWS_REGION: ${AWS_REGION:-eu-central-1}
       PGHOST: /var/run/postgresql
       PGDATABASE: ${POSTGRES_DB}
+      # The image creates only POSTGRES_USER as a role, no "postgres" role.
+      # Without this, the nightly WAL-G backup (cron, OS user postgres)
+      # connected as role "postgres" and failed, so no base backup existed.
+      PGUSER: ${POSTGRES_USER}
     volumes:
       - /data/postgres:/var/lib/postgresql/data
     healthcheck:
