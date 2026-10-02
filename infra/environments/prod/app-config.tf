@@ -20,6 +20,10 @@ locals {
     WALG_S3_PREFIX          = "s3://${module.storage.backups_bucket_name}/wal-g"
     ECR_REGISTRY            = "875476618056.dkr.ecr.eu-central-1.amazonaws.com"
 
+    # Weekly cart report (carts.reports). Private bucket, not the media one.
+    ANALYTICS_REPORTS_BUCKET = module.storage.reports_bucket_name
+    ANALYTICS_REPORTS_PREFIX = "reports/carts"
+
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "prod"
     GRAFANA_PROM_URL  = "https://prometheus-prod-65-prod-eu-west-2.grafana.net/api/prom/push"
