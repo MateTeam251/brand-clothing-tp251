@@ -5,6 +5,8 @@
 #   - frontend-static  : CloudFront OAC only, no direct public access
 #   - media            : CloudFront OAC + app role (get/put)
 #   - db-backups-wal   : app role put-only (no delete), versioned
+#   - reports          : private analyst reports (weekly cart CSVs), app
+#                        role read/write via its IAM policy
 #
 # CloudFront distribution sits in front of frontend-static. Media is
 # served through the same distribution via a second origin/behavior so
@@ -15,6 +17,7 @@ locals {
   frontend_bucket_name = "${var.project_name}-frontend-static-${var.bucket_suffix}"
   media_bucket_name    = "${var.project_name}-media-${var.bucket_suffix}"
   backups_bucket_name  = "${var.project_name}-db-backups-wal-${var.bucket_suffix}"
+  reports_bucket_name  = "${var.project_name}-reports-${var.bucket_suffix}"
 }
 
 ########################################################################
@@ -250,6 +253,54 @@ resource "aws_s3_bucket_policy" "media" {
   # The policy has public statements, so S3 rejects it while the public
   # access block still blocks public policies. Apply the block change first.
   depends_on = [aws_s3_bucket_public_access_block.media]
+}
+
+########################################################################
+# reports — private. Weekly cart report CSVs written by the app
+# (carts.reports, prefix reports/carts/). Never public: analysts get
+# their own read-only access. Old reports expire after a year.
+########################################################################
+
+resource "aws_s3_bucket" "reports" {
+  bucket = local.reports_bucket_name
+
+  tags = {
+    Name = local.reports_bucket_name
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "reports" {
+  bucket = aws_s3_bucket.reports.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "reports" {
+  bucket = aws_s3_bucket.reports.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "reports" {
+  bucket = aws_s3_bucket.reports.id
+
+  rule {
+    id     = "expire-after-1-year"
+    status = "Enabled"
+
+    filter {}
+
+    expiration {
+      days = 365
+    }
+  }
 }
 
 ########################################################################

@@ -57,6 +57,11 @@ variable "backups_bucket_arn" {
   type = string
 }
 
+variable "reports_bucket_arn" {
+  description = "Private analyst reports bucket (storage module). The app writes weekly CSVs there."
+  type        = string
+}
+
 variable "ssm_parameter_path" {
   description = "SSM path the instance renders .env from. No trailing slash."
   type        = string

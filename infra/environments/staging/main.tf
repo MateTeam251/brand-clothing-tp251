@@ -35,6 +35,7 @@ module "compute" {
   security_group_id     = module.network.app_security_group_id
   media_bucket_arn      = module.storage.media_bucket_arn
   backups_bucket_arn    = module.storage.backups_bucket_arn
+  reports_bucket_arn    = module.storage.reports_bucket_arn
   ssm_parameter_path    = "/brand-clothing/staging"
 
   instance_type    = "t4g.micro"

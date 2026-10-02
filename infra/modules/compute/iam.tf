@@ -92,6 +92,20 @@ data "aws_iam_policy_document" "app" {
     resources = ["${var.backups_bucket_arn}/*"]
   }
 
+  # Analyst reports (weekly cart CSVs). Read/write, no delete: re-running a
+  # week overwrites its files, old ones expire via the bucket lifecycle.
+  statement {
+    sid       = "ReportsList"
+    actions   = ["s3:ListBucket"]
+    resources = [var.reports_bucket_arn]
+  }
+
+  statement {
+    sid       = "ReportsObjects"
+    actions   = ["s3:GetObject", "s3:PutObject"]
+    resources = ["${var.reports_bucket_arn}/*"]
+  }
+
   # Scope to the domain identity once it exists (Phase 4).
   statement {
     sid       = "SesSend"
