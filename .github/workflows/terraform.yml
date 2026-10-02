@@ -1,0 +1,242 @@
+name: Terraform
+run-name: >-
+  ${{ github.event_name == 'pull_request'
+      && format('Plan - {0} - {1}', github.head_ref, github.sha)
+      || format('Apply {0} - {1}', github.ref_name, github.sha) }}
+
+# PR into develop/main  -> plan staging + prod, posted as a PR comment (read-only role).
+# Merge to develop      -> apply staging.
+# Merge to main         -> apply prod, after approval in the "infra-production" Environment.
+# If the launch template changed, the instance is replaced (instance refresh) right after.
+# Manual "Run workflow" on develop/main = apply that branch's environment again.
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "infra/environments/**"
+      - "infra/modules/**"
+      # Embedded in the instance's user-data:
+      - "docker-compose.prod.yml"
+      - "nginx/**"
+      - ".github/workflows/terraform.yml"
+  push:
+    branches: [develop, main]
+    paths:
+      - "infra/environments/**"
+      - "infra/modules/**"
+      # Embedded in the instance's user-data:
+      - "docker-compose.prod.yml"
+      - "nginx/**"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+  TF_VAR_bucket_suffix: ${{ vars.TF_BUCKET_SUFFIX }}
+  TF_VAR_budget_alert_email: ${{ secrets.TF_BUDGET_ALERT_EMAIL }}
+
+jobs:
+  plan:
+    name: plan (${{ matrix.env }})
+    # Fork PRs get no OIDC token (and no secrets): nothing to plan with.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # OIDC -> read-only plan role
+      pull-requests: write # plan comment
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [staging, prod]
+    defaults:
+      run:
+        working-directory: infra/environments/${{ matrix.env }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.13"
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials (plan role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.TF_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Format check
+        run: terraform fmt -check -recursive -diff ../..
+
+      - name: Init
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
+        run: |
+          # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
+          BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
+          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
+          [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
+          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
+          terraform init \
+            -backend-config="bucket=$BUCKET" \
+            -backend-config="dynamodb_table=$TABLE" \
+            -backend-config="region=$AWS_REGION"
+
+      - name: Validate
+        run: terraform validate -no-color
+
+      - name: Plan
+        id: plan
+        run: |
+          set +e
+          terraform plan -no-color -lock-timeout=5m -detailed-exitcode -out=tfplan > plan.txt 2>&1
+          code=$?
+          set -e
+          cat plan.txt
+          # 0 = no changes, 2 = changes, 1 = error
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" -ne 1 ]
+
+      - name: Comment on PR
+        if: always() && steps.plan.outputs.exitcode != ''
+        uses: actions/github-script@v7
+        env:
+          ENV_NAME: ${{ matrix.env }}
+          EXIT_CODE: ${{ steps.plan.outputs.exitcode }}
+        with:
+          script: |
+            const fs = require('fs');
+            const env = process.env.ENV_NAME;
+            const code = process.env.EXIT_CODE;
+            let out = fs.readFileSync(`infra/environments/${env}/plan.txt`, 'utf8');
+            // Keep only the part after the refresh noise.
+            const start = out.search(/Terraform used the selected providers|No changes\.|Error:/);
+            if (start > 0) out = out.slice(start);
+            if (out.length > 60000) out = out.slice(0, 60000) + '\n\n... (truncated, full plan in the job log)';
+            const summary = (out.match(/Plan: .*|No changes\..*/) || ['see log'])[0];
+            const status = code === '1' ? '(failed)' : code === '2' ? '(changes)' : '(no changes)';
+            const marker = `<!-- terraform-plan-${env} -->`;
+            const body = `${marker}\n### Terraform plan: \`${env}\` ${status}\n${summary}\n\n<details><summary>Show plan</summary>\n\n\`\`\`\n${out}\n\`\`\`\n</details>\n\n_Commit ${context.sha.slice(0, 7)} - [run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`;
+            const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: context.issue.number, per_page: 100 });
+            const old = comments.find(c => c.body.startsWith(marker));
+            if (old) await github.rest.issues.updateComment({ ...context.repo, comment_id: old.id, body });
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+
+  apply:
+    name: apply # environment (infra-staging / infra-production) shows next to the job
+    if: >-
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (github.ref_name == 'develop' || github.ref_name == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      id-token: write # OIDC -> the environment's apply role
+    # The apply role trusts only jobs in this Environment; infra-production
+    # also requires an approval before the job starts.
+    environment: ${{ github.ref_name == 'main' && 'infra-production' || 'infra-staging' }}
+    # Same group as the release workflow's deploy job: an apply/refresh and an
+    # app deploy never run on the same instance at the same time.
+    concurrency:
+      group: deploy-${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: infra/environments/${{ github.ref_name == 'main' && 'prod' || 'staging' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.13"
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials (apply role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.TF_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Init
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
+        run: |
+          # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
+          BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
+          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
+          [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
+          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
+          terraform init \
+            -backend-config="bucket=$BUCKET" \
+            -backend-config="dynamodb_table=$TABLE" \
+            -backend-config="region=$AWS_REGION"
+
+      - name: Plan
+        run: terraform plan -no-color -lock-timeout=5m -out=tfplan
+
+      - name: Apply
+        run: terraform apply -no-color -lock-timeout=5m tfplan
+
+      # The ASG only uses a new launch template version for new instances.
+      # If the running instance is on an older version, replace it now.
+      - name: Instance refresh (if the launch template changed)
+        run: |
+          ASG=$(terraform output -raw asg_name)
+          IP=$(terraform output -raw app_public_ip)
+          WANT=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG" \
+            --query 'AutoScalingGroups[0].LaunchTemplate.Version' --output text)
+          OLD=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG" \
+            --query "AutoScalingGroups[0].Instances[?LaunchTemplate.Version!='$WANT'].InstanceId" --output text)
+
+          if [ -z "$OLD" ] || [ "$OLD" = "None" ]; then
+            echo "Instances are on launch template version $WANT (or none running). No refresh needed."
+            exit 0
+          fi
+
+          RUNNING=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name "$ASG" --max-records 1 \
+            --query 'InstanceRefreshes[0].Status' --output text)
+          if [ "$RUNNING" = "Pending" ] || [ "$RUNNING" = "InProgress" ]; then
+            echo "::error::An instance refresh is already $RUNNING on $ASG. Re-run this workflow when it's done."
+            exit 1
+          fi
+
+          echo "Instance $OLD is on an older launch template; ASG wants version $WANT. Starting instance refresh."
+          ID=$(aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG" \
+            --query InstanceRefreshId --output text)
+
+          for _ in $(seq 1 60); do
+            sleep 20
+            read -r STATUS PCT <<< "$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name "$ASG" \
+              --instance-refresh-ids "$ID" --query 'InstanceRefreshes[0].[Status,PercentageComplete]' --output text)"
+            echo "refresh $ID: $STATUS ($PCT%)"
+            case "$STATUS" in
+              Successful) break ;;
+              Failed|Cancelled|RollbackSuccessful|RollbackFailed)
+                echo "::error::Instance refresh $STATUS"; exit 1 ;;
+            esac
+          done
+          [ "$STATUS" = "Successful" ] || { echo "::error::Instance refresh did not finish in 20 min"; exit 1; }
+
+          # The new instance runs deploy.sh at boot; give the app a few minutes.
+          URL="http://$IP/api/admin/login/"
+          for _ in $(seq 1 30); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
+            echo "$URL -> HTTP $CODE"
+            [ "$CODE" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "::error::$URL did not return 200 within 5 min after the refresh"
+          exit 1

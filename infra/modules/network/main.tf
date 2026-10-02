@@ -62,22 +62,14 @@ resource "aws_route_table_association" "public" {
 ########################################################################
 
 resource "aws_security_group" "app" {
-  name        = "${var.project_name}-sg-app"
+  name = "${var.project_name}-sg-app"
+  # Outdated text (the exporter rules are gone), but changing a security
+  # group's description replaces the group, and with it the instance's SG.
   description = "App EC2 instance: public HTTPS/HTTP in, exporter ports scoped to monitoring SG only, no SSH."
   vpc_id      = aws_vpc.main.id
 
   tags = {
     Name = "${var.project_name}-sg-app"
-  }
-}
-
-resource "aws_security_group" "monitoring" {
-  name        = "${var.project_name}-sg-monitoring"
-  description = "Monitoring EC2 instance: Loki reachable from app SG only, Grafana/Prometheus reachable via SSM port-forward only (no public ingress rule)."
-  vpc_id      = aws_vpc.main.id
-
-  tags = {
-    Name = "${var.project_name}-sg-monitoring"
   }
 }
 
@@ -119,21 +111,9 @@ resource "aws_vpc_security_group_ingress_rule" "app_http_v6" {
   ip_protocol       = "tcp"
 }
 
-resource "aws_vpc_security_group_ingress_rule" "app_exporters_from_monitoring" {
-  for_each = toset(["9100", "9187", "8080"]) # node_exporter, postgres_exporter, cAdvisor
-
-  security_group_id            = aws_security_group.app.id
-  description                  = "Exporter scrape (port ${each.value}) - monitoring instance only"
-  referenced_security_group_id = aws_security_group.monitoring.id
-  from_port                    = tonumber(each.value)
-  to_port                      = tonumber(each.value)
-  ip_protocol                  = "tcp"
-}
-
 # No ingress rule for port 22 anywhere in this module — deliberate.
-# Instance access is SSM Session Manager only (App-EC2-Role /
-# Monitoring-EC2-Role both carry AmazonSSMManagedInstanceCore in the
-# compute module, which isn't part of this "foundation" pass).
+# Instance access is SSM Session Manager only (the app role carries
+# AmazonSSMManagedInstanceCore, see modules/compute).
 
 # --- sg-app egress ------------------------------------------------------
 
@@ -146,38 +126,6 @@ resource "aws_vpc_security_group_egress_rule" "app_egress_v4" {
 
 resource "aws_vpc_security_group_egress_rule" "app_egress_v6" {
   security_group_id = aws_security_group.app.id
-  description       = "All outbound (IPv6)"
-  cidr_ipv6         = "::/0"
-  ip_protocol       = "-1"
-}
-
-# --- sg-monitoring ingress ----------------------------------------------
-
-resource "aws_vpc_security_group_ingress_rule" "monitoring_loki_from_app" {
-  security_group_id            = aws_security_group.monitoring.id
-  description                  = "promtail (app instance) to Loki"
-  referenced_security_group_id = aws_security_group.app.id
-  from_port                    = 3100
-  to_port                      = 3100
-  ip_protocol                  = "tcp"
-}
-
-# No ingress rule for 3000 (Grafana), 9090 (Prometheus) or 22 (SSH).
-# Grafana/Prometheus are reached only via `aws ssm start-session` port
-# forwarding from an operator's machine — never exposed to the internet
-# or even to the VPC at large.
-
-# --- sg-monitoring egress -------------------------------------------------
-
-resource "aws_vpc_security_group_egress_rule" "monitoring_egress_v4" {
-  security_group_id = aws_security_group.monitoring.id
-  description       = "All outbound - updates, container pulls, Telegram alert API, SSM"
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-}
-
-resource "aws_vpc_security_group_egress_rule" "monitoring_egress_v6" {
-  security_group_id = aws_security_group.monitoring.id
   description       = "All outbound (IPv6)"
   cidr_ipv6         = "::/0"
   ip_protocol       = "-1"

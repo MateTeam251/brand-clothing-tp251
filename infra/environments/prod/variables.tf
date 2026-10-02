@@ -16,12 +16,13 @@ variable "bucket_suffix" {
 variable "budget_limit_usd" {
   description = "Monthly AWS Budget alert threshold. Set below the hard $30/month cap so it's a real early warning, not a formality."
   type        = number
-  default     = 27
+  default     = 30
 }
 
 variable "budget_alert_email" {
   description = "Email address to notify when the budget threshold is forecast to be exceeded."
   type        = string
+  sensitive   = true # plans are posted as PR comments in a public repo
 }
 
 variable "github_org" {

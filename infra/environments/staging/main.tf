@@ -48,10 +48,29 @@ module "compute" {
 
   instance_count = 1
 
+  # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
+  ami_id = "ami-0540ba4e636bf2faf"
+
   # Weekdays 08:00-20:00 Kyiv time. Outside that the ASG is at 0.
   schedule = {
     start_cron = "0 8 * * MON-FRI"
     stop_cron  = "0 20 * * MON-FRI"
     time_zone  = "Europe/Kyiv"
   }
+}
+
+# The GitHub OIDC provider is account-wide and managed in environments/prod.
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+module "deploy_role" {
+  source = "../../modules/deploy-role"
+
+  name               = "${var.project_name}-github-deploy"
+  oidc_provider_arn  = data.aws_iam_openid_connect_provider.github.arn
+  github_subject     = "repo:MateTeam251@327962530/brand-clothing-tp251@1350646589"
+  github_environment = "staging"
+  ssm_parameter_path = "/brand-clothing/staging"
+  instance_role_tag  = module.compute.role_tag
 }

@@ -18,3 +18,8 @@ output "data_volume_id" {
 output "asg_name" {
   value = aws_autoscaling_group.app.name
 }
+
+output "role_tag" {
+  description = "Value of the Role tag on the app instance (deploy roles target it)."
+  value       = local.role_tag
+}

@@ -80,6 +80,7 @@ data "aws_iam_policy_document" "push" {
     actions = [
       "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
+      "ecr:DescribeImages", # skip rebuilding a db image whose tag already exists
       "ecr:InitiateLayerUpload",
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload",

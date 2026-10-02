@@ -1,4 +1,3 @@
-import { useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
@@ -6,6 +5,7 @@ import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { ProductQueryParams } from '../../shared/types/products';
 import styles from './ProductSlider.module.scss';
 import { ProductCard } from '../ProductCard';
+import { useDragScroll } from '../../shared/hooks/useDragScroll';
 
 type ProductSliderProps = {
   title: string;
@@ -21,54 +21,11 @@ export const ProductSlider = ({
   showViewAll = true,
 }: ProductSliderProps) => {
   const { t } = useTranslation();
-  const sliderRef = useRef<HTMLDivElement | null>(null);
-  const dragStartX = useRef(0);
-  const dragStartScrollLeft = useRef(0);
-  const isDragging = useRef(false);
-  const hasDragged = useRef(false);
+  const { ref: sliderRef, handlePointerDown, handlePointerMove, handlePointerUp, handleClickCapture } =
+  useDragScroll<HTMLDivElement>();
   const { currency, language } = useAppSelector((state) => state.settings);
   const requestParams = { ...queryParams, currency, lang: language };
   const { data, isLoading, isError } = useGetProductsQuery(requestParams);
-
-  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-
-    const slider = sliderRef.current;
-    if (!slider) return;
-    if (slider.scrollWidth <= slider.clientWidth) return;
-
-    isDragging.current = true;
-    hasDragged.current = false;
-    dragStartX.current = event.clientX;
-    dragStartScrollLeft.current = slider.scrollLeft;
-    slider.setPointerCapture(event.pointerId);
-    slider.classList.add('is-dragging');
-  };
-
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !sliderRef.current) return;
-
-    const distance = event.clientX - dragStartX.current;
-    if (Math.abs(distance) > 5) hasDragged.current = true;
-    sliderRef.current.scrollLeft = dragStartScrollLeft.current - distance;
-  };
-
-  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const slider = sliderRef.current;
-    if (!slider || !isDragging.current) return;
-
-    isDragging.current = false;
-    slider.releasePointerCapture(event.pointerId);
-    slider.classList.remove('is-dragging');
-  };
-
-  const handleTrackClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (hasDragged.current) {
-      event.preventDefault();
-      event.stopPropagation();
-      hasDragged.current = false;
-    }
-  };
 
   return (
     <section className={styles.slider} aria-labelledby='product-slider-title'>
@@ -97,7 +54,7 @@ export const ProductSlider = ({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          onClick={handleTrackClick}
+          onClickCapture={handleClickCapture}
         >
           {data.results.map((product) => (
             <div className={styles.slider__item} data-slider-item='true' key={product.id}>

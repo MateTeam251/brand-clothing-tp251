@@ -43,7 +43,7 @@ class CollectionSerializer(LanguageMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Collection
-        fields = ("id", "slug", "name", "description")
+        fields = ("id", "image", "slug", "name", "description")
 
 
     def get_description(self, obj):
