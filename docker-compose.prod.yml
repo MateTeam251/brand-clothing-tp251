@@ -71,6 +71,48 @@ services:
     mem_limit: 64m
     logging: *logging
 
+  # Background jobs (carts.tasks: hourly abandoned-cart marking, weekly
+  # report to the reports bucket). Only started where COMPOSE_PROFILES
+  # contains "celery" (SSM app-config): prod yes, staging no (1 GB RAM).
+  # Run the same jobs by hand on staging:
+  #   docker compose run --rm web python manage.py cart_report --mark-abandoned
+  redis:
+    image: public.ecr.aws/docker/library/redis:7.4-alpine
+    container_name: brand_clothing_redis
+    restart: always
+    profiles: ["celery"]
+    # Broker only: no persistence (a lost queued task is re-sent by beat on
+    # its next run), fixed memory cap, refuse writes instead of evicting tasks.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "48mb", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 64m
+    logging: *logging
+
+  # One worker with beat embedded (-B): safe because there is always exactly
+  # one instance. Same image as web. Schedule file in /tmp (/app is read-only
+  # for the app user).
+  celery:
+    image: ${ECR_REGISTRY}/brand-clothing-backend:${IMAGE_TAG}
+    container_name: brand_clothing_celery
+    restart: always
+    profiles: ["celery"]
+    command: ["celery", "-A", "config", "worker", "-B", "--concurrency=1", "--loglevel=INFO", "-s", "/tmp/celerybeat-schedule"]
+    env_file:
+      - .env
+    environment:
+      GRAFANA_CLOUD_TOKEN: ""
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: ${CELERY_MEM_LIMIT:-256m}
+    logging: *logging
+
   # Grafana Alloy: pushes host metrics and container logs to Grafana Cloud.
   # Outbound HTTPS only, no ports. Values come from SSM via .env
   # (app-config.tf; the token from secrets/GRAFANA_CLOUD_TOKEN).
@@ -144,7 +186,7 @@ configs:
         }
       }
 
-      // ---- Logs: stdout/stderr of web, nginx, db ----
+      // ---- Logs: stdout/stderr of web, nginx, db, celery, redis ----
       discovery.docker "containers" {
         host = "unix:///var/run/docker.sock"
       }
@@ -154,7 +196,7 @@ configs:
 
         rule {
           source_labels = ["__meta_docker_container_name"]
-          regex         = "/brand_clothing_(web|nginx|db)"
+          regex         = "/brand_clothing_(web|nginx|db|celery|redis)"
           action        = "keep"
         }
 

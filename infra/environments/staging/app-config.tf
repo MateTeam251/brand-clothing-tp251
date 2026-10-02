@@ -24,6 +24,9 @@ locals {
     ANALYTICS_REPORTS_BUCKET = module.storage.reports_bucket_name
     ANALYTICS_REPORTS_PREFIX = "reports/carts"
 
+    # No COMPOSE_PROFILES = "celery" here: redis + celery don't fit next to
+    # web + db in 1 GB. Run the jobs by hand (see docker-compose.prod.yml).
+
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "staging"
     GRAFANA_PROM_URL  = "https://prometheus-prod-65-prod-eu-west-2.grafana.net/api/prom/push"
