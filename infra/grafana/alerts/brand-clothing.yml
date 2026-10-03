@@ -163,7 +163,7 @@ groups:
           noDataState: Alerting
           execErrState: Error
           for: 10m
-          isPaused: true
+          isPaused: false
           notification_settings:
             receiver: grafana-maxmlv-email
     - orgId: 1
