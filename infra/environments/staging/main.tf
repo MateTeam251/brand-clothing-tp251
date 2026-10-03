@@ -35,6 +35,7 @@ module "compute" {
   security_group_id     = module.network.app_security_group_id
   media_bucket_arn      = module.storage.media_bucket_arn
   backups_bucket_arn    = module.storage.backups_bucket_arn
+  reports_bucket_arn    = module.storage.reports_bucket_arn
   ssm_parameter_path    = "/brand-clothing/staging"
 
   instance_type    = "t4g.micro"
@@ -51,10 +52,10 @@ module "compute" {
   # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
   ami_id = "ami-0540ba4e636bf2faf"
 
-  # Weekdays 08:00-20:00 Kyiv time. Outside that the ASG is at 0.
+  # Every day 08:00-20:00 Kyiv time. Outside that the ASG is at 0.
   schedule = {
-    start_cron = "0 8 * * MON-FRI"
-    stop_cron  = "0 20 * * MON-FRI"
+    start_cron = "0 8 * * *"
+    stop_cron  = "0 20 * * *"
     time_zone  = "Europe/Kyiv"
   }
 }

@@ -5,8 +5,8 @@
     "name": "matfkvd",
     "namespace": "stacks-1851201",
     "uid": "29f68f91-62df-4030-8a08-fa587443572c",
-    "resourceVersion": "2105679840032649216",
-    "generation": 10,
+    "resourceVersion": "2105930447542763520",
+    "generation": 14,
     "creationTimestamp": "2026-10-01T15:01:03Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "2493334113570816"
@@ -15,7 +15,7 @@
       "grafana.app/createdBy": "user:efzwldjrd7ocgc",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:efzwldjrd7ocgc",
-      "grafana.app/updatedTimestamp": "2026-10-01T15:22:50Z"
+      "grafana.app/updatedTimestamp": "2026-10-02T07:58:39Z"
     }
   },
   "spec": {
@@ -67,7 +67,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "sum by (status) (count_over_time({env=\"staging\", container=\"nginx\"} | json | __error__=\"\" [1m]))",
+                        "expr": "sum by (status) (count_over_time({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" [1m]))",
                         "queryType": "range"
                       }
                     },
@@ -299,7 +299,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "quantile_over_time(0.95, {env=\"staging\", container=\"nginx\"} | json | __error__=\"\" | unwrap request_time [5m]) by (env)",
+                        "expr": "quantile_over_time(0.95, {env=\"$env\", container=\"nginx\"} | json | __error__=\"\" | path != \"\" | unwrap request_time [5m]) by (env)",
                         "queryType": "range"
                       }
                     },
@@ -414,7 +414,7 @@
                       "spec": {
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "topk(10, avg by (path) (avg_over_time({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" | unwrap request_time [$__range])))",
+                        "expr": "topk(10, avg by (path) (avg_over_time({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" | path != \"\" | unwrap request_time [$__range])))",
                         "queryType": "instant"
                       }
                     },
