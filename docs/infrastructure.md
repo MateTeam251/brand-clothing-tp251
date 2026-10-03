@@ -11,7 +11,7 @@ _Last updated: 2026-10-01_
 |---|---|---|
 | Terraform | `infra/environments/prod` | `infra/environments/staging` |
 | Deploys from | `main` | `develop` |
-| Instance | t4g.small (2 GB), always on | t4g.micro (1 GB), Mon–Fri 08:00–20:00 Kyiv |
+| Instance | t4g.small (2 GB), always on | t4g.micro (1 GB), daily 08:00–20:00 Kyiv |
 | Public IP (EIP) | `3.73.249.226` | `18.194.165.37` |
 | CloudFront | `d1sjix7eute2eg.cloudfront.net` | `d1iq6r8ypyqu9.cloudfront.net` |
 | VPC | own VPC, 1 public subnet | own VPC `10.1.0.0/16`, 1 public subnet |

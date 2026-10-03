@@ -202,7 +202,7 @@ jobs:
           TARGETS=$(aws ssm list-commands --command-id "$CMD_ID" --query 'Commands[0].TargetCount' --output text)
           if [ "$TARGETS" = "0" ]; then
             if [ "$ENVIRONMENT" = "staging" ]; then
-              # Staging runs weekdays 08-20 Kyiv. IMAGE_TAG is already in SSM,
+              # Staging runs 08-20 Kyiv. IMAGE_TAG is already in SSM,
               # so the next morning boot starts this version by itself.
               echo "::warning::No running staging instance (outside working hours?). It will start $IMAGE_TAG on its next boot."
               echo "skipped=true" >> "$GITHUB_OUTPUT"
