@@ -47,3 +47,7 @@ output "deploy_role_arn" {
   description = "GitHub Environment \"production\" -> variable AWS_DEPLOY_ROLE_ARN."
   value       = module.deploy_role.role_arn
 }
+
+output "name_servers" {
+  value = aws_route53_zone.main.name_servers
+}
