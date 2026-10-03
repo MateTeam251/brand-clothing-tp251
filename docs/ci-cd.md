@@ -28,7 +28,7 @@ merge to main    ──► test ──► build ──► deploy production ─�
 - **smoke check**: `/api/admin/login/` and its CSS must return 200 within 60 s.
 - **Manual run** (rollback / redeploy): pick `environment` and an existing `image_tag`; test and build are skipped.
 
-Staging runs on weekdays 08:00–20:00 Kyiv time. A deploy outside those hours is skipped with a warning, not an error: `IMAGE_TAG` is already updated, so the instance starts the new version on its next boot.
+Staging runs every day 08:00–20:00 Kyiv time. A deploy outside those hours is skipped with a warning, not an error: `IMAGE_TAG` is already updated, so the instance starts the new version on its next boot.
 
 ## Terraform pipeline
 
