@@ -52,6 +52,11 @@ module "compute" {
   # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
   ami_id = "ami-0540ba4e636bf2faf"
 
+  acme = {
+    zone_id     = data.aws_route53_zone.main.zone_id
+    record_name = local.origin_host
+  }
+
   # Every day 08:00-20:00 Kyiv time. Outside that the ASG is at 0.
   schedule = {
     start_cron = "0 8 * * *"

@@ -35,3 +35,16 @@ resource "aws_acm_certificate_validation" "site" {
   certificate_arn         = aws_acm_certificate.site.arn
   validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
 }
+
+# CloudFront's origin for /api/*. Not for visitors.
+locals {
+  origin_host = "origin.theart-theartist.com"
+}
+
+resource "aws_route53_record" "origin" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = local.origin_host
+  type    = "A"
+  ttl     = 300
+  records = [module.compute.app_public_ip]
+}
