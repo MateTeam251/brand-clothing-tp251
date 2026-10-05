@@ -24,6 +24,10 @@ module "storage" {
 
   app_role_enabled = true
   app_iam_role_arn = module.compute.app_role_arn
+
+  domain_aliases      = [local.site_host]
+  acm_certificate_arn = aws_acm_certificate_validation.site.certificate_arn
+  api_origin_domain   = local.origin_host
 }
 
 module "compute" {
