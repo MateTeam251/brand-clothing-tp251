@@ -32,6 +32,7 @@ resource "aws_acm_certificate_validation" "site" {
 
 # CloudFront's origin for /api/*. Not for visitors.
 locals {
+  site_host   = "staging.theart-theartist.com"
   origin_host = "origin-staging.theart-theartist.com"
 }
 
@@ -41,4 +42,18 @@ resource "aws_route53_record" "origin" {
   type    = "A"
   ttl     = 300
   records = [module.compute.app_public_ip]
+}
+
+resource "aws_route53_record" "site" {
+  for_each = toset(["A", "AAAA"])
+
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = local.site_host
+  type    = each.value
+
+  alias {
+    name                   = module.storage.cloudfront_domain_name
+    zone_id                = module.storage.cloudfront_hosted_zone_id
+    evaluate_target_health = false
+  }
 }

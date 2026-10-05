@@ -5,9 +5,10 @@
 locals {
   app_config = {
     DEBUG                   = "False"
-    ALLOWED_HOSTS           = module.compute.app_public_ip
-    SITE_URL                = "http://${module.compute.app_public_ip}"
-    CORS_ALLOWED_ORIGINS    = "https://${module.storage.cloudfront_domain_name}"
+    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host}"
+    SITE_URL                = "https://${local.site_host}"
+    CSRF_TRUSTED_ORIGINS    = "https://${local.site_host}"
+    CORS_ALLOWED_ORIGINS    = "https://${local.site_host}"
     EMAIL_BACKEND           = "django.core.mail.backends.console.EmailBackend"
     POSTGRES_DB             = "brand_clothing_db"
     POSTGRES_USER           = "brand_clothing"
