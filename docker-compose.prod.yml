@@ -64,11 +64,40 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
+    environment:
+      ORIGIN_HOST: ${ORIGIN_HOST:-}
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/default.conf:/etc/nginx/templates/default.conf.template:ro
+      - /data/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - web
     mem_limit: 64m
+    logging: *logging
+
+  # Let's Encrypt certificate for ORIGIN_HOST (CloudFront -> nginx over HTTPS).
+  # DNS-01 via Route 53. certonly --keep-until-expiring also renews (< 30 days
+  # left), so one loop does both. The hook lets nginx workers read the key.
+  certbot:
+    image: certbot/dns-route53:v5.7.0
+    container_name: brand_clothing_certbot
+    restart: always
+    environment:
+      ORIGIN_HOST: ${ORIGIN_HOST:-}
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        trap exit TERM
+        while :; do
+          certbot certonly --dns-route53 -d "$$ORIGIN_HOST" \
+            --non-interactive --agree-tos --register-unsafely-without-email \
+            --keep-until-expiring \
+            --deploy-hook 'chmod 755 /etc/letsencrypt/live /etc/letsencrypt/archive; chmod 644 /etc/letsencrypt/archive/*/privkey*.pem'
+          sleep 12h & wait $$!
+        done
+    volumes:
+      - /data/letsencrypt:/etc/letsencrypt
+    mem_limit: 128m
     logging: *logging
 
   # Background jobs (carts.tasks: hourly abandoned-cart marking, weekly
@@ -196,7 +225,7 @@ configs:
 
         rule {
           source_labels = ["__meta_docker_container_name"]
-          regex         = "/brand_clothing_(web|nginx|db|celery|redis)"
+          regex         = "/brand_clothing_(web|nginx|db|celery|redis|certbot)"
           action        = "keep"
         }
 
