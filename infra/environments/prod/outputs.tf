@@ -51,3 +51,7 @@ output "deploy_role_arn" {
 output "name_servers" {
   value = aws_route53_zone.main.name_servers
 }
+
+output "cloudfront_distribution_id" {
+  value = module.storage.cloudfront_distribution_id
+}
