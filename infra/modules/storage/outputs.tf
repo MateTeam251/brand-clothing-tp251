@@ -33,3 +33,7 @@ output "reports_bucket_name" {
 output "reports_bucket_arn" {
   value = aws_s3_bucket.reports.arn
 }
+
+output "cloudfront_hosted_zone_id" {
+  value = aws_cloudfront_distribution.frontend.hosted_zone_id
+}
