@@ -36,7 +36,7 @@ resource "aws_launch_template" "app" {
   image_id               = var.ami_id
   instance_type          = var.instance_type
   vpc_security_group_ids = [var.security_group_id]
-  user_data = base64encode(templatefile("${path.module}/user-data.sh.tftpl", {
+  user_data = base64gzip(templatefile("${path.module}/user-data.sh.tftpl", {
     region             = local.region
     data_volume_id     = aws_ebs_volume.data.id
     eip_allocation_id  = aws_eip.app.allocation_id
