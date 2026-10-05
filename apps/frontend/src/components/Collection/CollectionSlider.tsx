@@ -3,27 +3,27 @@ import { useTranslation } from 'react-i18next';
 import { useGetCollectionsQuery } from '../../shared/api/collectionsApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { Collection } from '../../shared/types/products';
-import fallbackImage from '../../shared/assets/images/autumn-collection.png';
 import styles from './CollectionSlider.module.scss';
 import { useDragScroll } from '../../shared/hooks/useDragScroll';
-import summerImage from '../../shared/assets/images/summer-collection.png';
-import autumnImage from '../../shared/assets/images/autumn-collection.png';
+import { Loader } from '../Loader';
+import { ErrorState } from '../ErrorState';
+import { EmptyState } from '../EmptyState';
+import { ViewAllLink } from '../ViewAllLink';
 
 type CollectionSliderProps = {
   title: string;
 };
 
 const CollectionCard = ({ collection }: { collection: Collection }) => {
-  const getCollectionImage = (slug: string) => {
-  if (slug === 'forever-summer') return summerImage;
-  if (slug === 'i-am-an-autumn') return autumnImage;
-    return fallbackImage;
-    
-};
+
   return (
     <article className={styles.slider__item}>
       <Link className={styles.card} to={`/catalog?collection=${encodeURIComponent(collection.slug)}`}>
-        <img className={styles.card__image} src={getCollectionImage(collection.slug)} alt={collection.name} />
+        {collection.image ? (
+            <img className={styles.card__image} src={collection.image} alt={collection.name} />
+          ) : (
+            <div className={styles.card__imagePlaceholder} aria-hidden="true" />
+          )}
       <h3 className={styles.card__title}>{collection.name}</h3>
       <p className={styles.card__description}>{collection.description}</p>
       </Link>
@@ -41,15 +41,13 @@ export const CollectionSlider = ({ title }: CollectionSliderProps) => {
     <section className={styles.slider} aria-labelledby='collections-slider-title'>
       <div className={styles.slider__header}>
         <h2 id='collections-slider-title' className={styles.slider__title}>{title}</h2>
-        <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--desktop']}`} to='/catalog'>
-          {t('view-all')}
-        </Link>
+        <ViewAllLink to='/catalog' placement='header' />
       </div>
 
-      {isLoading && <p className={styles.slider__status}>Loading...</p>}
-      {isError && <p className={styles.slider__status}>Unable to load collections.</p>}
+      {isLoading && <Loader />}
+      {isError && <ErrorState />}
       {!isLoading && !isError && data?.results.length === 0 && (
-        <p className={styles.slider__status}>No collections found.</p>
+        <EmptyState message={t('collections_not_found')} />
       )}
 
       {!isLoading && !isError && data?.results.length ? (
@@ -68,9 +66,7 @@ export const CollectionSlider = ({ title }: CollectionSliderProps) => {
         </div>
       ) : null}
 
-      <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--mobile']}`} to='/catalog'>
-        {t('view-all')}
-      </Link>
+      <ViewAllLink to='/catalog' placement='footer' />
     </section>
   );
 };

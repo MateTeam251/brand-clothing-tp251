@@ -4,10 +4,14 @@
 .home {
   position: relative;
   width: 100vw;
-  margin: 0;
   padding-inline: 16px;
+  background-color: $dominant;
 
   @include flex(column, 72px);
+
+  @include on-desktop {
+    padding-inline: 40px;
+  }
 
   &__wrapper {
     position: relative;
@@ -26,6 +30,7 @@
 
     @include on-desktop {
       background-image: url('./home_bg-desktop.png');
+      margin-inline: -40px;
     }
   }
 
@@ -33,12 +38,11 @@
     margin-bottom: 96px;
     padding-inline: 16px;
     width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
   &__btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 100%;
     max-width: 100%;
     padding: 12px 28px;
@@ -53,15 +57,15 @@
     line-height: 24px;
     text-decoration: none;
     cursor: pointer;
-    position: relative;
     z-index: 1;
+
+    @include text-style($font-heading, 16px, 24px);
 
     @include on-desktop {
       width: 438px;
       max-width: 438px;
-      margin-bottom: 12px;
-      font-size: 20px;
-      line-height: 24px;
+
+      @include text-style($font-heading, 20px, 24px);
     }
   }
 
@@ -251,6 +255,15 @@
       padding-bottom: 40px;
     }
   }
+  &__container {
+    @include flex(column, 72px);
 
+    max-width: 1280px;
+    margin: 0 auto;
+
+    @include on-desktop {
+      gap: 120px;
+    }
+  }
 
 }
