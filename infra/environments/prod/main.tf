@@ -67,6 +67,11 @@ module "compute" {
 
   # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
   ami_id = "ami-0540ba4e636bf2faf"
+
+  acme = {
+    zone_id     = aws_route53_zone.main.zone_id
+    record_name = local.origin_host
+  }
 }
 
 # GitHub Actions deploys to prod only from jobs in the "production"
