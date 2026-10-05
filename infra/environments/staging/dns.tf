@@ -1,18 +1,12 @@
-# Shared by both environments; staging finds it by name. Registered at
-# GoDaddy, which points to the name servers in output "name_servers".
-resource "aws_route53_zone" "main" {
+# The zone itself is managed in prod.
+data "aws_route53_zone" "main" {
   name = "theart-theartist.com"
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_acm_certificate" "site" {
-  provider                  = aws.us_east_1
-  domain_name               = "theart-theartist.com"
-  subject_alternative_names = ["www.theart-theartist.com"]
-  validation_method         = "DNS"
+  provider          = aws.us_east_1
+  domain_name       = "staging.theart-theartist.com"
+  validation_method = "DNS"
 
   lifecycle {
     create_before_destroy = true
@@ -22,7 +16,7 @@ resource "aws_acm_certificate" "site" {
 resource "aws_route53_record" "cert_validation" {
   for_each = { for o in aws_acm_certificate.site.domain_validation_options : o.domain_name => o }
 
-  zone_id         = aws_route53_zone.main.zone_id
+  zone_id         = data.aws_route53_zone.main.zone_id
   name            = each.value.resource_record_name
   type            = each.value.resource_record_type
   records         = [each.value.resource_record_value]
