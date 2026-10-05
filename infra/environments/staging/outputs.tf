@@ -26,3 +26,7 @@ output "deploy_role_arn" {
   description = "GitHub Environment \"staging\" -> variable AWS_DEPLOY_ROLE_ARN."
   value       = module.deploy_role.role_arn
 }
+
+output "cloudfront_distribution_id" {
+  value = module.storage.cloudfront_distribution_id
+}

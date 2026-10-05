@@ -83,4 +83,7 @@ module "deploy_role" {
   github_environment = "staging"
   ssm_parameter_path = "/brand-clothing/staging"
   instance_role_tag  = module.compute.role_tag
+
+  frontend_bucket_arn         = module.storage.frontend_bucket_arn
+  cloudfront_distribution_arn = module.storage.cloudfront_distribution_arn
 }

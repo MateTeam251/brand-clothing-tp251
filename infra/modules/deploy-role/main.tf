@@ -77,6 +77,34 @@ data "aws_iam_policy_document" "deploy" {
     }
   }
 
+  # Frontend: upload the build, then invalidate the CloudFront cache.
+  dynamic "statement" {
+    for_each = var.frontend_bucket_arn == null ? [] : [var.frontend_bucket_arn]
+    content {
+      sid       = "FrontendList"
+      actions   = ["s3:ListBucket"]
+      resources = [statement.value]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.frontend_bucket_arn == null ? [] : [var.frontend_bucket_arn]
+    content {
+      sid       = "FrontendObjects"
+      actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+      resources = ["${statement.value}/*"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.cloudfront_distribution_arn == null ? [] : [var.cloudfront_distribution_arn]
+    content {
+      sid       = "InvalidateCache"
+      actions   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"]
+      resources = [statement.value]
+    }
+  }
+
   # Reading command status/output can't be scoped to a resource.
   statement {
     sid = "ReadCommandResults"

@@ -262,3 +262,98 @@ jobs:
             echo "| URL | $APP_URL |"
             echo "| Result | ${{ job.status }} |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # 4. Frontend: build the React app and upload it to the environment's bucket
+  #    behind CloudFront. Pushes only (a manual run redeploys backend images).
+  #    Skipped while the environment has no FRONTEND_BUCKET variable.
+  frontend:
+    name: frontend (${{ github.ref_name == 'main' && 'production' || 'staging' }})
+    needs: deploy
+    if: github.event_name == 'push' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      url: ${{ vars.FRONTEND_URL }}
+
+    concurrency:
+      group: deploy-${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      cancel-in-progress: false
+
+    env:
+      FRONTEND_BUCKET: ${{ vars.FRONTEND_BUCKET }}
+      CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+      FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+
+    defaults:
+      run:
+        working-directory: apps/frontend
+
+    steps:
+      - name: Check configuration
+        id: config
+        working-directory: .
+        run: |
+          if [ -z "$FRONTEND_BUCKET" ] || [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ] || [ -z "$FRONTEND_URL" ]; then
+            echo "::notice::No FRONTEND_BUCKET / CLOUDFRONT_DISTRIBUTION_ID / FRONTEND_URL in this environment, frontend not deployed."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.config.outputs.skip != 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        if: steps.config.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - name: Build
+        if: steps.config.outputs.skip != 'true'
+        run: |
+          npm ci
+          npm run build
+
+      - name: Configure AWS credentials (OIDC)
+        if: steps.config.outputs.skip != 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # Hashed files under assets/ never change: cache for a year, keep old ones
+      # for browsers that still have the previous index.html. Everything else
+      # (index.html, icons) is revalidated on every request.
+      - name: Upload
+        if: steps.config.outputs.skip != 'true'
+        run: |
+          aws s3 sync dist/assets "s3://$FRONTEND_BUCKET/assets" \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 sync dist "s3://$FRONTEND_BUCKET" --delete --exclude "assets/*" \
+            --cache-control "no-cache"
+
+      - name: Invalidate CloudFront
+        if: steps.config.outputs.skip != 'true'
+        run: |
+          ID=$(aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/*" --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --id "$ID"
+
+      - name: Smoke check
+        if: steps.config.outputs.skip != 'true'
+        run: |
+          for path in / /catalog; do
+            CODE=$(curl -s -o page.html -w '%{http_code}' --max-time 10 "$FRONTEND_URL$path" || true)
+            echo "$FRONTEND_URL$path -> HTTP $CODE"
+            if [ "$CODE" != "200" ] || ! grep -q 'id="root"' page.html; then
+              echo "::error::$FRONTEND_URL$path did not return the app"
+              exit 1
+            fi
+          done
