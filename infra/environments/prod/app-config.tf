@@ -24,6 +24,9 @@ locals {
     ANALYTICS_REPORTS_BUCKET = module.storage.reports_bucket_name
     ANALYTICS_REPORTS_PREFIX = "reports/carts"
 
+    # Name CloudFront uses for the backend (dns.tf); certbot gets its certificate.
+    ORIGIN_HOST = local.origin_host
+
     # Starts the redis + celery services in docker-compose.prod.yml.
     COMPOSE_PROFILES = "celery"
 
