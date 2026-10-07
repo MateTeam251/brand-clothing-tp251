@@ -75,39 +75,17 @@ resource "aws_security_group" "app" {
 
 # --- sg-app ingress ---------------------------------------------------
 
-resource "aws_vpc_security_group_ingress_rule" "app_https_v4" {
+# Only CloudFront reaches the origin (HTTPS only; certbot uses DNS-01, no port 80).
+data "aws_ec2_managed_prefix_list" "cloudfront" {
+  name = "com.amazonaws.global.cloudfront.origin-facing"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "app_https_cloudfront" {
   security_group_id = aws_security_group.app.id
-  description       = "HTTPS from the internet"
-  cidr_ipv4         = "0.0.0.0/0"
+  description       = "HTTPS from CloudFront only"
+  prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
   from_port         = 443
   to_port           = 443
-  ip_protocol       = "tcp"
-}
-
-resource "aws_vpc_security_group_ingress_rule" "app_https_v6" {
-  security_group_id = aws_security_group.app.id
-  description       = "HTTPS from the internet (IPv6)"
-  cidr_ipv6         = "::/0"
-  from_port         = 443
-  to_port           = 443
-  ip_protocol       = "tcp"
-}
-
-resource "aws_vpc_security_group_ingress_rule" "app_http_v4" {
-  security_group_id = aws_security_group.app.id
-  description       = "HTTP - ACME challenge + redirect to HTTPS"
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 80
-  to_port           = 80
-  ip_protocol       = "tcp"
-}
-
-resource "aws_vpc_security_group_ingress_rule" "app_http_v6" {
-  security_group_id = aws_security_group.app.id
-  description       = "HTTP - ACME challenge + redirect to HTTPS (IPv6)"
-  cidr_ipv6         = "::/0"
-  from_port         = 80
-  to_port           = 80
   ip_protocol       = "tcp"
 }
 
