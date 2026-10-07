@@ -150,6 +150,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "backups" {
       noncurrent_days = 90
       storage_class   = "GLACIER"
     }
+
+    # Old versions are kept a year, then removed (the app can't delete).
+    noncurrent_version_expiration {
+      noncurrent_days = 365
+    }
   }
 }
 
