@@ -75,6 +75,40 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
   restrict_public_buckets = true
 }
 
+data "aws_iam_policy_document" "terraform_state_tls_only" {
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.terraform_state.arn, "${aws_s3_bucket.terraform_state.arn}/*"]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "terraform_state" {
+  bucket = aws_s3_bucket.terraform_state.id
+  policy = data.aws_iam_policy_document.terraform_state_tls_only.json
+}
+
+# Account-wide: no bucket in this account can be made public.
+# Apply only after the media bucket is private in both environments.
+resource "aws_s3_account_public_access_block" "this" {
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 resource "aws_dynamodb_table" "terraform_lock" {
   name         = "brand-clothing-terraform-lock"
   billing_mode = "PAY_PER_REQUEST" # a handful of locks/month — on-demand is effectively free
