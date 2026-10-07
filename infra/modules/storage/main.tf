@@ -158,41 +158,72 @@ resource "aws_s3_bucket_lifecycle_configuration" "backups" {
   }
 }
 
-# App role: put-only, no delete. Written as a data source + resource pair
-# so the policy simply doesn't attach until app_iam_role_arn is set
-# (compute module doesn't exist yet in this "foundation" pass).
-data "aws_iam_policy_document" "backups_bucket_policy" {
-  count = var.app_role_enabled ? 1 : 0
+# Every bucket policy below includes this: deny any request not over TLS.
+data "aws_iam_policy_document" "tls_only" {
+  for_each = {
+    frontend = aws_s3_bucket.frontend.arn
+    media    = aws_s3_bucket.media.arn
+    backups  = aws_s3_bucket.backups.arn
+    reports  = aws_s3_bucket.reports.arn
+  }
 
   statement {
-    sid    = "AppRolePutOnly"
-    effect = "Allow"
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [each.value, "${each.value}/*"]
 
     principals {
-      type        = "AWS"
-      identifiers = [var.app_iam_role_arn]
+      type        = "*"
+      identifiers = ["*"]
     }
 
-    actions = [
-      "s3:PutObject",
-    ]
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
 
-    resources = ["${aws_s3_bucket.backups.arn}/*"]
+# App role: put-only, no delete.
+data "aws_iam_policy_document" "backups_bucket_policy" {
+  source_policy_documents = [data.aws_iam_policy_document.tls_only["backups"].json]
 
-    # Explicitly no s3:DeleteObject / s3:DeleteObjectVersion here
+  dynamic "statement" {
+    for_each = var.app_role_enabled ? [var.app_iam_role_arn] : []
+    content {
+      sid    = "AppRolePutOnly"
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [statement.value]
+      }
+
+      # Explicitly no s3:DeleteObject / s3:DeleteObjectVersion here
+      actions   = ["s3:PutObject"]
+      resources = ["${aws_s3_bucket.backups.arn}/*"]
+    }
   }
 }
 
 resource "aws_s3_bucket_policy" "backups" {
-  count  = var.app_role_enabled ? 1 : 0
   bucket = aws_s3_bucket.backups.id
-  policy = data.aws_iam_policy_document.backups_bucket_policy[0].json
+  policy = data.aws_iam_policy_document.backups_bucket_policy.json
+}
+
+moved {
+  from = aws_s3_bucket_policy.backups[0]
+  to   = aws_s3_bucket_policy.backups
 }
 
 # Media bucket policy. Always exists, so CloudFront can read media even
 # before the compute module (and its App-EC2-Role) exists. The app-role
 # statement is added only once app_iam_role_arn is set.
 data "aws_iam_policy_document" "media_bucket_policy" {
+  source_policy_documents = [data.aws_iam_policy_document.tls_only["media"].json]
+
   statement {
     sid    = "CloudFrontOAC"
     effect = "Allow"
@@ -286,6 +317,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "reports" {
       days = 365
     }
   }
+}
+
+resource "aws_s3_bucket_policy" "reports" {
+  bucket = aws_s3_bucket.reports.id
+  policy = data.aws_iam_policy_document.tls_only["reports"].json
 }
 
 ########################################################################
@@ -448,6 +484,8 @@ resource "aws_cloudfront_distribution" "frontend" {
 # nothing else. (Split from media's policy above since this one never
 # depends on app_iam_role_arn.)
 data "aws_iam_policy_document" "frontend_bucket_policy" {
+  source_policy_documents = [data.aws_iam_policy_document.tls_only["frontend"].json]
+
   statement {
     sid    = "CloudFrontOAC"
     effect = "Allow"
