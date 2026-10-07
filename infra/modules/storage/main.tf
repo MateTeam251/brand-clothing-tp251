@@ -70,14 +70,11 @@ resource "aws_s3_bucket" "media" {
 resource "aws_s3_bucket_public_access_block" "media" {
   bucket = aws_s3_bucket.media.id
 
-  block_public_acls  = true
-  ignore_public_acls = true
-
-  # TEMPORARY: allows the public-read bucket policy statement below.
-  # Set both back to true (and remove TemporaryPublicRead) before go-live;
-  # media should be served through CloudFront only.
-  block_public_policy     = false
-  restrict_public_buckets = false
+  # Private: the app hands out signed URLs; CloudFront reads via OAC.
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
@@ -210,21 +207,6 @@ data "aws_iam_policy_document" "media_bucket_policy" {
     }
   }
 
-  # TEMPORARY: public read of media objects (GetObject only, no listing).
-  # Remove before go-live, together with the public access block change above.
-  statement {
-    sid    = "TemporaryPublicRead"
-    effect = "Allow"
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.media.arn}/*"]
-  }
-
   dynamic "statement" {
     for_each = var.app_role_enabled ? [var.app_iam_role_arn] : []
     content {
@@ -250,8 +232,6 @@ resource "aws_s3_bucket_policy" "media" {
   bucket = aws_s3_bucket.media.id
   policy = data.aws_iam_policy_document.media_bucket_policy.json
 
-  # The policy has public statements, so S3 rejects it while the public
-  # access block still blocks public policies. Apply the block change first.
   depends_on = [aws_s3_bucket_public_access_block.media]
 }
 
