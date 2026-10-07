@@ -57,3 +57,7 @@ npm run dev
 
 Details: [docs/releasing.md](docs/releasing.md), [docs/ci-cd.md](docs/ci-cd.md),
 [docs/infrastructure.md](docs/infrastructure.md), [docs/database-restore.md](docs/database-restore.md).
+
+## License
+
+[MIT](LICENSE)
