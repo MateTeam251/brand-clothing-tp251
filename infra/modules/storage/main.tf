@@ -326,7 +326,8 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
 }
 
 # SPA routing for the frontend only: paths whose last segment has no file
-# extension (/catalog, /product/12) get index.html. Error-page rewrites would
+# extension (/catalog, /product/12) get index.html. www.* redirects to the
+# bare domain. Error-page rewrites would
 # also hit /api/* and turn API 404s into 200 HTML.
 resource "aws_cloudfront_function" "spa_rewrite" {
   name    = "${var.project_name}-spa-rewrite"
@@ -335,6 +336,14 @@ resource "aws_cloudfront_function" "spa_rewrite" {
   code    = <<-JS
     function handler(event) {
       var request = event.request;
+      var host = request.headers.host ? request.headers.host.value : '';
+      if (host.indexOf('www.') === 0) {
+        return {
+          statusCode: 301,
+          statusDescription: 'Moved Permanently',
+          headers: { location: { value: 'https://' + host.substring(4) + request.uri } },
+        };
+      }
       var last = request.uri.split('/').pop();
       if (last.indexOf('.') === -1) {
         request.uri = '/index.html';
