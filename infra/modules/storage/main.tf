@@ -315,9 +315,48 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
   signing_protocol                  = "sigv4"
 }
 
+# AWS-managed policies for the backend paths: never cache, forward everything
+# (cookies, query, Authorization) except Host, so the origin gets its own name.
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
+# SPA routing for the frontend only: paths whose last segment has no file
+# extension (/catalog, /product/12) get index.html. www.* redirects to the
+# bare domain. Error-page rewrites would
+# also hit /api/* and turn API 404s into 200 HTML.
+resource "aws_cloudfront_function" "spa_rewrite" {
+  name    = "${var.project_name}-spa-rewrite"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-JS
+    function handler(event) {
+      var request = event.request;
+      var host = request.headers.host ? request.headers.host.value : '';
+      if (host.indexOf('www.') === 0) {
+        return {
+          statusCode: 301,
+          statusDescription: 'Moved Permanently',
+          headers: { location: { value: 'https://' + host.substring(4) + request.uri } },
+        };
+      }
+      var last = request.uri.split('/').pop();
+      if (last.indexOf('.') === -1) {
+        request.uri = '/index.html';
+      }
+      return request;
+    }
+  JS
+}
+
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   is_ipv6_enabled     = true
+  aliases             = var.domain_aliases
   default_root_object = "index.html"
   comment             = "${var.project_name} frontend + media"
 
@@ -346,6 +385,43 @@ resource "aws_cloudfront_distribution" "frontend" {
         forward = "none"
       }
     }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_rewrite.arn
+    }
+  }
+
+  # Backend (nginx -> Django) over HTTPS, see api_origin_domain.
+  dynamic "origin" {
+    for_each = var.api_origin_domain == null ? [] : [var.api_origin_domain]
+    content {
+      domain_name = origin.value
+      origin_id   = "api"
+
+      custom_origin_config {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "https-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+        origin_read_timeout    = 60
+      }
+    }
+  }
+
+  # /static/* is Django admin's CSS/JS (WhiteNoise); the frontend uses /assets/.
+  dynamic "ordered_cache_behavior" {
+    for_each = var.api_origin_domain == null ? [] : ["/api/*", "/static/*"]
+    content {
+      path_pattern             = ordered_cache_behavior.value
+      allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods           = ["GET", "HEAD"]
+      target_origin_id         = "api"
+      viewer_protocol_policy   = "redirect-to-https"
+      compress                 = true
+      cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
+      origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    }
   }
 
   ordered_cache_behavior {
@@ -364,31 +440,18 @@ resource "aws_cloudfront_distribution" "frontend" {
     }
   }
 
-  # SPA fallback: unknown paths (client-side routes) resolve to index.html.
-  custom_error_response {
-    error_code         = 403
-    response_code      = 200
-    response_page_path = "/index.html"
-  }
-
-  custom_error_response {
-    error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
-  }
-
   restrictions {
     geo_restriction {
       restriction_type = "none"
     }
   }
 
-  # No custom domain / ACM cert wired up yet — uses the default
-  # *.cloudfront.net certificate until Route 53 + a real domain
-  # (dns module) exist. Swap in `aliases` + `viewer_certificate.acm_certificate_arn`
-  # at that point; see architecture-detail.md's DNS & TLS table.
+  # Default *.cloudfront.net certificate until a domain is set.
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = var.acm_certificate_arn == null
+    acm_certificate_arn            = var.acm_certificate_arn
+    ssl_support_method             = var.acm_certificate_arn == null ? null : "sni-only"
+    minimum_protocol_version       = var.acm_certificate_arn == null ? "TLSv1" : "TLSv1.2_2021"
   }
 
   tags = {

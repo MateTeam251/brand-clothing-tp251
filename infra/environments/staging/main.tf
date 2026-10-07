@@ -24,6 +24,10 @@ module "storage" {
 
   app_role_enabled = true
   app_iam_role_arn = module.compute.app_role_arn
+
+  domain_aliases      = [local.site_host]
+  acm_certificate_arn = aws_acm_certificate_validation.site.certificate_arn
+  api_origin_domain   = local.origin_host
 }
 
 module "compute" {
@@ -52,6 +56,11 @@ module "compute" {
   # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
   ami_id = "ami-0540ba4e636bf2faf"
 
+  acme = {
+    zone_id     = data.aws_route53_zone.main.zone_id
+    record_name = local.origin_host
+  }
+
   # Every day 08:00-20:00 Kyiv time. Outside that the ASG is at 0.
   schedule = {
     start_cron = "0 8 * * *"
@@ -74,4 +83,7 @@ module "deploy_role" {
   github_environment = "staging"
   ssm_parameter_path = "/brand-clothing/staging"
   instance_role_tag  = module.compute.role_tag
+
+  frontend_bucket_arn         = module.storage.frontend_bucket_arn
+  cloudfront_distribution_arn = module.storage.cloudfront_distribution_arn
 }

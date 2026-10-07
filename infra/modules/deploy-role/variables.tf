@@ -27,3 +27,15 @@ variable "instance_role_tag" {
   description = "Value of the Role tag on the environment's app instance. Run Command is limited to instances with this tag."
   type        = string
 }
+
+variable "frontend_bucket_arn" {
+  description = "Frontend bucket the release workflow uploads the built site to. Null = no frontend deploy."
+  type        = string
+  default     = null
+}
+
+variable "cloudfront_distribution_arn" {
+  description = "Distribution to invalidate after a frontend upload."
+  type        = string
+  default     = null
+}

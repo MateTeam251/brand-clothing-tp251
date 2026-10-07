@@ -30,3 +30,21 @@ variable "app_role_enabled" {
   type        = bool
   default     = false
 }
+
+variable "domain_aliases" {
+  description = "Custom domain names for the CloudFront distribution. Needs acm_certificate_arn."
+  type        = list(string)
+  default     = []
+}
+
+variable "acm_certificate_arn" {
+  description = "ACM certificate (us-east-1) covering domain_aliases. Null = default cloudfront.net certificate."
+  type        = string
+  default     = null
+}
+
+variable "api_origin_domain" {
+  description = "Backend host name (HTTPS). Set = /api/* and /static/* go there. Null = frontend and media only."
+  type        = string
+  default     = null
+}

@@ -17,7 +17,9 @@ type AuthState = {
 }
 
 const rawBaseQuery = fetchBaseQuery({
-	baseUrl: 'http://127.0.0.1:8000/api/',
+	// Same domain as the site on servers (CloudFront routes /api/*). Locally:
+	// VITE_API_URL=http://127.0.0.1:8000/api/ in apps/frontend/.env.local
+	baseUrl: import.meta.env.VITE_API_URL ?? '/api/',
 	prepareHeaders: (headers, { getState }) => {
 		const state = getState() as AuthState;
     const accessToken = state.auth.accessToken;

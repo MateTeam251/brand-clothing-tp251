@@ -5,9 +5,10 @@
 locals {
   app_config = {
     DEBUG                   = "False"
-    ALLOWED_HOSTS           = module.compute.app_public_ip
-    SITE_URL                = "http://${module.compute.app_public_ip}"
-    CORS_ALLOWED_ORIGINS    = "https://${module.storage.cloudfront_domain_name}"
+    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host}"
+    SITE_URL                = "https://${local.site_host}"
+    CSRF_TRUSTED_ORIGINS    = "https://${local.site_host},https://www.${local.site_host}"
+    CORS_ALLOWED_ORIGINS    = "https://${local.site_host},https://www.${local.site_host}"
     EMAIL_BACKEND           = "django.core.mail.backends.console.EmailBackend"
     POSTGRES_DB             = "brand_clothing_db"
     POSTGRES_USER           = "brand_clothing"
@@ -23,6 +24,9 @@ locals {
     # Weekly cart report (carts.reports). Private bucket, not the media one.
     ANALYTICS_REPORTS_BUCKET = module.storage.reports_bucket_name
     ANALYTICS_REPORTS_PREFIX = "reports/carts"
+
+    # Name CloudFront uses for the backend (dns.tf); certbot gets its certificate.
+    ORIGIN_HOST = local.origin_host
 
     # Starts the redis + celery services in docker-compose.prod.yml.
     COMPOSE_PROFILES = "celery"

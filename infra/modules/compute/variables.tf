@@ -99,3 +99,12 @@ variable "schedule" {
   })
   default = null
 }
+
+variable "acme" {
+  description = "Lets certbot on the instance prove ownership of record_name via a DNS TXT record (Let's Encrypt DNS-01). Null = no Route 53 access."
+  type = object({
+    zone_id     = string
+    record_name = string
+  })
+  default = null
+}

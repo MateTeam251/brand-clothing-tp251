@@ -106,6 +106,37 @@ data "aws_iam_policy_document" "app" {
     resources = ["${var.reports_bucket_arn}/*"]
   }
 
+  # certbot: only the _acme-challenge TXT record of this instance's origin name.
+  dynamic "statement" {
+    for_each = var.acme == null ? [] : [var.acme]
+    content {
+      sid       = "AcmeChallengeRecord"
+      actions   = ["route53:ChangeResourceRecordSets"]
+      resources = ["arn:aws:route53:::hostedzone/${statement.value.zone_id}"]
+
+      condition {
+        test     = "ForAllValues:StringEquals"
+        variable = "route53:ChangeResourceRecordSetsNormalizedRecordNames"
+        values   = ["_acme-challenge.${statement.value.record_name}"]
+      }
+
+      condition {
+        test     = "ForAllValues:StringEquals"
+        variable = "route53:ChangeResourceRecordSetsRecordTypes"
+        values   = ["TXT"]
+      }
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.acme == null ? [] : [var.acme]
+    content {
+      sid       = "AcmeLookup"
+      actions   = ["route53:ListHostedZones", "route53:GetChange"]
+      resources = ["*"]
+    }
+  }
+
   # Scope to the domain identity once it exists (Phase 4).
   statement {
     sid       = "SesSend"
