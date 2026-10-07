@@ -346,6 +346,11 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
+# HSTS, nosniff, X-Frame-Options, Referrer-Policy on every response.
+data "aws_cloudfront_response_headers_policy" "security_headers" {
+  name = "Managed-SecurityHeadersPolicy"
+}
+
 # SPA routing for the frontend only: paths whose last segment has no file
 # extension (/catalog, /product/12) get index.html. www.* redirects to the
 # bare domain. Error-page rewrites would
@@ -400,6 +405,8 @@ resource "aws_cloudfront_distribution" "frontend" {
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
 
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
+
     forwarded_values {
       query_string = false
       cookies {
@@ -442,6 +449,8 @@ resource "aws_cloudfront_distribution" "frontend" {
       compress                 = true
       cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+
+      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
     }
   }
 
@@ -452,6 +461,8 @@ resource "aws_cloudfront_distribution" "frontend" {
     target_origin_id       = "media-s3"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
+
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
 
     forwarded_values {
       query_string = false
