@@ -70,14 +70,11 @@ resource "aws_s3_bucket" "media" {
 resource "aws_s3_bucket_public_access_block" "media" {
   bucket = aws_s3_bucket.media.id
 
-  block_public_acls  = true
-  ignore_public_acls = true
-
-  # TEMPORARY: allows the public-read bucket policy statement below.
-  # Set both back to true (and remove TemporaryPublicRead) before go-live;
-  # media should be served through CloudFront only.
-  block_public_policy     = false
-  restrict_public_buckets = false
+  # Private: the app hands out signed URLs; CloudFront reads via OAC.
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
@@ -153,44 +150,80 @@ resource "aws_s3_bucket_lifecycle_configuration" "backups" {
       noncurrent_days = 90
       storage_class   = "GLACIER"
     }
+
+    # Old versions are kept a year, then removed (the app can't delete).
+    noncurrent_version_expiration {
+      noncurrent_days = 365
+    }
   }
 }
 
-# App role: put-only, no delete. Written as a data source + resource pair
-# so the policy simply doesn't attach until app_iam_role_arn is set
-# (compute module doesn't exist yet in this "foundation" pass).
-data "aws_iam_policy_document" "backups_bucket_policy" {
-  count = var.app_role_enabled ? 1 : 0
+# Every bucket policy below includes this: deny any request not over TLS.
+data "aws_iam_policy_document" "tls_only" {
+  for_each = {
+    frontend = aws_s3_bucket.frontend.arn
+    media    = aws_s3_bucket.media.arn
+    backups  = aws_s3_bucket.backups.arn
+    reports  = aws_s3_bucket.reports.arn
+  }
 
   statement {
-    sid    = "AppRolePutOnly"
-    effect = "Allow"
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [each.value, "${each.value}/*"]
 
     principals {
-      type        = "AWS"
-      identifiers = [var.app_iam_role_arn]
+      type        = "*"
+      identifiers = ["*"]
     }
 
-    actions = [
-      "s3:PutObject",
-    ]
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
 
-    resources = ["${aws_s3_bucket.backups.arn}/*"]
+# App role: put-only, no delete.
+data "aws_iam_policy_document" "backups_bucket_policy" {
+  source_policy_documents = [data.aws_iam_policy_document.tls_only["backups"].json]
 
-    # Explicitly no s3:DeleteObject / s3:DeleteObjectVersion here
+  dynamic "statement" {
+    for_each = var.app_role_enabled ? [var.app_iam_role_arn] : []
+    content {
+      sid    = "AppRolePutOnly"
+      effect = "Allow"
+
+      principals {
+        type        = "AWS"
+        identifiers = [statement.value]
+      }
+
+      # Explicitly no s3:DeleteObject / s3:DeleteObjectVersion here
+      actions   = ["s3:PutObject"]
+      resources = ["${aws_s3_bucket.backups.arn}/*"]
+    }
   }
 }
 
 resource "aws_s3_bucket_policy" "backups" {
-  count  = var.app_role_enabled ? 1 : 0
   bucket = aws_s3_bucket.backups.id
-  policy = data.aws_iam_policy_document.backups_bucket_policy[0].json
+  policy = data.aws_iam_policy_document.backups_bucket_policy.json
+}
+
+moved {
+  from = aws_s3_bucket_policy.backups[0]
+  to   = aws_s3_bucket_policy.backups
 }
 
 # Media bucket policy. Always exists, so CloudFront can read media even
 # before the compute module (and its App-EC2-Role) exists. The app-role
 # statement is added only once app_iam_role_arn is set.
 data "aws_iam_policy_document" "media_bucket_policy" {
+  source_policy_documents = [data.aws_iam_policy_document.tls_only["media"].json]
+
   statement {
     sid    = "CloudFrontOAC"
     effect = "Allow"
@@ -208,21 +241,6 @@ data "aws_iam_policy_document" "media_bucket_policy" {
       variable = "AWS:SourceArn"
       values   = [aws_cloudfront_distribution.frontend.arn]
     }
-  }
-
-  # TEMPORARY: public read of media objects (GetObject only, no listing).
-  # Remove before go-live, together with the public access block change above.
-  statement {
-    sid    = "TemporaryPublicRead"
-    effect = "Allow"
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.media.arn}/*"]
   }
 
   dynamic "statement" {
@@ -250,8 +268,6 @@ resource "aws_s3_bucket_policy" "media" {
   bucket = aws_s3_bucket.media.id
   policy = data.aws_iam_policy_document.media_bucket_policy.json
 
-  # The policy has public statements, so S3 rejects it while the public
-  # access block still blocks public policies. Apply the block change first.
   depends_on = [aws_s3_bucket_public_access_block.media]
 }
 
@@ -303,6 +319,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "reports" {
   }
 }
 
+resource "aws_s3_bucket_policy" "reports" {
+  bucket = aws_s3_bucket.reports.id
+  policy = data.aws_iam_policy_document.tls_only["reports"].json
+}
+
 ########################################################################
 # CloudFront — frontend-static via Origin Access Control. Media rides
 # the same distribution on a second origin/behavior.
@@ -323,6 +344,11 @@ data "aws_cloudfront_cache_policy" "caching_disabled" {
 
 data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
+}
+
+# HSTS, nosniff, X-Frame-Options, Referrer-Policy on every response.
+data "aws_cloudfront_response_headers_policy" "security_headers" {
+  name = "Managed-SecurityHeadersPolicy"
 }
 
 # SPA routing for the frontend only: paths whose last segment has no file
@@ -379,6 +405,8 @@ resource "aws_cloudfront_distribution" "frontend" {
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
 
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
+
     forwarded_values {
       query_string = false
       cookies {
@@ -421,6 +449,8 @@ resource "aws_cloudfront_distribution" "frontend" {
       compress                 = true
       cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
       origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+
+      response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
     }
   }
 
@@ -431,6 +461,8 @@ resource "aws_cloudfront_distribution" "frontend" {
     target_origin_id       = "media-s3"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
+
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
 
     forwarded_values {
       query_string = false
@@ -463,6 +495,8 @@ resource "aws_cloudfront_distribution" "frontend" {
 # nothing else. (Split from media's policy above since this one never
 # depends on app_iam_role_arn.)
 data "aws_iam_policy_document" "frontend_bucket_policy" {
+  source_policy_documents = [data.aws_iam_policy_document.tls_only["frontend"].json]
+
   statement {
     sid    = "CloudFrontOAC"
     effect = "Allow"

@@ -31,5 +31,4 @@ infra/**/*.tfstate
 infra/**/*.tfstate.backup
 infra/**/terraform.tfvars
 infra/**/backend.hcl
-infra/**/.terraform.lock.hcl
 infra/**/crash.log
