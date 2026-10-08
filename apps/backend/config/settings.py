@@ -283,7 +283,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "weekly-cart-report": {
         "task": "carts.tasks.send_weekly_cart_report_task",
-        "schedule": crontab(minute=0, hour=3, day_of_week="monday"),  # previous Mon-Sun week
+        "schedule": crontab(minute=0, hour=4, day_of_week="monday"),  # previous Mon-Sun week
     },
 }
 
