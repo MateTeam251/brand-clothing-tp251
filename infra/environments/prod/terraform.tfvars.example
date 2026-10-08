@@ -4,5 +4,5 @@
 aws_region          = "eu-central-1"
 project_name        = "brand-clothing"
 bucket_suffix       = "REPLACE_WITH_YOUR_AWS_ACCOUNT_ID"
-budget_limit_usd    = 27
+budget_limit_usd    = 30
 budget_alert_email  = "you@example.com"
