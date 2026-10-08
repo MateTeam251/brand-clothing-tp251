@@ -62,15 +62,15 @@ jobs:
         working-directory: infra/environments/${{ matrix.env }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "~1.13"
           terraform_wrapper: false
 
       - name: Configure AWS credentials (plan role)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.TF_PLAN_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
@@ -81,16 +81,12 @@ jobs:
       - name: Init
         env:
           STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
-          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
         run: |
           # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
           BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
-          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
           [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
-          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
           terraform init \
             -backend-config="bucket=$BUCKET" \
-            -backend-config="dynamodb_table=$TABLE" \
             -backend-config="region=$AWS_REGION"
 
       - name: Validate
@@ -110,7 +106,7 @@ jobs:
 
       - name: Comment on PR
         if: always() && steps.plan.outputs.exitcode != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           ENV_NAME: ${{ matrix.env }}
           EXIT_CODE: ${{ steps.plan.outputs.exitcode }}
@@ -156,15 +152,15 @@ jobs:
         working-directory: infra/environments/${{ github.ref_name == 'main' && 'prod' || 'staging' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "~1.13"
           terraform_wrapper: false
 
       - name: Configure AWS credentials (apply role)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.TF_APPLY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
@@ -172,16 +168,12 @@ jobs:
       - name: Init
         env:
           STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
-          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
         run: |
           # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
           BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
-          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
           [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
-          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
           terraform init \
             -backend-config="bucket=$BUCKET" \
-            -backend-config="dynamodb_table=$TABLE" \
             -backend-config="region=$AWS_REGION"
 
       - name: Plan
@@ -195,7 +187,7 @@ jobs:
       - name: Instance refresh (if the launch template changed)
         run: |
           ASG=$(terraform output -raw asg_name)
-          IP=$(terraform output -raw app_public_ip)
+          SITE=$(terraform output -raw site_url)
           WANT=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG" \
             --query 'AutoScalingGroups[0].LaunchTemplate.Version' --output text)
           OLD=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG" \
@@ -231,7 +223,8 @@ jobs:
           [ "$STATUS" = "Successful" ] || { echo "::error::Instance refresh did not finish in 20 min"; exit 1; }
 
           # The new instance runs deploy.sh at boot; give the app a few minutes.
-          URL="http://$IP/api/admin/login/"
+          # Through CloudFront: the server only accepts traffic from CloudFront.
+          URL="$SITE/api/admin/login/"
           for _ in $(seq 1 30); do
             CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
             echo "$URL -> HTTP $CODE"

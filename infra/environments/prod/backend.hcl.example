@@ -4,6 +4,5 @@
 # Get these from infra/bootstrap's outputs (terraform output, from the
 # bootstrap directory, after applying it).
 
-bucket         = "REPLACE_WITH_STATE_BUCKET_NAME"
-region         = "REPLACE_WITH_AWS_REGION"
-dynamodb_table = "REPLACE_WITH_LOCK_TABLE_NAME"
+bucket = "REPLACE_WITH_STATE_BUCKET_NAME"
+region = "REPLACE_WITH_AWS_REGION"

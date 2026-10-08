@@ -355,11 +355,8 @@ data "aws_cloudfront_response_headers_policy" "security_headers" {
 # extension (/catalog, /product/12) get index.html. www.* redirects to the
 # bare domain. Error-page rewrites would
 # also hit /api/* and turn API 404s into 200 HTML.
-resource "aws_cloudfront_function" "spa_rewrite" {
-  name    = "${var.project_name}-spa-rewrite"
-  runtime = "cloudfront-js-2.0"
-  publish = true
-  code    = <<-JS
+locals {
+  spa_rewrite_js = <<-JS
     function handler(event) {
       var request = event.request;
       var host = request.headers.host ? request.headers.host.value : '';
@@ -377,6 +374,14 @@ resource "aws_cloudfront_function" "spa_rewrite" {
       return request;
     }
   JS
+}
+
+resource "aws_cloudfront_function" "spa_rewrite" {
+  name    = "${var.project_name}-spa-rewrite"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  # A Windows checkout (CRLF) would otherwise change the code on every local plan.
+  code = replace(local.spa_rewrite_js, "\r", "")
 }
 
 resource "aws_cloudfront_distribution" "frontend" {

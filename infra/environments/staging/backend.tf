@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.6"
+  required_version = ">= 1.10" # use_lockfile
 
   required_providers {
     aws = {
@@ -8,10 +8,13 @@ terraform {
     }
   }
 
-  # Same state bucket and lock table as prod (backend.hcl), different key.
+  # Same state bucket as prod (backend.hcl), different key.
   backend "s3" {
     key     = "staging/terraform.tfstate"
     encrypt = true
+
+    # Lock = a .tflock file next to the state in S3 (no DynamoDB table).
+    use_lockfile = true
   }
 }
 

@@ -52,3 +52,20 @@ Then fix forward: fix on `develop`, release again.
 - Images: ECR `brand-clothing-backend` (tag = commit SHA) and `brand-clothing-db` (tag = hash of `db/`, rebuilt only when `db/` changes). Staging and production use the same images.
 - Deploy: GitHub writes `IMAGE_TAG` / `DB_IMAGE_TAG` to SSM and runs `/opt/brand-clothing/deploy.sh` on the instance via SSM Run Command. `deploy.sh` builds `.env` from SSM, pulls the images and restarts the containers.
 - Access: GitHub uses OIDC roles, one per environment, usable only from jobs in that GitHub Environment (`staging` → `develop`, `production` → `main`). No AWS keys in GitHub.
+
+## Versions
+
+`vMAJOR.MINOR.PATCH`: a new **minor** for features or infrastructure that changes how the site works, a **patch** for fixes, ops and docs. Tag every release on `main`. Add a row here on the branch that goes into the release.
+
+| Version | Date | What changed |
+|---|---|---|
+| v0.4.4 | 2026-10-08 | Secure cookies, full Python tracebacks in Grafana (payments errors dropped whole), GitHub Actions on Node 24, image builds on native ARM runners, docs/Terraform-only merges skip the release |
+| v0.4.3 | 2026-10-07 | Media bucket private (signed URLs), TLS-only buckets, account-wide S3 Block Public Access, CloudFront security headers (HSTS), backup versions expire after 1 year, provider lock files |
+| v0.4.2 | 2026-10-07 | Server accepts HTTPS from CloudFront only (security group) |
+| v0.4.1 | 2026-10-07 | nginx resolves `web` per request (502 after a redeploy) |
+| v0.4.0 | 2026-10-07 | Production on theart-theartist.com: ACM certificates, Let's Encrypt origin (certbot), frontend deploy to S3/CloudFront, staging on staging.theart-theartist.com, README + license |
+| v0.3.1 | 2026-10-03 | Route 53 zone for theart-theartist.com, Grafana alerts resumed |
+| v0.3.0 | 2026-10-03 | Weekly cart report (Celery + Redis on prod), reports bucket, backup cron PATH fix, restore runbook, staging every day, less log noise |
+| v0.2.1 | 2026-10-02 | nginx JSON access logs, WAL-G backup logging, Grafana export |
+| v0.2.0 | 2026-10-01 | Monitoring (Grafana Cloud, Alloy), Terraform CI (plan on PR, apply on merge), gunicorn fix |
+| v0.1.0 | 2026-10-01 | First release: staging + production, release pipeline (test → build → deploy → smoke check), SSM config and secrets |

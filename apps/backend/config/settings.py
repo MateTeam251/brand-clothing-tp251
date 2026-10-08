@@ -47,6 +47,10 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 # nginx terminates HTTPS in prod and forwards the original scheme
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Cookies only over HTTPS on servers (local dev runs on plain http).
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 
 # Application definition
 
@@ -279,7 +283,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "weekly-cart-report": {
         "task": "carts.tasks.send_weekly_cart_report_task",
-        "schedule": crontab(minute=0, hour=3, day_of_week="monday"),  # previous Mon-Sun week
+        "schedule": crontab(minute=0, hour=4, day_of_week="monday"),  # previous Mon-Sun week
     },
 }
 
@@ -287,7 +291,7 @@ CELERY_BEAT_SCHEDULE = {
 # A cart is abandoned when it has items, no checkout, and was not changed for this long.
 CART_ABANDON_AFTER_HOURS = int(os.getenv("CART_ABANDON_AFTER_HOURS", "24"))
 
-# Private bucket for analyst reports. Intentionally no default: the media bucket is public.
+# Private bucket for analyst reports. Intentionally no default: never fall back to the media bucket.
 ANALYTICS_REPORTS_BUCKET = os.getenv("ANALYTICS_REPORTS_BUCKET")
 ANALYTICS_REPORTS_PREFIX = os.getenv("ANALYTICS_REPORTS_PREFIX", "reports/carts")
 
