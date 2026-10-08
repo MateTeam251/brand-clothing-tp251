@@ -1,0 +1,26 @@
+name: Main source branch
+
+# Releases only: main accepts PRs from develop (this repo), nothing else.
+# Required status check on main (Settings -> Rules -> Rulesets).
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited]
+
+permissions: {}
+
+jobs:
+  source-is-develop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Check source branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "::error::PRs into main must come from develop (got $HEAD_REPO:$HEAD_REF). Open this PR into develop instead."
+            exit 1
+          fi
+          echo "Source is develop, OK."

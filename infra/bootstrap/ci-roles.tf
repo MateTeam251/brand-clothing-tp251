@@ -198,11 +198,17 @@ resource "aws_iam_role_policy_attachment" "plan_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
-# Plans take the state lock, so they need to write the lock table.
+# Plans take the state lock, so they need to write the lock table
+# (and the S3 lock file, use_lockfile; the table goes away after the switch).
 data "aws_iam_policy_document" "plan_state_lock" {
   statement {
     actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
     resources = [aws_dynamodb_table.terraform_lock.arn]
+  }
+
+  statement {
+    actions   = ["s3:PutObject", "s3:DeleteObject"]
+    resources = ["${aws_s3_bucket.terraform_state.arn}/*.tflock"]
   }
 }
 
