@@ -245,6 +245,18 @@ configs:
       loki.process "scrub" {
         forward_to = [loki.write.cloud.receiver]
 
+        // Python tracebacks span many lines; join them to the "[..." line
+        // they belong to, so an error is one log entry (and is dropped whole below).
+        stage.match {
+          selector = "{container=~\"web|celery\"}"
+
+          stage.multiline {
+            firstline     = "^\\["
+            max_wait_time = "3s"
+            max_lines     = 200
+          }
+        }
+
         // The "payments" logger prints WayForPay callback data (names, emails,
         // phones). It stays on the instance (/data/app-logs/payments.log) only.
         stage.drop {
