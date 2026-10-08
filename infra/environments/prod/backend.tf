@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.6"
+  required_version = ">= 1.10" # use_lockfile
 
   required_providers {
     aws = {
@@ -15,6 +15,9 @@ terraform {
   backend "s3" {
     key     = "prod/terraform.tfstate"
     encrypt = true
+
+    # Lock = a .tflock file next to the state in S3 (no DynamoDB table).
+    use_lockfile = true
   }
 }
 

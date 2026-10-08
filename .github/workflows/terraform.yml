@@ -81,16 +81,12 @@ jobs:
       - name: Init
         env:
           STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
-          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
         run: |
           # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
           BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
-          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
           [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
-          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
           terraform init \
             -backend-config="bucket=$BUCKET" \
-            -backend-config="dynamodb_table=$TABLE" \
             -backend-config="region=$AWS_REGION"
 
       - name: Validate
@@ -172,16 +168,12 @@ jobs:
       - name: Init
         env:
           STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
-          LOCK_TABLE: ${{ vars.TF_LOCK_TABLE }}
         run: |
           # Strip whitespace a pasted variable value may carry (tabs/newlines are invisible in the UI).
           BUCKET=$(printf '%s' "$STATE_BUCKET" | tr -d '[:space:]')
-          TABLE=$(printf '%s' "$LOCK_TABLE" | tr -d '[:space:]')
           [ "$BUCKET" = "$STATE_BUCKET" ] || echo "::warning::TF_STATE_BUCKET contains whitespace (length ${#STATE_BUCKET}, expected ${#BUCKET}); re-enter it in the repo variables"
-          [ "$TABLE" = "$LOCK_TABLE" ] || echo "::warning::TF_LOCK_TABLE contains whitespace; re-enter it in the repo variables"
           terraform init \
             -backend-config="bucket=$BUCKET" \
-            -backend-config="dynamodb_table=$TABLE" \
             -backend-config="region=$AWS_REGION"
 
       - name: Plan

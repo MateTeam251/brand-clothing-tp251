@@ -86,7 +86,7 @@ GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys i
 | Resource | Name |
 |---|---|
 | S3 state bucket | `brand-clothing-tfstate-875476618056-eu` (versioned, encrypted) |
-| DynamoDB lock table | `brand-clothing-terraform-lock` |
+| State lock | `<key>.tflock` file next to each state in the same bucket (`use_lockfile`) |
 | CI roles | see above |
 
 ## Account-level
