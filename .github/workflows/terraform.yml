@@ -195,7 +195,7 @@ jobs:
       - name: Instance refresh (if the launch template changed)
         run: |
           ASG=$(terraform output -raw asg_name)
-          IP=$(terraform output -raw app_public_ip)
+          SITE=$(terraform output -raw site_url)
           WANT=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG" \
             --query 'AutoScalingGroups[0].LaunchTemplate.Version' --output text)
           OLD=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names "$ASG" \
@@ -231,7 +231,8 @@ jobs:
           [ "$STATUS" = "Successful" ] || { echo "::error::Instance refresh did not finish in 20 min"; exit 1; }
 
           # The new instance runs deploy.sh at boot; give the app a few minutes.
-          URL="http://$IP/api/admin/login/"
+          # Through CloudFront: the server only accepts traffic from CloudFront.
+          URL="$SITE/api/admin/login/"
           for _ in $(seq 1 30); do
             CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$URL" || true)
             echo "$URL -> HTTP $CODE"
