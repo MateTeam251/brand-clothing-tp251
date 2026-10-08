@@ -30,3 +30,7 @@ output "deploy_role_arn" {
 output "cloudfront_distribution_id" {
   value = module.storage.cloudfront_distribution_id
 }
+
+output "site_url" {
+  value = "https://${local.site_host}"
+}
