@@ -137,11 +137,14 @@ data "aws_iam_policy_document" "app" {
     }
   }
 
-  # Scope to the domain identity once it exists (Phase 4).
+  # Sends through the domain identity and its configuration set (both checked).
   statement {
-    sid       = "SesSend"
-    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
-    resources = ["arn:aws:ses:${local.region}:${local.account_id}:identity/*"]
+    sid     = "SesSend"
+    actions = ["ses:SendEmail", "ses:SendRawEmail"]
+    resources = [
+      "arn:aws:ses:${local.region}:${local.account_id}:identity/*",
+      "arn:aws:ses:${local.region}:${local.account_id}:configuration-set/*",
+    ]
   }
 
   # user-data attaches the data volume and the EIP to the instance it runs on.
