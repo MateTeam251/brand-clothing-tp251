@@ -118,7 +118,7 @@ data "aws_iam_policy_document" "guardrails" {
     ]
   }
 
-  # The state bucket and lock table stay intact whatever a plan contains.
+  # The state bucket stays intact whatever a plan contains.
   statement {
     sid    = "ProtectState"
     effect = "Deny"
@@ -134,13 +134,6 @@ data "aws_iam_policy_document" "guardrails" {
       aws_s3_bucket.terraform_state.arn,
       "${aws_s3_bucket.terraform_state.arn}/*",
     ]
-  }
-
-  statement {
-    sid       = "ProtectLockTable"
-    effect    = "Deny"
-    actions   = ["dynamodb:DeleteTable", "dynamodb:UpdateTable"]
-    resources = [aws_dynamodb_table.terraform_lock.arn]
   }
 }
 
@@ -198,14 +191,8 @@ resource "aws_iam_role_policy_attachment" "plan_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
-# Plans take the state lock, so they need to write the lock table
-# (and the S3 lock file, use_lockfile; the table goes away after the switch).
+# Plans take the state lock (use_lockfile), so they write and delete the .tflock file.
 data "aws_iam_policy_document" "plan_state_lock" {
-  statement {
-    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
-    resources = [aws_dynamodb_table.terraform_lock.arn]
-  }
-
   statement {
     actions   = ["s3:PutObject", "s3:DeleteObject"]
     resources = ["${aws_s3_bucket.terraform_state.arn}/*.tflock"]
