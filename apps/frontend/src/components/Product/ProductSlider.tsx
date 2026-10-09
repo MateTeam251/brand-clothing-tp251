@@ -1,11 +1,10 @@
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { ProductQueryParams } from '../../shared/types/products';
 import styles from './ProductSlider.module.scss';
 import { ProductCard } from '../ProductCard';
 import { useDragScroll } from '../../shared/hooks/useDragScroll';
+import { ViewAllLink } from '../ViewAllLink';
 
 type ProductSliderProps = {
   title: string;
@@ -17,10 +16,9 @@ type ProductSliderProps = {
 export const ProductSlider = ({
   title,
   queryParams,
-  viewAllTo = '/catalog?ordering=-is_bestseller',
+  viewAllTo = '/catalog?is_bestseller=true',
   showViewAll = true,
 }: ProductSliderProps) => {
-  const { t } = useTranslation();
   const { ref: sliderRef, handlePointerDown, handlePointerMove, handlePointerUp, handleClickCapture } =
   useDragScroll<HTMLDivElement>();
   const { currency, language } = useAppSelector((state) => state.settings);
@@ -34,9 +32,7 @@ export const ProductSlider = ({
           {title}
         </h2>
         {showViewAll && (
-          <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--desktop']}`} to={viewAllTo}>
-          {t('view-all')}
-          </Link>
+          <ViewAllLink to={viewAllTo} placement='header' />
         )}
       </div>
 
@@ -65,9 +61,7 @@ export const ProductSlider = ({
       ) : null}
 
       {showViewAll && (
-        <Link className={`${styles.slider__viewAll} ${styles['slider__viewAll--mobile']}`} to={viewAllTo}>
-          {t('view-all')}
-        </Link>
+        <ViewAllLink to={viewAllTo} placement='footer' />
       )}
     </section>
   );

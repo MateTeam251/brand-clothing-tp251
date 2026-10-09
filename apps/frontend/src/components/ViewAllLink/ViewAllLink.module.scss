@@ -1,0 +1,36 @@
+@use '../../app/styles/mixins.scss' as *;
+@use '../../app/styles/variables.scss' as *;
+
+
+.link {
+  padding: 12px;
+  color: inherit;
+  font-size: 20px;
+  line-height: 24px;
+  text-decoration: none;
+  border-radius: 100px;
+  background-color: $accent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &--header {
+    display: none;
+
+    @include on-desktop {
+      display: inline-flex;
+      width: 322px;
+      height: 56px;
+    }
+  }
+
+  &--footer {
+    height: 48px;
+    width: 100%;
+    display: inline-flex;
+
+    @include on-desktop {
+      display: none;
+    }
+  }
+}
