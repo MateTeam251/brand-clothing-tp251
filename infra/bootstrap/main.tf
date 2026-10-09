@@ -29,7 +29,7 @@ provider "aws" {
 }
 
 variable "aws_region" {
-  description = "AWS region for the state bucket/lock table."
+  description = "AWS region for the state bucket."
   type        = string
   default     = "eu-central-1"
 }
@@ -109,21 +109,6 @@ resource "aws_s3_account_public_access_block" "this" {
   restrict_public_buckets = true
 }
 
-resource "aws_dynamodb_table" "terraform_lock" {
-  name         = "brand-clothing-terraform-lock"
-  billing_mode = "PAY_PER_REQUEST" # a handful of locks/month — on-demand is effectively free
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-}
-
 output "state_bucket_name" {
   value = aws_s3_bucket.terraform_state.id
-}
-
-output "lock_table_name" {
-  value = aws_dynamodb_table.terraform_lock.name
 }
