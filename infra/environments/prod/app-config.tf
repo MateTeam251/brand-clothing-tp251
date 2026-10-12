@@ -9,7 +9,7 @@ locals {
     SITE_URL                = "https://${local.site_host}"
     CSRF_TRUSTED_ORIGINS    = "https://${local.site_host},https://www.${local.site_host}"
     CORS_ALLOWED_ORIGINS    = "https://${local.site_host},https://www.${local.site_host}"
-    EMAIL_BACKEND           = "django.core.mail.backends.console.EmailBackend"
+    DEFAULT_FROM_EMAIL      = "The Art — The Artist <noreply@theart-theartist.com>"
     POSTGRES_DB             = "brand_clothing_db"
     POSTGRES_USER           = "brand_clothing"
     POSTGRES_HOST           = "db"
@@ -24,6 +24,15 @@ locals {
     # Weekly cart report (carts.reports). Private bucket, not the media one.
     ANALYTICS_REPORTS_BUCKET = module.storage.reports_bucket_name
     ANALYTICS_REPORTS_PREFIX = "reports/carts"
+
+    # Email via Resend SMTP while SES stays in the sandbox. The API key is
+    # secrets/EMAIL_HOST_PASSWORD (by hand). Back to SES: EMAIL_BACKEND =
+    # "django_ses.SESBackend" + AWS_SES_REGION_NAME = "eu-central-1".
+    EMAIL_BACKEND   = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST      = "smtp.resend.com"
+    EMAIL_PORT      = "587"
+    EMAIL_USE_TLS   = "True"
+    EMAIL_HOST_USER = "resend"
 
     # Name CloudFront uses for the backend (dns.tf); certbot gets its certificate.
     ORIGIN_HOST = local.origin_host

@@ -146,3 +146,31 @@ resource "aws_cloudwatch_metric_alarm" "ses_complaint_rate" {
   treat_missing_data  = "notBreaching"
   alarm_actions       = [aws_sns_topic.email_alerts.arn]
 }
+
+# --- Resend (sends for us while SES stays in the sandbox) -------------------
+# Values from Resend -> Domains -> theart-theartist.com (region eu-west-1).
+
+resource "aws_route53_record" "resend_dkim" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "resend._domainkey.${aws_route53_zone.main.name}"
+  type    = "TXT"
+  ttl     = 1800
+  records = ["p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDTVHP6lvIhR/Xj6o3rbsuCMCvSxItqSlV5lptk2/Z7WMpPd4Ywxa88kewUOiRo6PwE8j8c0H6QyvhasrpBqFcRknKNSmysQMVEhM2TQydRhKpEKPggBu7kQ2taOEKVdAZHQgzXrPpCScV1KqHzumj3Gg18xkW+Sg2/m7gtueVSawIDAQAB"]
+}
+
+resource "aws_route53_record" "resend_rsend" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "rsend.${aws_route53_zone.main.name}"
+  type    = "CNAME"
+  ttl     = 1800
+  records = ["rsend-euw1.forge.rmta.net"]
+}
+
+# Return path: bounces come back to send.<domain>.
+resource "aws_route53_record" "resend_send" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "send.${aws_route53_zone.main.name}"
+  type    = "CNAME"
+  ttl     = 1800
+  records = ["send.forge.rmta.net"]
+}
