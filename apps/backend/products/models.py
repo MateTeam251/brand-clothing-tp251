@@ -1,6 +1,7 @@
 from django.db import models
 
 from core.enums import AvailabilityRequestStatusEnum
+from products.images import to_webp
 
 
 class Collection(models.Model):
@@ -124,6 +125,12 @@ class ProductImage(models.Model):
                 name="unique_main_image_per_product"
             )
         ]
+
+    def save(self, *args, **kwargs):
+        # Only a freshly uploaded file is uncommitted; editing `order` doesn't re-encode.
+        if self.image and not self.image._committed:
+            self.image = to_webp(self.image)
+        super().save(*args, **kwargs)
 
 
 class AvailabilityRequest(models.Model):
