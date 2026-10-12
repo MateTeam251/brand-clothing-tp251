@@ -59,6 +59,9 @@ Then fix forward: fix on `develop`, release again.
 
 | Version | Date | What changed |
 |---|---|---|
+| v0.4.7 | 2026-10-12 | Email through Resend (SMTP) on staging and production; SES stays set up for when AWS approves production access |
+| v0.4.6 | 2026-10-09 | SES bounce and complaint alerts (configuration set, SNS email, rate alarms) |
+| v0.4.5 | 2026-10-09 | SES domain: DKIM, custom MAIL FROM, DMARC |
 | v0.4.4 | 2026-10-08 | Secure cookies, full Python tracebacks in Grafana (payments errors dropped whole), GitHub Actions on Node 24, image builds on native ARM runners, docs/Terraform-only merges skip the release |
 | v0.4.3 | 2026-10-07 | Media bucket private (signed URLs), TLS-only buckets, account-wide S3 Block Public Access, CloudFront security headers (HSTS), backup versions expire after 1 year, provider lock files |
 | v0.4.2 | 2026-10-07 | Server accepts HTTPS from CloudFront only (security group) |
