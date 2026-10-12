@@ -309,13 +309,6 @@ NOVA_POSHTA_API_URL = os.environ.get(
     "https://api.novaposhta.ua/v2.0/json/",
 )
 
-# Ukrposhta — bearer token issued in the Ukrposhta developer cabinet.
-UKRPOSHTA_BEARER_TOKEN = os.environ.get("UKRPOSHTA_BEARER_TOKEN")
-UKRPOSHTA_API_URL = os.environ.get(
-    "UKRPOSHTA_API_URL",
-    "https://www.ukrposhta.ua/address-classifier-ws",
-)
-
 #LOGS
 LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
