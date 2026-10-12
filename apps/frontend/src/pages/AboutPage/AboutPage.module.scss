@@ -8,11 +8,13 @@
     padding: 0 40px 120px;
   }
 
-  &__content {
+  &__container {
+    max-width: 1440px;  
+    margin-inline: auto;
     @include flex(column, 72px);
 
     @include on-desktop {
-      @include flex(column, 120px);
+        @include flex(column, 120px);
     }
   }
 
@@ -38,6 +40,7 @@
   }
 
   &__headerImage {
+    margin-bottom: 72px;
     position: relative;
     left: 50%;
     right: 50%;
@@ -49,8 +52,10 @@
     object-position: bottom;
 
     @include on-desktop {
-      height: 600px;
-      object-position: 0 -400px;
+      margin-bottom: 120px;
+      aspect-ratio: 16 / 7;
+      max-height: 800px;
+      object-position: 50% 30%;
     }
   }
 
