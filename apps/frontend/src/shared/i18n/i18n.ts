@@ -36,6 +36,7 @@ i18n.use(initReactI18next).init({
         size: 'Size',
         cart_item_desc: 'Made to order in 5-8 days',
         generic_error: 'Something went wrong. Please try again.',
+        collections_not_found: 'No collections found',
         header: {
           catalog: 'Catalog',
           about: 'About',
@@ -174,6 +175,7 @@ i18n.use(initReactI18next).init({
         size: 'Розмір',
         cart_item_desc: 'Під замовлення 5-8 днів',
         generic_error: 'Щось пішло не так. Спробуйте ще раз.',
+        collections_not_found: 'Колекцій не знайдено',
         header: {
           catalog: 'Каталог',
           about: 'Про нас',

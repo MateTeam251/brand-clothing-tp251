@@ -14,6 +14,7 @@ export interface Collection {
   slug: string;
   name: string;
   description: string;
+  image: string | null;
 }
 
 export interface ProductListItem {
