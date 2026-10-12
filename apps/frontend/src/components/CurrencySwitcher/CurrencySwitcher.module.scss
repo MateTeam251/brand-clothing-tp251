@@ -1,0 +1,33 @@
+@use '../../app/styles/variables.scss' as *;
+
+.switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &__button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 24px;
+
+    &[aria-pressed='true'] {
+      color: #000;
+    }
+
+    &[aria-pressed='false'],
+    &[aria-pressed='false']:hover,
+    &[aria-pressed='false']:focus-visible {
+      color: $color-inactive;
+    }
+  }
+
+  &__divider {
+    width: 1px;
+    height: 24px;
+    background-color: #000;
+  }
+}

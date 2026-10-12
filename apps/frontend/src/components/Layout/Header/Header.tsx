@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Header.module.scss';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../../shared/hooks/reduxHooks';
-import { setCurrency, setLanguage } from '../../../app/store/reducers/settingsSlice';
+import { useAppSelector } from '../../../shared/hooks/reduxHooks';
 import { useTranslation } from 'react-i18next';
 import Logo from '../../../shared/assets/images/logotype.png';
 
@@ -14,13 +13,13 @@ import SearchIcon from '../../../shared/assets/icons/search.svg';
 import closeIcon from '../../../shared/assets/icons/close.svg';
 import cartActive from '../../../shared/assets/icons/cart-active.svg';
 import { useDebouncedSearchParam } from '../../../shared/hooks/useDebouncedSearchParam';
+import { LanguageSwitcher } from '../../LanguageSwitcher';
+import { CurrencySwitcher } from '../../CurrencySwitcher';
 
 export const Header: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { currency, language } = useAppSelector((state) => state.settings);
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -59,11 +58,6 @@ export const Header: React.FC = () => {
   };
   const isCartPage = location.pathname === '/cart';
 
-  const handleLanguageChange = (nextLanguage: 'ua' | 'en') => {
-    dispatch(setLanguage(nextLanguage));
-    void i18n.changeLanguage(nextLanguage);
-  };
-
   useEffect(() => {
     if(isMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -76,26 +70,8 @@ export const Header: React.FC = () => {
     <>
       <header className={styles.header}>
         <div className={`${styles['header__top']} container`}>
-          <div className={styles['header__currency']}>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('uah'))} aria-pressed={currency === 'uah'}>UAH</button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('usd'))} aria-pressed={currency === 'usd'}>USD</button>
-          </div>
-          <div className={styles['header__lang']}>
-            <button className={styles['header__select-button']} 
-            onClick={() => handleLanguageChange('ua')}
-              aria-pressed={language === 'ua'}
-            >
-                UA
-            </button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} 
-            onClick={() => handleLanguageChange('en')}
-              aria-pressed={language === 'en'}
-            >
-                EN
-            </button>
-          </div>
+          <CurrencySwitcher />
+          <LanguageSwitcher />
         </div>
         <hr className={styles['header__divider']} />
         <div className={`${styles['header__main']} ${isSearchOpen ? styles['header__main--search'] : ''} container`}>
@@ -158,16 +134,8 @@ export const Header: React.FC = () => {
           )}
           <nav className={`${styles['header__nav']} ${styles['header__nav--account']}`} aria-label="Account navigation">
             <div className={styles['header__actions'] }>
-              <div className={styles['header__currency']}>
-                <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('uah'))} aria-pressed={currency === 'uah'}>UAH</button>
-                <div className={styles['header__select-divider']}></div>
-                <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('usd'))} aria-pressed={currency === 'usd'}>USD</button>
-              </div>
-              <div className={styles['header__lang']}>
-                <button className={styles['header__select-button']} onClick={() => handleLanguageChange('ua')} aria-pressed={language === 'ua'}>UA</button>
-                <div className={styles['header__select-divider']}></div>
-                <button className={styles['header__select-button']} onClick={() => handleLanguageChange('en')} aria-pressed={language === 'en'}>EN</button>
-              </div>
+              <CurrencySwitcher />
+              <LanguageSwitcher />
             </div>
             <ul className={styles['header__list']}>
               <li>
@@ -212,16 +180,8 @@ export const Header: React.FC = () => {
 
       <aside id="menu" className={`${styles.menu} ${isMenuOpen ? styles['menu--open'] : ''}`}>
         <div className={styles.menu__topRow}>
-          <div className={styles['header__currency']}>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('uah'))} aria-pressed={currency === 'uah'}>UAH</button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('usd'))} aria-pressed={currency === 'usd'}>USD</button>
-          </div>
-          <div className={styles['header__lang']}>
-            <button className={styles['header__select-button']} onClick={() => handleLanguageChange('ua')} aria-pressed={language === 'ua'}>UA</button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} onClick={() => handleLanguageChange('en')} aria-pressed={language === 'en'}>EN</button>
-          </div>
+          <CurrencySwitcher />
+          <LanguageSwitcher />
         </div>
 
         <hr className={styles.menu__divider} />
