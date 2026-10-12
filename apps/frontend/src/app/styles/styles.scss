@@ -171,7 +171,7 @@ h4 {
 
 .container {
   padding: 8px 15px;
-
+  
    @include on-desktop {
     padding: 8px 40px;
    }

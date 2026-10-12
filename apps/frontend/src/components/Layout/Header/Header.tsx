@@ -252,7 +252,7 @@ export const Header: React.FC = () => {
         <div className={styles.menu__content}>
           <ul className={styles.menu__list}>
             <li><Link className={styles.menu__link} to="/catalog" onClick={() => setIsMenuOpen(false)}>{t('catalog', { defaultValue: 'Каталог' })}</Link></li>
-            <li><Link className={styles.menu__link} to="/catalog?filter=bestsellers" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
+            <li><Link className={styles.menu__link} to="/catalog?is_bestseller=true" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
             <li><Link className={styles.menu__link} to="/collections" onClick={() => setIsMenuOpen(false)}>{t('collections', { defaultValue: 'Колекції' })}</Link></li>
             <li><Link className={styles.menu__link} to="/about" onClick={() => setIsMenuOpen(false)}>{t('about', { defaultValue: 'Про нас' })}</Link></li>
           </ul>
