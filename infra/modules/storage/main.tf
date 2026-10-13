@@ -87,6 +87,40 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
   }
 }
 
+# Deleted or replaced images stay recoverable for 30 days.
+resource "aws_s3_bucket_versioning" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  rule {
+    id     = "expire-old-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.media]
+}
+
 ########################################################################
 # db-backups-wal — put-only for the app role, versioned, lifecycle to
 # Glacier at 90 days (see infrastructure-plan.md: the point is that a
