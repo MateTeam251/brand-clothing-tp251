@@ -193,6 +193,24 @@ configs:
         scrape_interval = "60s"
       }
 
+      // ---- Origin certificate expiry (Let's Encrypt on nginx) ----
+      // TLS handshake to nginx; reports probe_ssl_earliest_cert_expiry.
+      prometheus.exporter.blackbox "origin" {
+        config = "{ modules: { tls: { prober: tcp, timeout: 5s, tcp: { tls: true, tls_config: { insecure_skip_verify: true } } } } }"
+
+        target {
+          name    = "origin_cert"
+          address = "nginx:443"
+          module  = "tls"
+        }
+      }
+
+      prometheus.scrape "origin_cert" {
+        targets         = prometheus.exporter.blackbox.origin.targets
+        forward_to      = [prometheus.relabel.instance.receiver]
+        scrape_interval = "300s"
+      }
+
       prometheus.relabel "instance" {
         forward_to = [prometheus.remote_write.cloud.receiver]
 
