@@ -12,6 +12,7 @@ click-plugins==1.1.1.2
 click-repl==0.4.0
 click==8.5.0
 colorama==0.4.6
+django-cleanup==9.0.0
 django-cors-headers==4.9.0
 django-countries==9.1.0
 django-ses==4.8.0

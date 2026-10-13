@@ -73,6 +73,9 @@ INSTALLED_APPS = [
     "favorites",
     "carts",
     "storages",
+    # Deletes a file from S3 when its row is deleted or the file is replaced.
+    # Must stay last, so it sees the file fields of every app above.
+    "django_cleanup.apps.CleanupConfig",
 ]
 
 MIDDLEWARE = [
