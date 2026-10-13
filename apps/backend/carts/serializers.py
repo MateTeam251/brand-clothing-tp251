@@ -17,11 +17,11 @@ class CartItemSerializer(CurrencyMixin, serializers.ModelSerializer):
     main_image = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()        # price for 1 product
     total_price = serializers.SerializerMethodField()  # price * quantity - price for THIS item considering quantity of items in cart. NOT the total price for cart
-
+    is_available = serializers.BooleanField(source="product.is_available", read_only=True)
 
     class Meta:
         model = CartItem
-        fields = ("id", "product", "name", "main_image", "size", "quantity", "price", "total_price")
+        fields = ("id", "product", "name", "main_image", "size", "quantity", "price", "total_price", "is_available")
         read_only_fields = fields
 
     def get_main_image(self, obj):
@@ -50,8 +50,8 @@ class CartItemSerializer(CurrencyMixin, serializers.ModelSerializer):
 
 class CartItemWriteSerializer(serializers.ModelSerializer):
     """
-    Used for POST /api/cart-items/ (add to cart) and
-    PATCH /api/cart-items/{id}/ (change quantity/size).
+    Used for POST /api/cart/items/ (add to cart) and
+    PATCH /api/cart/items/{id}/ (change quantity/size).
     Client sends only product+size+quantity — price is never accepted
     from the client, it's always derived server-side (see CartItemSerializer).
     """
@@ -65,6 +65,19 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
         if value < 1:
             raise serializers.ValidationError("Quantity must be at least 1.")
         return value
+
+    def validate(self, attrs):
+        current = self.instance.product if self.instance else None
+        product = attrs.get("product", current)
+        adding = (
+            self.instance is None
+            or product != current
+            or attrs.get("size", self.instance.size) != self.instance.size
+            or attrs.get("quantity", 0) > self.instance.quantity
+        )
+        if not product.is_available and adding:
+            raise serializers.ValidationError({"product": "This product is not available."})
+        return attrs
 
     def create(self, validated_data):
         cart = self.context["cart"]
