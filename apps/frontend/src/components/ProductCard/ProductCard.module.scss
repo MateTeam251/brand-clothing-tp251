@@ -1,6 +1,10 @@
 @use '../../app/styles/variables.scss' as *;
 @use '../../app/styles/mixins.scss' as *;
 
+.wrapper {
+  position: relative;
+}
+
 .card {
   display: flex;
   flex-direction: column;
@@ -34,6 +38,18 @@
     border: none;
     cursor: pointer;
     padding: 4px;
+  }
+
+    &__remove {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    padding: 4px;
+    border: none;
+    background: none;
+    color: inherit;
+    cursor: pointer;
   }
 
   &__favoriteIcon,
