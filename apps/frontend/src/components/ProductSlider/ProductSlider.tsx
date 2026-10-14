@@ -1,3 +1,5 @@
+import { useId } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { ProductQueryParams } from '../../shared/types/products';
@@ -8,41 +10,56 @@ import { ViewAllLink } from '../ViewAllLink';
 
 type ProductSliderProps = {
   title: string;
-  queryParams: ProductQueryParams;
+  queryParams?: ProductQueryParams;
   viewAllTo?: string;
   showViewAll?: boolean;
+  excludeProductId?: number;
 };
 
 export const ProductSlider = ({
   title,
-  queryParams,
+  queryParams = {},
   viewAllTo = '/catalog?is_bestseller=true',
   showViewAll = true,
+  excludeProductId,
 }: ProductSliderProps) => {
-  const { ref: sliderRef, handlePointerDown, handlePointerMove, handlePointerUp, handleClickCapture } =
-  useDragScroll<HTMLDivElement>();
+  const { t } = useTranslation();
+  const titleId = useId();
+  const {
+    ref: sliderRef,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handleClickCapture,
+  } = useDragScroll<HTMLDivElement>();
   const { currency, language } = useAppSelector((state) => state.settings);
-  const requestParams = { ...queryParams, currency, lang: language };
-  const { data, isLoading, isError } = useGetProductsQuery(requestParams);
+  const { data, isLoading, isError } = useGetProductsQuery({
+    ...queryParams,
+    currency,
+    lang: language,
+  });
+
+  const products = (data?.results ?? []).filter(
+    (product) => product.id !== excludeProductId,
+  );
+
+  if (!isLoading && !isError && products.length === 0) {
+    return null;
+  }
 
   return (
-    <section className={styles.slider} aria-labelledby='product-slider-title'>
+    <section className={styles.slider} aria-labelledby={titleId}>
       <div className={styles.slider__header}>
-        <h2 id='product-slider-title' className={styles.slider__title}>
+        <h2 id={titleId} className={styles.slider__title}>
           {title}
         </h2>
-        {showViewAll && (
-          <ViewAllLink to={viewAllTo} placement='header' />
-        )}
+        {showViewAll && <ViewAllLink to={viewAllTo} placement='header' />}
       </div>
 
-      {isLoading && <p className={styles.slider__status}>Loading...</p>}
-      {isError && <p className={styles.slider__status}>Unable to load products.</p>}
-      {!isLoading && !isError && data?.results.length === 0 && (
-        <p className={styles.slider__status}>No products found.</p>
-      )}
+      {isLoading && <p className={styles.slider__status}>{t('slider.loading')}</p>}
+      {isError && <p className={styles.slider__status}>{t('slider.error')}</p>}
 
-      {!isLoading && !isError && data?.results.length ? (
+      {products.length > 0 && (
         <div
           ref={sliderRef}
           className={styles.slider__track}
@@ -52,17 +69,15 @@ export const ProductSlider = ({
           onPointerCancel={handlePointerUp}
           onClickCapture={handleClickCapture}
         >
-          {data.results.map((product) => (
+          {products.map((product) => (
             <div className={styles.slider__item} data-slider-item='true' key={product.id}>
               <ProductCard product={product} />
             </div>
           ))}
         </div>
-      ) : null}
-
-      {showViewAll && (
-        <ViewAllLink to={viewAllTo} placement='footer' />
       )}
+
+      {showViewAll && <ViewAllLink to={viewAllTo} placement='footer' />}
     </section>
   );
 };

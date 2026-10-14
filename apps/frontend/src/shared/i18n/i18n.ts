@@ -101,6 +101,10 @@ i18n.use(initReactI18next).init({
           name_required: 'Please enter your name',
           addToCart_note: 'Before placing your order, please check the item\'s availability'
         },
+        slider: {
+          loading: "Loading...",
+          error: "Unable to load products. Please try again later."
+        },
         order_confirmation: {},
         cart: {
           title: 'Cart',
@@ -239,6 +243,10 @@ i18n.use(initReactI18next).init({
           invalid_phone: 'Введіть коректний номер телефону',
           name_required: "Введіть ваше ім'я",
           addToCart_note: 'Перед тим, як замовляти товар, перевірте його наявність'
+        },
+        slider: {
+          loading: "Завантаження...",
+          error: "Не вдалося завантажити товари. Спробуйте пізніше."
         },
         order_confirmation: {},
         cart: {
