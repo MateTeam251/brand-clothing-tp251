@@ -31,4 +31,7 @@ def to_webp(uploaded_file) -> ContentFile:
         buffer = BytesIO()
         img.save(buffer, format="WEBP", quality=WEBP_QUALITY, icc_profile=icc_profile)
 
-    return ContentFile(buffer.getvalue(), name=f"{Path(uploaded_file.name).stem}.webp")
+    webp = ContentFile(buffer.getvalue(), name=f"{Path(uploaded_file.name).stem}.webp")
+    # Explicit, so S3 serves it as an image.
+    webp.content_type = "image/webp"
+    return webp
