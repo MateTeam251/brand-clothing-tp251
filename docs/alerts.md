@@ -81,6 +81,8 @@ docker system df
 
 _Less than ~200 MB free on the 2 GB instance._
 
+Which container: Grafana Explore → `container_memory_working_set_bytes{env="prod"}` (per container, with history).
+
 ```bash
 free -m
 docker stats --no-stream
