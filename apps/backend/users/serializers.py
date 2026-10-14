@@ -31,16 +31,26 @@ class RegisterSerializer(serializers.ModelSerializer):
         - ``password`` is write-only and never included in the
           serialized output.
     """
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True, min_length=8)
-    agree_to_terms = serializers.BooleanField(write_only=True)
-    marketing_opt_in = serializers.BooleanField(required=False, default=False)
+    password = serializers.CharField(
+        write_only=True, min_length=8,
+        help_text="At least 8 characters. No other password rules are checked here.")
+    password_confirm = serializers.CharField(
+        write_only=True, min_length=8, help_text="Must be equal to `password`.")
+    agree_to_terms = serializers.BooleanField(
+        write_only=True, help_text="Must be `true`, otherwise 400.")
+    marketing_opt_in = serializers.BooleanField(
+        required=False, default=False, help_text="Consent to marketing emails. Default `false`.")
 
 
     class Meta:
         model = User
         fields = ("email", "password", "password_confirm", "name", "instagram",
                   "agree_to_terms", "marketing_opt_in")
+        extra_kwargs = {
+            "email": {"help_text": "Login of the account. Must be unique. An activation link is sent here."},
+            "name": {"help_text": "Display name. Optional."},
+            "instagram": {"help_text": "Instagram handle or profile link. Required, cannot be empty."},
+        }
 
 
     def validate_agree_to_terms(self, value):
@@ -85,6 +95,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     even if the email/password pair is valid, a JWT pair will not be
     issued unless ``user.is_active`` is True.
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Field descriptions for the API schema (SimpleJWT creates these fields here).
+        self.fields[self.username_field].help_text = "Email the account was registered with."
+        self.fields["password"].help_text = "Account password."
+
     def validate(self, attrs):
         """
         Validate credentials and enforce that the account is active.
@@ -132,6 +148,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "name", "age", "phone_number",
                   "marketing_opt_in", "instagram",]
         read_only_fields = ['id', 'email']
+        extra_kwargs = {
+            "email": {"help_text": "Cannot be changed here; a sent value is ignored."},
+            "name": {"help_text": "Display name. Can be empty."},
+            "age": {"help_text": "Age in years, 0 or more. Can be null."},
+            "phone_number": {"help_text": "Phone number, up to 20 characters. Format is not checked. Can be empty."},
+            "marketing_opt_in": {"help_text": "Consent to marketing emails."},
+            "instagram": {"help_text": "Instagram handle or profile link. Cannot be empty."},
+        }
 
     def update(self, instance, validated_data):
 
@@ -143,6 +167,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return instance
 
 
+class LogoutSerializer(serializers.Serializer):
+    """Request body of POST /api/auth/logout/ (used for the API schema)."""
+    refresh = serializers.CharField(help_text="Refresh token from login/refresh. It is blacklisted and stops working.")
+
+
+
 class PasswordResetRequestSerializer(serializers.Serializer):
     """
     Serializer that handles the "forgot password" request step.
@@ -150,7 +180,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     Given an email address, triggers a password reset email if a
     matching account exists.
     """
-    email = serializers.EmailField()
+    email = serializers.EmailField(help_text="Email of the account to send the reset link to.")
 
     def save(self, **kwargs):
         """
@@ -194,7 +224,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     """
     uid = serializers.CharField()
     token = serializers.CharField()
-    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password = serializers.CharField(
+        write_only=True, min_length=8,
+        help_text="New password: at least 8 characters, not a common password, not entirely numeric.")
 
     def validate_new_password(self, value):
         """
