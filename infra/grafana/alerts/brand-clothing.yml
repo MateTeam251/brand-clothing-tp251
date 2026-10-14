@@ -21,7 +21,6 @@ groups:
                     uid: grafanacloud-logs
                 editorMode: code
                 expr: count_over_time({env="prod", container="db"} |= "WAL-G backup FAILED" [1h])
-                hide: false
                 instant: true
                 intervalMs: 1000
                 maxDataPoints: 43200
@@ -55,6 +54,8 @@ groups:
                 type: threshold
           noDataState: OK
           execErrState: Error
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#prod-backup-failed
           isPaused: false
           notification_settings:
             receiver: grafana-maxmlv-email
@@ -74,7 +75,6 @@ groups:
                     uid: grafanacloud-logs
                 editorMode: code
                 expr: count_over_time({env="prod", container="db"} |= "archive command failed" [15m])
-                hide: false
                 instant: true
                 intervalMs: 1000
                 maxDataPoints: 43200
@@ -109,6 +109,8 @@ groups:
           noDataState: OK
           execErrState: Error
           for: 10m
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#prod-wal-archiving-failing
           isPaused: false
           notification_settings:
             receiver: grafana-maxmlv-email
@@ -128,7 +130,6 @@ groups:
                     uid: grafanacloud-logs
                 editorMode: code
                 expr: count_over_time({env="prod", container="db"} |= "WAL-G backup completed" [26h])
-                hide: false
                 instant: true
                 intervalMs: 1000
                 maxDataPoints: 43200
@@ -163,7 +164,66 @@ groups:
           noDataState: Alerting
           execErrState: Error
           for: 10m
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#prod-backup-missing-26h
           isPaused: false
+          notification_settings:
+            receiver: grafana-maxmlv-email
+    - orgId: 1
+      name: prod-cert
+      folder: brand-clothing
+      interval: 1h
+      rules:
+        - uid: eg13a03utxibkb
+          title: Origin certificate expiry
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: grafanacloud-prom
+              model:
+                editorMode: code
+                expr: (min(last_over_time(probe_ssl_earliest_cert_expiry{job="integrations/blackbox/origin_cert", env="prod"}[15m])) - time()) / 86400
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 14
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: Alerting
+          execErrState: Error
+          for: 1h
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#origin-certificate-expiry
+          isPaused: true
           notification_settings:
             receiver: grafana-maxmlv-email
     - orgId: 1
@@ -218,6 +278,8 @@ groups:
           noDataState: OK
           execErrState: Error
           for: 10m
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#prod-disk-above-85
           isPaused: false
           notification_settings:
             receiver: grafana-maxmlv-email
@@ -268,6 +330,8 @@ groups:
           noDataState: OK
           execErrState: Error
           for: 10m
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#prod-memory-available-below-10
           isPaused: false
           notification_settings:
             receiver: grafana-maxmlv-email
@@ -318,6 +382,8 @@ groups:
           noDataState: OK
           execErrState: Error
           for: 5m
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#prod-not-sending-metrics
           isPaused: false
           notification_settings:
             receiver: grafana-maxmlv-email
@@ -337,7 +403,6 @@ groups:
                     uid: grafanacloud-logs
                 editorMode: code
                 expr: sum(count_over_time({env="prod", container="nginx"} | json | __error__="" | status >= 500 [5m]))
-                hide: false
                 instant: true
                 intervalMs: 1000
                 maxDataPoints: 43200
@@ -372,6 +437,8 @@ groups:
           noDataState: OK
           execErrState: Error
           for: 5m
+          annotations:
+            runbook_url: https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md#prod-5xx-errors
           isPaused: false
           notification_settings:
             receiver: grafana-maxmlv-email
