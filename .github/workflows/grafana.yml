@@ -1,0 +1,117 @@
+name: Grafana
+
+# infra/grafana (alerts, contact point, synthetic check) as Terraform.
+# PR into develop/main -> plan, posted as a PR comment.
+# Merge to main        -> apply, after approval in "infra-production".
+on:
+  pull_request:
+    branches: [develop, main]
+    paths: ["infra/grafana/**", ".github/workflows/grafana.yml"]
+  push:
+    branches: [main]
+    paths: ["infra/grafana/**", ".github/workflows/grafana.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+  TF_VAR_grafana_auth: ${{ secrets.GRAFANA_AUTH }}
+  TF_VAR_sm_access_token: ${{ secrets.GRAFANA_SM_ACCESS_TOKEN }}
+  TF_VAR_alert_email: ${{ secrets.TF_BUDGET_ALERT_EMAIL }}
+
+defaults:
+  run:
+    working-directory: infra/grafana
+
+jobs:
+  plan:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write # OIDC -> read-only plan role (state in S3)
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.13"
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.TF_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Init
+        run: terraform init -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" -backend-config="region=$AWS_REGION"
+
+      - name: Plan
+        id: plan
+        run: |
+          set +e
+          terraform plan -no-color -lock-timeout=5m -detailed-exitcode > plan.txt 2>&1
+          code=$?
+          set -e
+          cat plan.txt
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" -ne 1 ]
+
+      - name: Comment on PR
+        if: always() && steps.plan.outputs.exitcode != ''
+        uses: actions/github-script@v9
+        env:
+          EXIT_CODE: ${{ steps.plan.outputs.exitcode }}
+        with:
+          script: |
+            const fs = require('fs');
+            const code = process.env.EXIT_CODE;
+            let out = fs.readFileSync('infra/grafana/plan.txt', 'utf8');
+            const start = out.search(/Terraform used the selected providers|Terraform will perform|No changes\.|Error:/);
+            if (start > 0) out = out.slice(start);
+            if (out.length > 60000) out = out.slice(0, 60000) + '\n\n... (truncated, full plan in the job log)';
+            const summary = (out.match(/Plan: .*|No changes\..*/) || ['see log'])[0];
+            const status = code === '1' ? '(failed)' : code === '2' ? '(changes)' : '(no changes)';
+            const marker = '<!-- terraform-plan-grafana -->';
+            const body = `${marker}\n### Terraform plan: \`grafana\` ${status}\n${summary}\n\n<details><summary>Show plan</summary>\n\n\`\`\`\n${out}\n\`\`\`\n</details>\n\n_Commit ${context.sha.slice(0, 7)} - [run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`;
+            const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: context.issue.number, per_page: 100 });
+            const old = comments.find(c => c.body.startsWith(marker));
+            if (old) await github.rest.issues.updateComment({ ...context.repo, comment_id: old.id, body });
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+
+  apply:
+    if: github.ref_name == 'main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: infra-production # approval
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.13"
+          terraform_wrapper: false
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.TF_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Init
+        run: terraform init -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" -backend-config="region=$AWS_REGION"
+
+      - name: Plan
+        run: terraform plan -no-color -lock-timeout=5m -out=tfplan
+
+      - name: Apply
+        run: terraform apply -no-color -lock-timeout=5m tfplan

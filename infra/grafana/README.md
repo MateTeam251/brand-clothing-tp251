@@ -1,14 +1,30 @@
-# Grafana snapshots
+# Grafana (Terraform)
 
-Exported from the Grafana Cloud stack `sturdyscone1696`. The source of truth is still Grafana;
-re-export after changing a rule or dashboard there.
-Runbooks for every alert: `docs/alerts.md` (set as each rule's Runbook URL).
+Grafana Cloud stack `sturdyscone1696`, managed with Terraform: folder, contact point,
+notification policy, alert rules (`alerts.tf`), synthetic check (`synthetics.tf`).
+Runbooks for every alert: `docs/alerts.md`.
 
-- `alerts/brand-clothing.yml`: alert rules, folder `brand-clothing` (groups `prod-infra`, `prod-backups`, `prod-cert`)
-- `dashboards/app-requests.json`: "App - Requests" (nginx JSON logs)
-- `dashboards/logs.json`: "Logs" (errors, backups, nginx 5xx, all logs with `env`/`container`/`search` filters)
+Change things here, not in the UI (provisioned rules are read-only in the UI).
+CI (`.github/workflows/grafana.yml`): plan on PRs, apply on merge to `main` (approval).
 
-Not exported:
-- **Node Exporter Full**: community dashboard, re-import with Dashboards → New → Import → ID `1860`, data source `…-prom`
-- **Contact points**: contain a personal email; recreate `grafana-maxmlv-email` and set it as the default policy's contact point
-- **Synthetic check** `prod-admin-login`: HTTP GET `https://theart-theartist.com/api/admin/login/`, 3 EU probes, every 2 min, alert at 3 of 6 failed (per-check alert, set in the check's Alerting step, not in this export; runbook URL `docs/alerts.md#prod-site-down`)
+Secrets (GitHub): `GRAFANA_AUTH` (service account `terraform`, Admin),
+`GRAFANA_SM_ACCESS_TOKEN`, `TF_BUDGET_ALERT_EMAIL` (alert email; the repo is public).
+
+Local plan (PowerShell):
+
+```powershell
+cd infra/grafana
+terraform init -backend-config="../environments/prod/backend.hcl"
+$env:TF_VAR_grafana_auth    = Read-Host -MaskInput "Grafana token"
+$env:TF_VAR_sm_access_token = Read-Host -MaskInput "SM token"
+$env:TF_VAR_alert_email     = Read-Host "Alert email"
+terraform plan
+```
+
+Moving to the customer's stack: new `grafana_url` / `sm_url` + tokens, apply, then point
+Alloy's push credentials (SSM) at the new stack.
+
+Not in Terraform (yet):
+- Dashboards `dashboards/*.json` (v2 export, import by hand: Dashboards → New → Import)
+- **Node Exporter Full**: community dashboard ID `1860`, data source `…-prom`
+- The synthetic check's per-check alert (Alerting step of the check)
