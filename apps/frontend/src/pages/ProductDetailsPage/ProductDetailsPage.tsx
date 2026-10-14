@@ -8,7 +8,7 @@ import { addToCart } from '../../app/store/reducers/cartSlice';
 import { SIZES } from '../../shared/types/common';
 import { Loader } from '../../components/Loader/Loader';
 import { ErrorState } from '../../components/ErrorState/ErrorState';
-import { ProductSlider } from '../../components/Product/ProductSlider';
+import { ProductSlider } from '../../components/ProductSlider/ProductSlider';
 import { AvailabilityRequestForm } from '../../components/AvailabilityRequestForm/AvailabilityRequestForm';
 import plusIcon from '../../shared/assets/icons/plus.svg';
 import minusIcon from '../../shared/assets/icons/minus.svg';
@@ -197,7 +197,8 @@ export const ProductDetailsPage = () => {
         <div className={styles.details__recommended}>
           <ProductSlider
             title={t('product.slider_title')}
-            queryParams={{ currency, lang: language }}
+            queryParams={{ ordering: '?', limit: 9 }}
+            excludeProductId={product.id}
             showViewAll={false}
           />
         </div>
