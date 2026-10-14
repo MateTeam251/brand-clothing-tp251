@@ -24,3 +24,25 @@ resource "grafana_synthetic_monitoring_check" "prod_admin_login" {
     }
   }
 }
+
+# Shop frontend (S3 + CloudFront). Alert: "prod frontend down" in alerts.tf.
+resource "grafana_synthetic_monitoring_check" "prod_frontend" {
+  job        = "prod-frontend"
+  target     = "https://theart-theartist.com/"
+  enabled    = true
+  frequency  = 300000 # ms; ~17k executions/month with 2 probes (free: 100k)
+  folder_uid = "grafana-synthetic-monitoring-app"
+
+  probes = [
+    data.grafana_synthetic_monitoring_probes.all.probes.Frankfurt,
+    data.grafana_synthetic_monitoring_probes.all.probes.London,
+  ]
+
+  settings {
+    http {
+      method             = "GET"
+      ip_version         = "V4"
+      valid_status_codes = [200]
+    }
+  }
+}

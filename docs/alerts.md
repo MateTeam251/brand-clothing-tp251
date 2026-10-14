@@ -31,6 +31,14 @@ _Synthetic check `prod-admin-login` failing (`ProbeFailedExecutionsTooHigh`)._
 3. No shell possible (instance gone): EC2 → Auto Scaling groups → prod. The ASG starts a new instance by itself; it reattaches the data volume (~5 min).
 4. Right after a release? Roll back: `docs/releasing.md` → Rolling back.
 
+## prod frontend down
+
+_The shop page `https://theart-theartist.com/` failed in more than half of the checks for 10 min (synthetic check `prod-frontend`). The backend can be fine at the same time._
+
+1. Open the site yourself (private window). Blank page or error?
+2. CloudFront error (403/404/5xx) → S3 bucket or distribution: last frontend deploy in Actions (Release → `frontend (production)` job), CloudFront → Distributions → status.
+3. Page loads but is broken → bad frontend build: redeploy the previous release (`docs/releasing.md` → Rolling back).
+
 ## prod 5xx errors
 
 _More than 5 responses with status 500–504 from nginx in 5 min._
@@ -38,6 +46,14 @@ _More than 5 responses with status 500–504 from nginx in 5 min._
 1. Logs dashboard → `container=web`: find the traceback.
 2. `502/504` only → `web` restarted or was slow: `docker ps` (uptime), memory alert?
 3. Bug in a new release → tell the backend dev with the traceback; roll back if it breaks checkout or login.
+
+## prod app errors
+
+_`ERROR`/`CRITICAL` lines from Django, Celery or gunicorn in the last 15 min that didn't become a 500 (those are **prod 5xx errors**), e.g. a failed background job (abandoned carts, weekly report) or a caught exception._
+
+1. Logs dashboard → `container=web` / `celery`, search `ERROR`: read the line and the traceback under it.
+2. Celery task failed → it retries on its next schedule; tell the backend dev with the traceback.
+3. Same error every few minutes → likely a config problem (missing SSM value, S3 access): check the last release / Terraform change.
 
 ## prod not sending metrics
 
