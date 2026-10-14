@@ -174,7 +174,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # cAdvisor maps each container's cgroup to its name via Docker's layer db.
       - /var/lib/docker:/var/lib/docker:ro
-    mem_limit: ${ALLOY_MEM_LIMIT:-160m}
+    mem_limit: ${ALLOY_MEM_LIMIT:-256m} # ~145 MB used with cAdvisor + Postgres exporters
     logging: *logging
 
 configs:
