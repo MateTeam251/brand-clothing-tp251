@@ -95,7 +95,7 @@ export const Header: React.FC = () => {
                 </button>
               </li>
               <li>
-                <Link className={styles['header__icon-button']} to="/account/favorites" aria-label="Favorites">
+                <Link className={styles['header__icon-button']} to="/favorites" aria-label="Favorites">
                   <img className={styles['header__icon']} src={FavouriteIcon} alt="" aria-hidden="true" />
                 </Link>
               </li>
@@ -150,7 +150,7 @@ export const Header: React.FC = () => {
               <li>
                 <Link
                   className={`${styles['header__icon-button']} ${styles['header__favourite-button']}`}
-                  to="/account/favorites"
+                  to="/favorites"
                   aria-label="Favorites"
                 >
                   <img className={styles['header__icon']} src={FavouriteIcon} alt="" aria-hidden="true" />
@@ -189,7 +189,7 @@ export const Header: React.FC = () => {
         <div className={styles.menu__header}>
           <Link 
             className={styles.menu__actionIcon} 
-            to="/account/favorites" 
+            to="/favorites" 
             onClick={() => setIsMenuOpen(false)}
             aria-label="Favorites"
           >

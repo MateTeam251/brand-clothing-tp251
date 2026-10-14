@@ -1,6 +1,7 @@
-export const AccountLayout = () => {
+export const FavoritesPage = () => {
   return (
     <div>
+
     </div>
   );
 }

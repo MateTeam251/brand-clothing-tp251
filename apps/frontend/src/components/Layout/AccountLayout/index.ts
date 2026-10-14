@@ -1,1 +1,0 @@
-export { AccountLayout } from './AccountLayout';
