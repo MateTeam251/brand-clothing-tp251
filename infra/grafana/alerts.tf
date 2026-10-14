@@ -103,6 +103,29 @@ locals {
           no_data = "OK"
           anchor  = "prod-5xx-errors"
         },
+        {
+          # Django/Celery/gunicorn ERROR lines that never became a 5xx (background jobs).
+          # django.request errors are 500s, already covered above.
+          name    = "prod app errors"
+          source  = "logs"
+          expr    = "sum(count_over_time({env=\"prod\", container=~\"web|celery\"} |~ `\\] (ERROR|CRITICAL):|: (ERROR|CRITICAL)/|\\[(ERROR|CRITICAL)\\]` !~ `^\\[django\\.request\\]` [15m]))"
+          op      = "gt"
+          value   = 0
+          for     = null
+          no_data = "OK"
+          anchor  = "prod-app-errors"
+        },
+        {
+          # Less than half of the frontend check's runs succeeded in 10 min.
+          name    = "prod frontend down"
+          source  = "prom"
+          expr    = "sum(increase(probe_all_success_sum{job=\"prod-frontend\"}[10m])) / sum(increase(probe_all_success_count{job=\"prod-frontend\"}[10m]))"
+          op      = "lt"
+          value   = 0.5
+          for     = null
+          no_data = "OK"
+          anchor  = "prod-frontend-down"
+        },
       ]
     }
   }

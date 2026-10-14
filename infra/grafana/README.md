@@ -1,7 +1,7 @@
 # Grafana (Terraform)
 
 Grafana Cloud stack `sturdyscone1696`, managed with Terraform: folder, contact point,
-notification policy, alert rules (`alerts.tf`), synthetic check (`synthetics.tf`).
+notification policy, alert rules (`alerts.tf`), synthetic checks (`synthetics.tf`: admin login, frontend).
 Runbooks for every alert: `docs/alerts.md`.
 
 Change things here, not in the UI (provisioned rules are read-only in the UI).
