@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { ProductListItem } from '../../shared/types/products';
 import styles from './ProductCard.module.scss';
+import closeIcon from '../../shared/assets/icons/close.svg';
 
 interface ProductCardProps {
   product: ProductListItem;
+  onRemove?: () => void;
 }
 
 const formatPrice = (value: string, currency: 'uah' | 'usd') => {
@@ -14,43 +17,57 @@ const formatPrice = (value: string, currency: 'uah' | 'usd') => {
   return `${formatted} ${symbol}`;
 };
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, onRemove }: ProductCardProps) => {
+  const { t } = useTranslation();
   const currency = useAppSelector((state) => state.settings.currency);
 
   return (
-    <Link to={`/product/${product.id}`} className={styles.card}>
-      <div className={styles.card__imageWrapper}>
-        {product.main_image ? (
-          <img
-            src={product.main_image.image}
-            alt={product.name}
-            className={styles.card__image}
-          />
-        ) : (
-          <div className={styles.card__imagePlaceholder} />
-        )}
-      </div>
-
-      <div className={styles.card__info}>
-        <p className={styles.card__name}>{product.name}</p>
-
-        <div className={styles.card__priceRow}>
-          {product.discounted_price ? (
-            <>
-              <span className={styles.card__priceOld}>
-                {formatPrice(product.price, currency)}
-              </span>
-              <span className={styles.card__price}>
-                {formatPrice(product.discounted_price, currency)}
-              </span>
-            </>
+    <div className={styles.wrapper}>
+      <Link to={`/product/${product.id}`} className={styles.card}>
+        <div className={styles.card__imageWrapper}>
+          {product.main_image ? (
+            <img
+              src={product.main_image.image}
+              alt={product.name}
+              className={styles.card__image}
+            />
           ) : (
-            <span className={styles.card__price}>
-              {formatPrice(product.price, currency)}
-            </span>
+            <div className={styles.card__imagePlaceholder} />
           )}
         </div>
-      </div>
-    </Link>
+
+        <div className={styles.card__info}>
+          <p className={styles.card__name}>{product.name}</p>
+
+          <div className={styles.card__priceRow}>
+            {product.discounted_price ? (
+              <>
+                <span className={styles.card__priceOld}>
+                  {formatPrice(product.price, currency)}
+                </span>
+                <span className={styles.card__price}>
+                  {formatPrice(product.discounted_price, currency)}
+                </span>
+              </>
+            ) : (
+              <span className={styles.card__price}>
+                {formatPrice(product.price, currency)}
+              </span>
+            )}
+          </div>
+        </div>
+      </Link>
+
+      {onRemove && (
+        <button
+          type="button"
+          className={styles.card__remove}
+          onClick={onRemove}
+          aria-label={t('product.remove_favorite')}
+        >
+          <img src={closeIcon} alt="" width={20} height={20} />
+        </button>
+      )}
+    </div>
   );
 };

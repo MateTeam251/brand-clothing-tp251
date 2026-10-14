@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductByIdQuery } from '../../shared/api/productsApi';
 import { useAddFavoriteMutation, useRemoveFavoriteByProductIdMutation } from '../../shared/api/favoritesApi';
@@ -26,6 +26,7 @@ export const ProductDetailsPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [isAvailabilityFormOpen, setIsAvailabilityFormOpen] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const location = useLocation();
 
   const { data: product, isLoading, error } = useGetProductByIdQuery({
     id: Number(id),
@@ -57,7 +58,7 @@ export const ProductDetailsPage = () => {
 
   const handleFavoriteClick = () => {
     if (!isAuthenticated) {
-      navigate('/signin');
+      navigate('/signin', { state: { from: location } });
       return;
     }
 

@@ -105,6 +105,11 @@ i18n.use(initReactI18next).init({
           loading: "Loading...",
           error: "Unable to load products. Please try again later."
         },
+        favorites_page: {
+          title: "Favorites",
+          empty: "You don't have any favorite products yet",
+          to_catalog: "Go to catalog"
+        },
         order_confirmation: {},
         cart: {
           title: 'Cart',
@@ -247,6 +252,11 @@ i18n.use(initReactI18next).init({
         slider: {
           loading: "Завантаження...",
           error: "Не вдалося завантажити товари. Спробуйте пізніше."
+        },
+        favorites_page: {
+          title: "Обране",
+          empty: "У вас ще немає обраних товарів",
+          to_catalog: "До каталогу"
         },
         order_confirmation: {},
         cart: {
