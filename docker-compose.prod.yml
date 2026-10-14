@@ -172,6 +172,8 @@ services:
       - /:/host/root:ro,rslave
       # Container discovery + logs. Note: Docker socket access is root-equivalent.
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # cAdvisor maps each container's cgroup to its name via Docker's layer db.
+      - /var/lib/docker:/var/lib/docker:ro
     mem_limit: ${ALLOY_MEM_LIMIT:-160m}
     logging: *logging
 
