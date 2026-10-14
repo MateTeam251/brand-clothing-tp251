@@ -1,9 +1,19 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
-from rest_framework.response import Response
 
 from carts.models import CartItem
 from carts.serializers import CartSerializer, CartItemWriteSerializer
 from carts.services import get_or_create_active_cart_for
+from core.openapi import CURRENCY_PARAM, DETAIL_RESPONSE, VALIDATION_ERROR
+
+WHOSE_CART = ("Works for guests (cart bound to the `sessionid` cookie) and for logged-in users "
+              "(Bearer token; the cookie is then not needed).")
+ITEM_ID_PARAM = OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH,
+                                 description="Cart line id (`items[].id` from `GET /api/cart/`).")
+ITEM_NOT_FOUND = OpenApiResponse(
+    DETAIL_RESPONSE,
+    description="No such line in YOUR current cart (lines of other carts are not visible).")
 
 
 def get_or_create_active_cart(request):
@@ -16,6 +26,15 @@ def get_or_create_active_cart(request):
     return get_or_create_active_cart_for(session_key=request.session.session_key)
 
 
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary="Get my cart",
+        description="Returns the current cart; creates an empty one on the first call. " + WHOSE_CART,
+        parameters=[CURRENCY_PARAM],
+        responses={200: CartSerializer},
+    ),
+)
+@extend_schema(tags=["cart"])
 class CartViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """GET /api/cart/ — always returns the caller's own current active cart."""
     serializer_class = CartSerializer
@@ -23,12 +42,32 @@ class CartViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     def get_object(self):
         return get_or_create_active_cart(self.request)
 
-    def list(self, request, *args, **kwargs):
-        cart = self.get_object()
-        return Response(self.get_serializer(cart).data)
 
 
-
+@extend_schema_view(
+    create=extend_schema(
+        summary="Add to cart",
+        description="Adds a product in a size. If this product and size are already in the cart, "
+                    "`quantity` is added to that line instead of making a new one. "
+                    "Returns the line as stored (with the summed quantity). " + WHOSE_CART,
+        responses={201: CartItemWriteSerializer, 400: VALIDATION_ERROR},
+    ),
+    partial_update=extend_schema(
+        summary="Change a cart line",
+        description="Send only what changes: `quantity`, `size` or `product`. If the product is out of stock, "
+                    "the line can only be reduced (or deleted); raising `quantity`, changing `size` "
+                    "or `product` gives 400. " + WHOSE_CART,
+        parameters=[ITEM_ID_PARAM],
+        responses={200: CartItemWriteSerializer, 400: VALIDATION_ERROR, 404: ITEM_NOT_FOUND},
+    ),
+    destroy=extend_schema(
+        summary="Remove a cart line",
+        description=WHOSE_CART,
+        parameters=[ITEM_ID_PARAM],
+        responses={204: OpenApiResponse(description="Removed. Empty body."), 404: ITEM_NOT_FOUND},
+    ),
+)
+@extend_schema(tags=["cart"])
 class CartItemViewSet(mixins.CreateModelMixin,
                        mixins.UpdateModelMixin,
                        mixins.DestroyModelMixin,

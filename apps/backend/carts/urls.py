@@ -8,5 +8,6 @@ router = DefaultRouter()
 router.register(r"items", CartItemViewSet, basename="cart-item")
 
 urlpatterns = [
-    path("", CartViewSet.as_view({"get": "list"}), name="cart-detail"),
+    # retrieve, not list: the cart is one object, so the schema shows no pagination
+    path("", CartViewSet.as_view({"get": "retrieve"}), name="cart-detail"),
 ] + router.urls
