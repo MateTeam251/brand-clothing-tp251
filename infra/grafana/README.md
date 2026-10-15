@@ -24,7 +24,11 @@ terraform plan
 Moving to the customer's stack: new `grafana_url` / `sm_url` + tokens, apply, then point
 Alloy's push credentials (SSM) at the new stack.
 
-Not in Terraform (yet):
-- Dashboards `dashboards/*.json` (v2 export, import by hand: Dashboards → New → Import)
-- **Node Exporter Full**: community dashboard ID `1860`, data source `…-prom`
-- The synthetic check's per-check alert (Alerting step of the check)
+Dashboards (`dashboards.tf`): Overview → Requests (RED, nginx logs), Infrastructure
+(USE: server + containers), Database (Postgres), Logs. All have an `env` switch and
+release markers. Edit `dashboards/generate.py`, run `python dashboards/generate.py`,
+commit the script and the JSON. Tip: try a change first via Dashboards → New → Import
+into a `TMP` dashboard, then put it in the script.
+
+Not in Terraform: the synthetic check's per-check alert (Alerting step of the check).
+Deep-dive server dashboard if ever needed: import community ID `1860` by hand.
