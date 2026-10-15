@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '../../shared/hooks/reduxHooks';
 import { AuthCard } from '../../components/AuthCard';
 import { AuthField } from '../../components/AuthField';
 import styles from './SignInPage.module.scss';
+import { productsApi } from '../../shared/api/productsApi';
 
 type FieldErrors = {
   email?: string;
@@ -69,6 +70,7 @@ export const SignInPage = () => {
     try {
       const tokens = await login({ email: trimmedEmail, password }).unwrap();
       dispatch(setCredentials(tokens));
+      dispatch(productsApi.util.invalidateTags(['Products']));
     } catch (error) {
       const status = (error as { status?: number }).status;
 

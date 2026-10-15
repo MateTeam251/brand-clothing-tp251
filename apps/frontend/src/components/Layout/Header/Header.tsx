@@ -15,10 +15,15 @@ import cartActive from '../../../shared/assets/icons/cart-active.svg';
 import { useDebouncedSearchParam } from '../../../shared/hooks/useDebouncedSearchParam';
 import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { CurrencySwitcher } from '../../CurrencySwitcher';
+import { useGetFavoritesQuery } from '../../../shared/api/favoritesApi';
+import FavouriteActiveIcon from '../../../shared/assets/icons/favourite-hovered.svg';
 
 export const Header: React.FC = () => {
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { data: favoritesData } = useGetFavoritesQuery({ limit: 1 }, { skip: !isAuthenticated });
+  const favoritesCount = isAuthenticated ? (favoritesData?.count ?? 0) : 0;
   const { t } = useTranslation();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,6 +62,16 @@ export const Header: React.FC = () => {
     navigate(value ? `/catalog?search=${encodeURIComponent(value)}` : '/catalog');
   };
   const isCartPage = location.pathname === '/cart';
+  const isFavoritesPage = location.pathname === '/favorites';
+    const favoritesBadge = favoritesCount > 0 && (
+    <span
+      className={`${styles['header__favorites-count']} ${
+        isFavoritesPage ? styles['header__favorites-count--active'] : ''
+      }`}
+    >
+      {favoritesCount}
+    </span>
+  );
 
   useEffect(() => {
     if(isMenuOpen) {
@@ -96,8 +111,9 @@ export const Header: React.FC = () => {
               </li>
               <li>
                 <Link className={styles['header__icon-button']} to="/favorites" aria-label="Favorites">
-                  <img className={styles['header__icon']} src={FavouriteIcon} alt="" aria-hidden="true" />
-                </Link>
+                <img className={styles['header__icon']} src={isFavoritesPage ? FavouriteActiveIcon : FavouriteIcon} alt="" aria-hidden="true" />
+                {favoritesBadge}
+              </Link>
               </li>
             </ul>
           </nav>
@@ -153,7 +169,13 @@ export const Header: React.FC = () => {
                   to="/favorites"
                   aria-label="Favorites"
                 >
-                  <img className={styles['header__icon']} src={FavouriteIcon} alt="" aria-hidden="true" />
+                  <img
+                    className={styles['header__icon']}
+                    src={isFavoritesPage ? FavouriteActiveIcon : FavouriteIcon}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  {favoritesBadge}
                 </Link>
               </li>
               <li>
