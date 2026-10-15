@@ -144,14 +144,40 @@ i18n.use(initReactI18next).init({
           production_title: 'Production',
           production_text: "We're not a basics brand. We're about mood — about pieces that make you feel like the main character of your own day. Real people stand behind this brand, not just a store. We run a small family production in Mykolaiv. We're just getting started, but we'd be glad to have you along for the journey.",
         },
-        account: {
-          info: 'Personal information',
-          favorites: 'Favorites',
-          orders: 'Orders',
-          order_status_1: 'Processing',
-          order_status_2: 'Awaiting shipment',
-          order_status_3: 'Shipped',
-          order_status_4: 'Delivered',
+        profile: {
+          title: "Profile",
+          personal_data: "Personal details",
+          name: "Name",
+          phone: "Phone number",
+          instagram: "Instagram",
+          email: "Email",
+          marketing: "I want to receive brand news, private sales and personal offers",
+          save: "Save changes",
+          saved: "Changes saved",
+          logout: "Log out",
+          errors: {
+            instagram_required: "Please enter your Instagram",
+            save_failed: "Could not save changes. Please try again."
+          }
+        },
+        orders: {
+          title: "Order history",
+          number: "Order № {{id}}",
+          items_count: "Items: {{count}}",
+          size: "Size",
+          pcs: "pcs",
+          subtotal: "Items",
+          discount: "Discount",
+          address: "Delivery address",
+          total: "Total",
+          empty: "You don't have any orders yet",
+          status: {
+            pending: "Awaiting payment",
+            processing: "Processing",
+            shipped: "Shipped",
+            delivered: "Completed",
+            canceled: "Canceled"
+          }
         },
         sign_in: {
           title: 'Log in',
@@ -307,14 +333,40 @@ i18n.use(initReactI18next).init({
           production_title: 'Виробництво',
           production_text: 'Ми не база. Ми про настрій. Про речі, в яких ти відчуваєш себе головною героїнею власного дня. За брендом стоять живі люди, а не просто магазин. Ми маємо невеличке сімейне виробництво в Миколаєві. Наш бренд тільки на старті, але ми будемо раді, якщо ти пройдеш цей шлях з нами.',
         },
-        account: {
-          info: 'Особиста інформація',
-          favorites: 'Обране',
-          orders: 'Замовлення',
-          order_status_1: 'В обробці',
-          order_status_2: 'Очікує відправлення',
-          order_status_3: 'Відправлено',
-          order_status_4: 'Доставлено',
+        profile: {
+          title: "Профіль",
+          personal_data: "Особисті дані",
+          name: "Ім'я",
+          phone: "Номер телефону",
+          instagram: "Інстаграм",
+          email: "Email",
+          marketing: "Хочу отримувати новини бренду, закриті сейли та персональні пропозиції",
+          save: "Зберегти зміни",
+          saved: "Зміни збережено",
+          logout: "Вийти",
+          errors: {
+            instagram_required: "Вкажіть Інстаграм",
+            save_failed: "Не вдалося зберегти зміни. Спробуйте ще раз."
+          }
+        },
+        orders: {
+          title: "Історія замовлень",
+          number: "Замовлення № {{id}}",
+          items_count: "Товарів: {{count}}",
+          size: "Розмір",
+          pcs: "шт",
+          subtotal: "Товари",
+          discount: "Знижка",
+          address: "Адреса доставки",
+          total: "Разом",
+          empty: "У вас ще немає замовлень",
+          status: {
+            pending: "Очікує оплати",
+            processing: "В обробці",
+            shipped: "Відправлено",
+            delivered: "Виконано",
+            canceled: "Скасовано"
+          }
         },
         sign_in: {
           title: 'Увійти в обліковий запис',

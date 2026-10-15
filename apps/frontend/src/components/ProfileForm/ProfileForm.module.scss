@@ -1,0 +1,69 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  &__fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+
+    @include on-desktop {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+  }
+
+  &__checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-family: 'Cambria', serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: $color-inactive;
+    cursor: pointer;
+
+    input {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: $accent;
+    }
+  }
+
+  &__error {
+    margin: 0;
+    color: #b3261e;
+    font-size: 14px;
+  }
+
+  &__success {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  &__submit {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 100px;
+    background-color: $accent;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+
+    @include on-desktop {
+      width: calc(50% - 8px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+}

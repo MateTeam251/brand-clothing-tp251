@@ -4,7 +4,8 @@ interface AuthFieldProps {
   name: string;
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
+  disabled?: boolean;
   type?: string;
   error?: string;
   autoComplete?: string;
@@ -15,6 +16,7 @@ export const AuthField = ({
   label,
   value,
   onChange,
+  disabled,
   type = 'text',
   error,
   autoComplete,
@@ -37,7 +39,8 @@ export const AuthField = ({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
         className={inputClassName}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange?.(event.target.value)}
+        disabled={disabled}
       />
 
       {error && (

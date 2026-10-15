@@ -17,6 +17,11 @@ $field-error: #b3261e;
     font-family: 'Cambria', serif;
     font-size: 14px;
 
+    &:disabled {
+      background-color: transparent;
+      color: $color-inactive;
+    }
+
     &::placeholder {
       color: $color-inactive;
     }
