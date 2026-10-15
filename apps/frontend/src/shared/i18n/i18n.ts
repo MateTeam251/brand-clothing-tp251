@@ -105,6 +105,21 @@ i18n.use(initReactI18next).init({
           loading: "Loading...",
           error: "Unable to load products. Please try again later."
         },
+        auth: {
+          tab_sign_in: "Sign in",
+          tab_sign_up: "Sign up",
+          email: "Email",
+          password: "Password",
+          sign_in: "Log in",
+          forgot_password: "Forgot password?",
+          errors: {
+            required: "This field is required",
+            invalid_email: "Enter a valid email",
+            invalid_credentials: "Incorrect email or password, or the account is not activated yet. Check your email.",
+            too_many_requests: "Too many attempts. Please try again later.",
+            generic: "Something went wrong. Please try again."
+          }
+        },
         favorites_page: {
           title: "Favorites",
           empty: "You don't have any favorite products yet",
@@ -252,6 +267,21 @@ i18n.use(initReactI18next).init({
         slider: {
           loading: "Завантаження...",
           error: "Не вдалося завантажити товари. Спробуйте пізніше."
+        },
+        auth: {
+          tab_sign_in: "Вхід",
+          tab_sign_up: "Реєстрація",
+          email: "Email",
+          password: "Пароль",
+          sign_in: "Увійти",
+          forgot_password: "Забули пароль?",
+          errors: {
+            required: "Це поле обов'язкове",
+            invalid_email: "Введіть коректний email",
+            invalid_credentials: "Невірний email чи пароль, або акаунт ще не активовано. Перевірте пошту.",
+            too_many_requests: "Забагато спроб. Спробуйте пізніше.",
+            generic: "Щось пішло не так. Спробуйте ще раз."
+          }
         },
         favorites_page: {
           title: "Обране",

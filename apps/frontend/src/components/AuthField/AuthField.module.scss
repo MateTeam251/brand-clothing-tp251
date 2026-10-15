@@ -1,0 +1,39 @@
+@use '../../app/styles/variables.scss' as *;
+
+// TODO: take exact colors from Figma
+$field-border: #d6d6d6;
+$field-error: #b3261e;
+
+.field {
+  &__input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid $field-border;
+    border-radius: 8px;
+    background-color: #fff;
+    color: inherit;
+    font-family: 'Cambria', serif;
+    font-size: 14px;
+
+    &::placeholder {
+      color: $color-inactive;
+    }
+
+    &:focus-visible {
+      outline: 1px solid currentColor;
+      outline-offset: 1px;
+    }
+
+    &--error {
+      border-color: $field-error;
+    }
+  }
+
+  &__error {
+    margin: 4px 0 0;
+    color: $field-error;
+    font-size: 12px;
+  }
+}
