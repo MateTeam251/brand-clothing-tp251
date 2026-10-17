@@ -956,12 +956,22 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value #A": "Size",
+              "relname": "table"
             }
           }
         }
       ],
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Size",
+            "desc": true
+          }
+        ]
       }
     }
   ]
