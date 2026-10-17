@@ -178,6 +178,11 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
         "HOST": os.getenv("POSTGRES_HOST", "db"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        # Reuse the connection between requests (default 0 = new connection, DNS lookup
+        # and Postgres process per request; failed under load.
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        # Check a reused connection is alive first (e.g. after a db restart).
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 
