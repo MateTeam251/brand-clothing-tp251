@@ -229,6 +229,29 @@ i18n.use(initReactI18next).init({
             home: 'Go to home page',
           },
         },
+        activation: {
+          success: {
+            title: 'Account successfully verified!',
+            text: 'You can now complete your profile with additional details to receive personal offers and check out instantly.',
+            complete_profile: 'Complete profile',
+            skip: 'Skip and go shopping',
+          },
+          failed: {
+            title: 'Could not verify your account!',
+            text: 'The verification link has expired or is not valid. Send a new email to complete your registration.',
+            resend: 'Resend email',
+            home: 'Go to home page',
+          },
+          resend: {
+            title: 'Resend email',
+            text: 'Enter the email you used to register.',
+            submit: 'Send',
+          },
+          sent: {
+            title: 'Check your email',
+            text: 'If an account with this email exists and is not verified yet, we have sent a new email with a link.',
+          },
+        },
         admin: {},
         not_found: {
           text: 'Page is not found',
@@ -456,6 +479,29 @@ i18n.use(initReactI18next).init({
             title: 'Перевірте пошту',
             text: 'Ми надіслали лист для підтвердження на {{email}}. Перейдіть за посиланням у листі, щоб завершити реєстрацію.',
             home: 'Перейти на головну',
+          },
+        },
+        activation: {
+          success: {
+            title: 'Акаунт успішно підтверджено!',
+            text: 'Тепер ви можете доповнити свій профіль додатковими даними, щоб отримувати персональні пропозиції та замовляти миттєво.',
+            complete_profile: 'Доповнити профіль',
+            skip: 'Пропустити та перейти до покупок',
+          },
+          failed: {
+            title: 'Не вдалося підтвердити акаунт!',
+            text: 'Посилання для підтвердження застаріло або є недійсним. Надішліть новий лист на пошту, щоб завершити реєстрацію.',
+            resend: 'Надіслати лист повторно',
+            home: 'Перейти на головну',
+          },
+          resend: {
+            title: 'Надіслати лист повторно',
+            text: 'Введіть email, який ви вказали при реєстрації.',
+            submit: 'Надіслати',
+          },
+          sent: {
+            title: 'Перевірте пошту',
+            text: 'Якщо акаунт з таким email існує і ще не підтверджений, ми надіслали новий лист із посиланням.',
           },
         },
         admin: {},

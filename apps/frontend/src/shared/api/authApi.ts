@@ -40,6 +40,13 @@ export const authApi = createApi({
         body,
       }),
     }),
+     resendActivation: builder.mutation<void, { email: string }>({
+      query: (body) => ({
+        url: 'auth/resend-activation/',
+        method: 'POST',
+        body,
+      }),
+    }),
     refreshToken: builder.mutation<TokenResponse, { refresh: string }>({
       query: (body) => ({
         url: 'auth/refresh/',
@@ -85,4 +92,5 @@ export const {
   useRequestPasswordResetMutation,
   useConfirmPasswordResetMutation,
   useGetUserQuery,
+  useResendActivationMutation,
 } = authApi;
