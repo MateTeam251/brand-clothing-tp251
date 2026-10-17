@@ -186,10 +186,18 @@ i18n.use(initReactI18next).init({
           password_reset: 'Forgot password?',
         },
         sign_up: {
-          first_name: 'First name',
-          last_name: 'Last name',
-          confirm_password: 'Confirm password',
-          sign_up_btn: 'Sign up',
+          submit: 'Sign up',
+          password_confirm: 'Repeat password',
+          agree: 'I agree to the terms of use and privacy policy',
+          errors: {
+            password_mismatch: 'Passwords do not match',
+            agree_required: 'Your consent is required',
+          },
+          check_email: {
+            title: 'Check your email',
+            text: 'We sent a confirmation email to {{email}}. Follow the link in the email to complete your registration.',
+            home: 'Go to home page',
+          },
         },
         admin: {},
         not_found: {
@@ -306,7 +314,9 @@ i18n.use(initReactI18next).init({
             invalid_email: "Введіть коректний email",
             invalid_credentials: "Невірний email чи пароль, або акаунт ще не активовано. Перевірте пошту.",
             too_many_requests: "Забагато спроб. Спробуйте пізніше.",
-            generic: "Щось пішло не так. Спробуйте ще раз."
+            generic: "Щось пішло не так. Спробуйте ще раз.",
+            password_mismatch: 'Паролі не збігаються',
+            agree_required: 'Потрібна ваша згода',
           }
         },
         favorites_page: {
@@ -375,10 +385,18 @@ i18n.use(initReactI18next).init({
           password_reset: 'Забули пароль?',
         },
         sign_up: {
-          first_name: "Ім'я",
-          last_name: 'Прізвище',
-          confirm_password: 'Підтвердіть пароль',
-          sign_up_btn: 'Зареєструватись',
+          submit: 'Зареєструватися',
+          password_confirm: 'Повторіть пароль',
+          agree: 'Я погоджуюсь з умовами використання та політикою конфіденційності',
+          errors: {
+            password_mismatch: 'Паролі не збігаються',
+            agree_required: 'Потрібна ваша згода',
+          },
+          check_email: {
+            title: 'Перевірте пошту',
+            text: 'Ми надіслали лист для підтвердження на {{email}}. Перейдіть за посиланням у листі, щоб завершити реєстрацію.',
+            home: 'Перейти на головну',
+          },
         },
         admin: {},
         not_found: {

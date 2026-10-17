@@ -1,0 +1,73 @@
+@use '../../app/styles/variables.scss' as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 648px;
+  margin: auto;
+  padding: 32px 24px;
+  border-radius: 24px;
+  background: #fff;
+  text-align: center;
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+
+    &--mail {
+      width: auto;
+      height: auto;
+    }
+
+    &--success {
+      background: $success; // TODO: точний колір з Figma
+    }
+
+    &--error {
+      background: $error; // TODO: точний колір з Figma
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+
+    @media (min-width: 1024px) {
+      font-size: 40px;
+    }
+  }
+
+  &__text {
+    max-width: 520px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #777; // TODO: сірий текст з Figma
+  }
+
+  &__link {
+    font-size: 14px;
+    color: inherit;
+    text-decoration: underline;
+  }
+}
