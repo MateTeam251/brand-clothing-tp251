@@ -20,6 +20,8 @@ import { Header } from './components/Layout/Header';
 import { Footer } from './components/Layout/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ActivationSuccessPage } from './pages/ActivationSuccessPage';
+import { ActivationFailedPage } from './pages/ActivationFailedPage';
 
 
 function App() {
@@ -43,6 +45,8 @@ function App() {
               <Route path='/resetpassword' element={<PasswordResetPage />} />
               <Route path='/signin' element={<SignInPage />} />
               <Route path='/signup' element={<SignUpPage />} />
+              <Route path='/activation/success' element={<ActivationSuccessPage />} />
+              <Route path='/activation/failed' element={<ActivationFailedPage />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route path="/account" element={<AccountPage />} />

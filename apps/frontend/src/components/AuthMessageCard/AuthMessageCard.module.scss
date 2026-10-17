@@ -43,11 +43,11 @@
     }
 
     &--success {
-      background: $success; // TODO: точний колір з Figma
+      background: $success;
     }
 
     &--error {
-      background: $error; // TODO: точний колір з Figma
+      background: $error;
     }
   }
 
@@ -66,12 +66,28 @@
     margin: 0;
     font-size: 14px;
     line-height: 1.5;
-    color: #777; // TODO: сірий текст з Figma
+    color: $gray90;
   }
 
   &__link {
     font-size: 14px;
     color: inherit;
     text-decoration: underline;
+  }
+
+    &__primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 100px;
+    background-color: $accent;
+    color: inherit;
+    font-size: 18px;
+    text-decoration: none;
+    cursor: pointer;
   }
 }
