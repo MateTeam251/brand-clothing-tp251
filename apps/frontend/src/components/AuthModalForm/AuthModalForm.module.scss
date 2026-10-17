@@ -1,0 +1,36 @@
+@use '../../app/styles/variables.scss' as *;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__error {
+    margin: 0;
+    color: $error;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  &__submit {
+    min-height: 48px;
+    border: none;
+    border-radius: 100px;
+    background-color: $accent;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+}
