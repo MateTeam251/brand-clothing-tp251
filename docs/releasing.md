@@ -59,6 +59,7 @@ Then fix forward: fix on `develop`, release again.
 
 | Version | Date | What changed |
 |---|---|---|
+| v0.5.0 | 2026-10-17 | nginx rate limits (login, sign-up, password reset, checkout), admin uploads up to 150 MB, product photos as WebP with media cleanup and versioned media bucket, origin certificate check, Grafana as code (alerts with runbooks, synthetic checks, 5 dashboards), container and Postgres metrics, release markers, new AMI, Dependabot updates (Python 3.14, nginx 1.31, Alloy 1.20) |
 | v0.4.7 | 2026-10-12 | Email through Resend (SMTP) on staging and production; SES stays set up for when AWS approves production access |
 | v0.4.6 | 2026-10-09 | SES bounce and complaint alerts (configuration set, SNS email, rate alarms) |
 | v0.4.5 | 2026-10-09 | SES domain: DKIM, custom MAIL FROM, DMARC |
