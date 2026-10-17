@@ -8,6 +8,8 @@ import { AuthCard } from '../../components/AuthCard';
 import { AuthField } from '../../components/AuthField';
 import { AuthCheckbox } from '../../components/AuthCheckbox';
 import { AuthMessageCard } from '../../components/AuthMessageCard';
+import { AuthSheet } from '../../components/AuthSheet';
+import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
@@ -22,7 +24,6 @@ const FIELD_KEYS = [
 type FieldKey = (typeof FIELD_KEYS)[number];
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
-// Бекенд при 400 повертає { поле: ["текст помилки"] } — беремо перший текст
 const mapServerErrors = (data: unknown): FieldErrors => {
   const result: FieldErrors = {};
 
@@ -58,6 +59,7 @@ export const SignUpPage = () => {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const closeAuth = useCloseAuth();
 
   if (isAuthenticated) {
     return <Navigate to="/account" replace />;
@@ -145,68 +147,70 @@ export const SignUpPage = () => {
   };
 
   return (
-    <AuthCard
-      onSubmit={handleSubmit}
-      submitLabel={t('sign_up.submit')}
-      isSubmitting={isLoading}
-      error={formError}
-    >
-      <AuthField
-        name="name"
-        type="text"
-        label={t('profile.name')}
-        value={name}
-        onChange={setName}
-        autoComplete="name"
-      />
-      <AuthField
-        name="email"
-        type="email"
-        label={t('auth.email')}
-        value={email}
-        onChange={setEmail}
-        error={fieldErrors.email}
-        autoComplete="email"
-      />
-      <AuthField
-        name="instagram"
-        type="text"
-        label={t('profile.instagram')}
-        value={instagram}
-        onChange={setInstagram}
-        error={fieldErrors.instagram}
-      />
-      <AuthField
-        name="password"
-        type="password"
-        label={t('auth.password')}
-        value={password}
-        onChange={setPassword}
-        error={fieldErrors.password}
-        autoComplete="new-password"
-      />
-      <AuthField
-        name="password_confirm"
-        type="password"
-        label={t('sign_up.password_confirm')}
-        value={passwordConfirm}
-        onChange={setPasswordConfirm}
-        error={fieldErrors.password_confirm}
-        autoComplete="new-password"
-      />
-      <AuthCheckbox
-        name="agree_to_terms"
-        checked={agree}
-        onChange={setAgree}
-        label={t('sign_up.agree')}
-        error={fieldErrors.agree_to_terms}
-      />
-      <AuthCheckbox
-        name="marketing_opt_in"
-        checked={marketing}
-        onChange={setMarketing}
-        label={t('profile.marketing')}
-      />
-    </AuthCard>
+    <AuthSheet onClose={closeAuth}>
+      <AuthCard
+        onSubmit={handleSubmit}
+        submitLabel={t('sign_up.submit')}
+        isSubmitting={isLoading}
+        error={formError}
+      >
+        <AuthField
+          name="name"
+          type="text"
+          label={t('profile.name')}
+          value={name}
+          onChange={setName}
+          autoComplete="name"
+        />
+        <AuthField
+          name="email"
+          type="email"
+          label={t('auth.email')}
+          value={email}
+          onChange={setEmail}
+          error={fieldErrors.email}
+          autoComplete="email"
+        />
+        <AuthField
+          name="instagram"
+          type="text"
+          label={t('profile.instagram')}
+          value={instagram}
+          onChange={setInstagram}
+          error={fieldErrors.instagram}
+        />
+        <AuthField
+          name="password"
+          type="password"
+          label={t('auth.password')}
+          value={password}
+          onChange={setPassword}
+          error={fieldErrors.password}
+          autoComplete="new-password"
+        />
+        <AuthField
+          name="password_confirm"
+          type="password"
+          label={t('sign_up.password_confirm')}
+          value={passwordConfirm}
+          onChange={setPasswordConfirm}
+          error={fieldErrors.password_confirm}
+          autoComplete="new-password"
+        />
+        <AuthCheckbox
+          name="agree_to_terms"
+          checked={agree}
+          onChange={setAgree}
+          label={t('sign_up.agree')}
+          error={fieldErrors.agree_to_terms}
+        />
+        <AuthCheckbox
+          name="marketing_opt_in"
+          checked={marketing}
+          onChange={setMarketing}
+          label={t('profile.marketing')}
+        />
+      </AuthCard>
+    </AuthSheet>
   );
 };
