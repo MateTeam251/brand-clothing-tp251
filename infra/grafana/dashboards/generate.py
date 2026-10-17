@@ -43,14 +43,14 @@ def stat(title, targets, x, y, w=4, h=4, unit="short", desc="", steps=None, ds=P
     if mappings: d["fieldConfig"]["defaults"]["mappings"]=mappings
     if link: d["fieldConfig"]["defaults"]["links"]=[{"title":"Details","url":link}]
     return d
-def table(title, targets, x, y, w=12, h=8, unit="short", desc="", ds=PROM):
+def table(title, targets, x, y, w=12, h=8, unit="short", desc="", ds=PROM, names=None, sort=None):
     for t in targets:
         t["format"]="table"
     return {"id":nid(),"type":"table","title":title,"description":desc,"datasource":ds,
        "gridPos":{"x":x,"y":y,"w":w,"h":h},"targets":targets,
        "fieldConfig":{"defaults":{"unit":unit},"overrides":[]},
-       "transformations":[{"id":"merge","options":{}},{"id":"organize","options":{"excludeByName":{"Time":True}}}],
-       "options":{"showHeader":True}}
+       "transformations":[{"id":"merge","options":{}},{"id":"organize","options":{"excludeByName":{"Time":True},"renameByName":names or {}}}],
+       "options":{"showHeader":True,"sortBy":[{"displayName":sort,"desc":True}] if sort else []}}
 def logs(title, expr, x, y, w=24, h=10, desc=""):
     return {"id":nid(),"type":"logs","title":title,"description":desc,"datasource":LOKI,
        "gridPos":{"x":x,"y":y,"w":w,"h":h},"targets":[tgt(expr,LOKI)],
@@ -98,7 +98,7 @@ p.append(stat("Disk used (max)",[tgt(f'max(100 * (1 - node_filesystem_avail_byte
   desc="Fullest of / and /data. Alert above 85%.",steps=[(None,"green"),(70,"orange"),(85,"red")],link=link("infra")))
 y+=4
 p.append(ts("Traffic: requests/s",[tgt(f'sum(rate({N} [$__auto]))',LOKI,"requests/s")],0,y,w=8,unit="reqps",ds=LOKI,min=0,desc="All requests reaching nginx (API + admin). Details: Requests dashboard."))
-p.append(ts("Errors: 5xx %",[tgt(f'100 * sum(rate({N} | status >= 500 [$__auto])) / sum(rate({N} [$__auto]))',LOKI,"5xx %")],8,y,w=8,unit="percent",ds=LOKI,min=0,steps=[(None,"green"),(1,"orange"),(5,"red")],desc="Share of responses with status 500-599."))
+p.append(ts("Errors: 5xx %",[tgt(f'100 * (sum(rate({N} | status >= 500 [$__auto])) or vector(0)) / sum(rate({N} [$__auto]))',LOKI,"5xx %")],8,y,w=8,unit="percent",ds=LOKI,min=0,steps=[(None,"green"),(1,"orange"),(5,"red")],desc="Share of responses with status 500-599."))
 p.append(ts("Latency: p95",[tgt(f'quantile_over_time(0.95, {N} | unwrap request_time [$__auto]) by (env)',LOKI,"p95")],16,y,w=8,unit="s",ds=LOKI,min=0,steps=[(None,"green"),(1,"orange"),(3,"red")],desc="95% of requests were faster than this (nginx request_time)."))
 y+=8
 p.append(ts("Saturation: memory per container",[tgt(f'sum by (container) (container_memory_working_set_bytes{{env="{E}"}})',PROM,"{{container}}")],0,y,unit="bytes",min=0,desc="Working set per container. Limits: Infrastructure dashboard."))
@@ -108,7 +108,7 @@ save(f"{OUT}/overview.json",dashboard(U["overview"],"Overview","Start here: stat
 # ---------- Requests (RED) ----------
 p=[]; y=0
 p.append(stat("Requests/s",[tgt(f'sum(rate({N} [$__auto]))',LOKI)],0,y,w=6,unit="reqps",ds=LOKI,decimals=2))
-p.append(stat("5xx %",[tgt(f'100 * sum(rate({N} | status >= 500 [$__auto])) / sum(rate({N} [$__auto]))',LOKI)],6,y,w=6,unit="percent",ds=LOKI,decimals=2,steps=[(None,"green"),(1,"orange"),(5,"red")]))
+p.append(stat("5xx %",[tgt(f'100 * (sum(rate({N} | status >= 500 [$__auto])) or vector(0)) / sum(rate({N} [$__auto]))',LOKI)],6,y,w=6,unit="percent",ds=LOKI,decimals=2,steps=[(None,"green"),(1,"orange"),(5,"red")]))
 p.append(stat("p95 latency",[tgt(f'quantile_over_time(0.95, {N} | unwrap request_time [$__auto]) by (env)',LOKI)],12,y,w=6,unit="s",ds=LOKI,decimals=2,steps=[(None,"green"),(1,"orange"),(3,"red")]))
 p.append(stat("429 rate-limited (range)",[tgt(f'sum(count_over_time({N} | status = 429 [$__range]))',LOKI,instant=True)],18,y,w=6,ds=LOKI,steps=[(None,"green"),(1,"orange")],desc="Requests blocked by nginx rate limits (login, registration, password reset, checkout) in the selected time range."))
 y+=4
@@ -116,15 +116,15 @@ p.append(row("Rate",y)); y+=1
 p.append(ts("Requests/s by status class",[tgt(f'sum by (class) (rate({N} | label_format class=`{{{{ substr 0 1 .status }}}}xx` [$__auto]))',LOKI,"{{class}}")],0,y,w=24,unit="reqps",ds=LOKI,min=0,desc="2xx ok, 3xx redirects, 4xx client errors (incl. 401/404/429), 5xx server errors."))
 y+=8
 p.append(row("Errors",y)); y+=1
-p.append(ts("5xx and 429 per minute",[tgt(f'sum(count_over_time({N} | status >= 500 [1m]))',LOKI,"5xx",ref="A"),tgt(f'sum(count_over_time({N} | status = 429 [1m]))',LOKI,"429 rate limited",ref="B")],0,y,unit="short",ds=LOKI,min=0))
-p.append(table("Paths with most 4xx/5xx",[tgt(f'topk(10, sum by (path, status) (count_over_time({N} | status >= 400 [$__range])))',LOKI,instant=True)],12,y,ds=LOKI,desc="In the selected time range."))
+p.append(ts("5xx and 429 per minute",[tgt(f'sum(count_over_time({N} | status >= 500 [1m])) or vector(0)',LOKI,"5xx",ref="A"),tgt(f'sum(count_over_time({N} | status = 429 [1m])) or vector(0)',LOKI,"429 rate limited",ref="B")],0,y,unit="short",ds=LOKI,min=0))
+p.append(table("Paths with most 4xx/5xx",[tgt(f'topk(10, sum by (path, status) (count_over_time({N} | status >= 400 [$__range])))',LOKI,instant=True)],12,y,ds=LOKI,desc="In the selected time range.",names={"Value #A":"Requests"},sort="Requests"))
 y+=8
 p.append(row("Duration",y)); y+=1
 p.append(ts("Response time p50 / p95 / p99",[tgt(f'quantile_over_time({q}, {N} | unwrap request_time [$__auto]) by (env)',LOKI,lbl,ref=r) for q,lbl,r in [("0.5","p50","A"),("0.95","p95","B"),("0.99","p99","C")]],0,y,unit="s",ds=LOKI,min=0,steps=[(None,"green"),(1,"orange"),(3,"red")]))
 p.append(ts("nginx total vs Django (p95)",[tgt(f'quantile_over_time(0.95, {N} | unwrap request_time [$__auto]) by (env)',LOKI,"total (nginx)",ref="A"),tgt(f'quantile_over_time(0.95, {N} | upstream_time != "" | unwrap upstream_time [$__auto]) by (env)',LOKI,"Django (upstream)",ref="B")],12,y,unit="s",ds=LOKI,min=0,desc="If both lines move together, the time is spent in Django/DB. A gap = nginx/network/client upload."))
 y+=8
-p.append(table("Slowest paths (p95)",[tgt(f'topk(10, quantile_over_time(0.95, {N} | unwrap request_time [$__range]) by (path))',LOKI,instant=True)],0,y,unit="s",ds=LOKI))
-p.append(table("Busiest paths",[tgt(f'topk(10, sum by (path) (count_over_time({N} [$__range])))',LOKI,instant=True)],12,y,ds=LOKI))
+p.append(table("Slowest paths (p95)",[tgt(f'topk(10, quantile_over_time(0.95, {N} | unwrap request_time [$__range]) by (path))',LOKI,instant=True)],0,y,unit="s",ds=LOKI,names={"Value #A":"p95"},sort="p95",desc="95% of requests to this path were faster than this, in the selected time range."))
+p.append(table("Busiest paths",[tgt(f'topk(10, sum by (path) (count_over_time({N} [$__range])))',LOKI,instant=True)],12,y,ds=LOKI,names={"Value #A":"Requests"},sort="Requests",desc="Request count per path in the selected time range."))
 save(f"{OUT}/requests.json",dashboard(U["requests"],"Requests","RED view of the backend from nginx access logs: rate, errors, duration.",p))
 
 # ---------- Infrastructure (USE) ----------
@@ -134,7 +134,7 @@ p.append(ts("CPU used",[tgt(f'100 * (1 - avg(rate(node_cpu_seconds_total{{env="{
 p.append(ts("Memory",[tgt(f'node_memory_MemTotal_bytes{{env="{E}"}} - node_memory_MemAvailable_bytes{{env="{E}"}}',PROM,"used",ref="A"),tgt(f'node_memory_MemTotal_bytes{{env="{E}"}}',PROM,"total",ref="B")],8,y,w=8,unit="bytes",min=0))
 p.append(ts("Disk used",[tgt(f'100 * (1 - node_filesystem_avail_bytes{{env="{E}", mountpoint=~"/|/data"}} / node_filesystem_size_bytes{{env="{E}", mountpoint=~"/|/data"}})',PROM,"{{mountpoint}}")],16,y,w=8,unit="percent",min=0,max=100,steps=[(None,"green"),(70,"orange"),(85,"red")],desc="/ = system + Docker images, /data = Postgres, certificates, app logs."))
 y+=8
-p.append(ts("Load (1 min) per CPU",[tgt(f'node_load1{{env="{E}"}} / count(node_cpu_seconds_total{{env="{E}", mode="idle"}})',PROM,"load / cpu")],0,y,w=8,unit="short",min=0,steps=[(None,"green"),(1,"orange"),(2,"red")],desc="Above 1 = more work queued than CPUs."))
+p.append(ts("Load (1 min) per CPU",[tgt(f'sum(node_load1{{env="{E}"}}) / count(node_cpu_seconds_total{{env="{E}", mode="idle"}})',PROM,"load / cpu")],0,y,w=8,unit="short",min=0,steps=[(None,"green"),(1,"orange"),(2,"red")],desc="Above 1 = more work queued than CPUs."))
 p.append(ts("Disk busy",[tgt(f'100 * rate(node_disk_io_time_seconds_total{{env="{E}"}}[$__rate_interval])',PROM,"{{device}}")],8,y,w=8,unit="percent",min=0,max=100,desc="Share of time each EBS volume was busy."))
 p.append(ts("Network",[tgt(f'sum(rate(node_network_receive_bytes_total{{env="{E}", device!~"lo|veth.*|docker.*|br-.*"}}[$__rate_interval]))',PROM,"in",ref="A"),tgt(f'-sum(rate(node_network_transmit_bytes_total{{env="{E}", device!~"lo|veth.*|docker.*|br-.*"}}[$__rate_interval]))',PROM,"out",ref="B")],16,y,w=8,unit="Bps",desc="In above zero, out below."))
 y+=8
@@ -143,7 +143,7 @@ p.append(ts("Memory used / limit",[tgt(f'100 * sum by (container) (container_mem
 p.append(ts("Memory used",[tgt(f'sum by (container) (container_memory_working_set_bytes{{env="{E}"}})',PROM,"{{container}}")],12,y,unit="bytes",min=0))
 y+=8
 p.append(ts("CPU per container",[tgt(f'sum by (container) (rate(container_cpu_usage_seconds_total{{env="{E}"}}[$__rate_interval]))',PROM,"{{container}}")],0,y,unit="cores",min=0))
-p.append(table("Restarts and OOM kills (range)",[tgt(f'sum by (container) (changes(container_start_time_seconds{{env="{E}"}}[$__range]))',PROM,"{{container}}",instant=True,ref="A"),tgt(f'sum by (container) (increase(container_oom_events_total{{env="{E}"}}[$__range]))',PROM,"{{container}}",instant=True,ref="B")],12,y,desc="A = restarts, B = OOM kills in the selected range. Should be 0 outside deploys."))
+p.append(table("Restarts and OOM kills (range)",[tgt(f'sum by (container) (changes(container_start_time_seconds{{env="{E}"}}[$__range]))',PROM,"{{container}}",instant=True,ref="A"),tgt(f'sum by (container) (increase(container_oom_events_total{{env="{E}"}}[$__range]))',PROM,"{{container}}",instant=True,ref="B")],12,y,desc="In the selected time range. Restarts are normal during deploys; OOM kills should stay 0.",names={"Value #A":"Restarts","Value #B":"OOM kills"},sort="Restarts"))
 save(f"{OUT}/infrastructure.json",dashboard(U["infra"],"Infrastructure","USE view: the server and every container (CPU, memory, disk, network).",p))
 
 # ---------- Database ----------
@@ -164,7 +164,7 @@ p.append(ts("Database size",[tgt(f'sum by (datname) (pg_database_size_bytes{{env
 p.append(logs("Backups (WAL-G)",'{env="$env", container="db"} |= "WAL-G backup"',12,y,w=12,h=8,desc="Nightly base backup at 03:00 UTC (prod; staging is off at night)."))
 y+=8
 p.append(ts("Longest open transaction",[tgt(f'max(pg_stat_activity_max_tx_duration{{env="{E}", {DB}}})',PROM,"longest")],0,y,unit="s",min=0,steps=[(None,"green"),(60,"orange"),(300,"red")],desc="A query or transaction running for minutes holds locks and blocks others (and vacuum). Normally under a second."))
-p.append(table("Largest tables",[tgt(f'topk(10, sum by (relname) (pg_stat_user_tables_table_size_bytes{{env="{E}"}} + pg_stat_user_tables_index_size_bytes{{env="{E}"}}))',PROM,instant=True)],12,y,unit="bytes",desc="Table + index size. Shows which tables grow."))
+p.append(table("Largest tables",[tgt(f'topk(10, sum by (relname) (pg_stat_user_tables_table_size_bytes{{env="{E}"}} + pg_stat_user_tables_index_size_bytes{{env="{E}"}}))',PROM,instant=True)],12,y,unit="bytes",desc="Table + index size. Shows which tables grow.",names={"Value #A":"Size","relname":"table"},sort="Size"))
 save(f"{OUT}/database.json",dashboard(U["db"],"Database","Postgres health: connections, throughput, cache, size, WAL archiving, backups.",p,time="now-24h"))
 
 # ---------- Logs ----------
