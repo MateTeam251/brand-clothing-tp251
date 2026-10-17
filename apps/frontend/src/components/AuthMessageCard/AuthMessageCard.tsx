@@ -10,9 +10,12 @@ interface AuthMessageCardProps {
   title: string;
   text?: string;
   children?: ReactNode;
+  primaryLabel?: string;
+  primaryTo?: string;
+  onPrimaryClick?: () => void;
   linkTo?: string;
   linkLabel?: string;
-   onClose?: () => void;
+  onClose?: () => void;
 }
 
 const Icon = ({ variant }: { variant: Variant }) => (
@@ -48,9 +51,12 @@ export const AuthMessageCard = ({
   title,
   text,
   children,
+  primaryLabel,
+  primaryTo,
+  onPrimaryClick,
   linkTo,
   linkLabel,
-  onClose
+  onClose,
 }: AuthMessageCardProps) => {
   const titleId = useId();
 
@@ -63,7 +69,7 @@ export const AuthMessageCard = ({
     };
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!onClose) {
       return;
     }
@@ -103,6 +109,16 @@ export const AuthMessageCard = ({
         </h2>
         {text && <p className={styles.card__text}>{text}</p>}
         {children}
+        {primaryLabel &&
+          (primaryTo ? (
+            <Link to={primaryTo} className={styles.card__primary}>
+              {primaryLabel}
+            </Link>
+          ) : (
+            <button type="button" className={styles.card__primary} onClick={onPrimaryClick}>
+              {primaryLabel}
+            </button>
+          ))}
         {linkTo && linkLabel && (
           <Link to={linkTo} className={styles.card__link}>
             {linkLabel}
