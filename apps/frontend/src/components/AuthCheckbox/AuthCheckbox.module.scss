@@ -1,3 +1,5 @@
+@use '../../app/styles/variables.scss' as *;
+
 .checkbox {
   display: flex;
   flex-direction: column;
@@ -17,13 +19,13 @@
     width: 16px;
     height: 16px;
     margin-top: 1px;
-    accent-color: #000;
+    accent-color: $accent;
     cursor: pointer;
   }
 
   &__error {
     margin: 0;
     font-size: 12px;
-    color: #d64545; // TODO: замінити токеном помилки, як в AuthField
+    color: $error;
   }
 }

@@ -30,10 +30,10 @@ export const AuthCard = ({
     <section className={styles.auth}>
       <div className={styles.card}>
         <nav className={styles.card__tabs}>
-          <NavLink to="/signin" state={location.state} className={getTabClassName}>
+          <NavLink to="/signin" replace state={location.state} className={getTabClassName}>
             {t('auth.tab_sign_in')}
           </NavLink>
-          <NavLink to="/signup" state={location.state} className={getTabClassName}>
+          <NavLink to="/signup" replace state={location.state} className={getTabClassName}>
             {t('auth.tab_sign_up')}
           </NavLink>
         </nav>
