@@ -120,6 +120,36 @@ i18n.use(initReactI18next).init({
             generic: "Something went wrong. Please try again."
           }
         },
+        password_recovery: {
+          title: 'Password recovery',
+          subtitle: "Enter your email and we'll send you a link to reset your password.",
+          submit: 'Send link',
+          check_email: {
+            title: 'Check your email',
+            text: 'Password reset instructions have been sent to your email.',
+            resend: 'Send again',
+            resent: 'Email sent again',
+          },
+          new_password: {
+            title: 'Create a new password',
+            password: 'New password',
+            confirm: 'Repeat new password',
+            submit: 'Save new password',
+          },
+          success: {
+            title: 'Password changed',
+            text: 'You can now sign in with your new password.',
+            sign_in: 'Sign in',
+          },
+          invalid_link: {
+            title: 'Link is not valid',
+            text: 'The password reset link has expired or is not valid. Please request a new one.',
+            request_new: 'Request a new link',
+          },
+          errors: {
+            password_mismatch: 'Passwords do not match',
+          },
+        },
         favorites_page: {
           title: "Favorites",
           empty: "You don't have any favorite products yet",
@@ -318,6 +348,36 @@ i18n.use(initReactI18next).init({
             password_mismatch: 'Паролі не збігаються',
             agree_required: 'Потрібна ваша згода',
           }
+        },
+        password_recovery: {
+          title: 'Відновлення пароля',
+          subtitle: 'Введіть email — надішлемо посилання для скидання паролю.',
+          submit: 'Надіслати посилання',
+          check_email: {
+            title: 'Перевірте пошту',
+            text: 'Інструкції щодо зміни пароля надіслано на вашу пошту.',
+            resend: 'Надіслати ще раз',
+            resent: 'Лист надіслано повторно',
+          },
+          new_password: {
+            title: 'Створіть новий пароль',
+            password: 'Новий пароль',
+            confirm: 'Повторіть новий пароль',
+            submit: 'Зберегти новий пароль',
+          },
+          success: {
+            title: 'Пароль змінено',
+            text: 'Тепер ви можете увійти з новим паролем.',
+            sign_in: 'Увійти',
+          },
+          invalid_link: {
+            title: 'Посилання недійсне',
+            text: 'Посилання для скидання пароля застаріло або недійсне. Запросіть нове.',
+            request_new: 'Запросити нове посилання',
+          },
+          errors: {
+            password_mismatch: 'Паролі не збігаються',
+          },
         },
         favorites_page: {
           title: "Обране",

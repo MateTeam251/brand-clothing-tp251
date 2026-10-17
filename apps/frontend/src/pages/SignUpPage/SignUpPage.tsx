@@ -73,6 +73,7 @@ export const SignUpPage = () => {
         text={t('sign_up.check_email.text', { email: registeredEmail })}
         linkTo="/"
         linkLabel={t('sign_up.check_email.home')}
+        onClose={closeAuth}
       />
     );
   }

@@ -1,17 +1,18 @@
 import { useEffect, useId } from 'react';
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './AuthMessageCard.module.scss';
 
 type Variant = 'mail' | 'success' | 'error';
 
 interface AuthMessageCardProps {
-  variant: Variant;
+  variant?: Variant;
   title: string;
-  text: string;
+  text?: string;
   children?: ReactNode;
   linkTo?: string;
   linkLabel?: string;
+   onClose?: () => void;
 }
 
 const Icon = ({ variant }: { variant: Variant }) => (
@@ -49,6 +50,7 @@ export const AuthMessageCard = ({
   children,
   linkTo,
   linkLabel,
+  onClose
 }: AuthMessageCardProps) => {
   const titleId = useId();
 
@@ -61,21 +63,45 @@ export const AuthMessageCard = ({
     };
   }, []);
 
+    useEffect(() => {
+    if (!onClose) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (onClose && event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} onClick={handleOverlayClick}>
       <section
         className={styles.card}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <div className={`${styles.card__icon} ${styles[`card__icon--${variant}`]}`}>
-          <Icon variant={variant} />
-        </div>
+        {variant && (
+          <div className={`${styles.card__icon} ${styles[`card__icon--${variant}`]}`}>
+            <Icon variant={variant} />
+          </div>
+        )}
         <h2 id={titleId} className={styles.card__title}>
           {title}
         </h2>
-        <p className={styles.card__text}>{text}</p>
+        {text && <p className={styles.card__text}>{text}</p>}
         {children}
         {linkTo && linkLabel && (
           <Link to={linkTo} className={styles.card__link}>
