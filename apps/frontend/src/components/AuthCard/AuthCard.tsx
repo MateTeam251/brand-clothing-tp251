@@ -1,10 +1,10 @@
-import type { FormEvent, ReactNode } from 'react';
+import type { SyntheticEvent, ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styles from './AuthCard.module.scss';
 
 interface AuthCardProps {
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (event: SyntheticEvent<HTMLFormElement>) => void;
   submitLabel: string;
   children: ReactNode;
   isSubmitting?: boolean;
