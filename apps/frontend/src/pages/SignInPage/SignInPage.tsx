@@ -9,6 +9,8 @@ import { AuthCard } from '../../components/AuthCard';
 import { AuthField } from '../../components/AuthField';
 import styles from './SignInPage.module.scss';
 import { productsApi } from '../../shared/api/productsApi';
+import { AuthSheet } from '../../components/AuthSheet';
+import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
 
 type FieldErrors = {
   email?: string;
@@ -39,6 +41,7 @@ export const SignInPage = () => {
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const closeAuth = useCloseAuth();
 
   if (isAuthenticated) {
     return <Navigate to={getRedirectPath(location.state)} replace />;
@@ -85,35 +88,38 @@ export const SignInPage = () => {
   };
 
   return (
-    <AuthCard
-      onSubmit={handleSubmit}
-      submitLabel={t('auth.sign_in')}
-      isSubmitting={isLoading}
-      error={formError}
-      footer={
-        <Link to="/forgotpassword" className={styles.signIn__forgot}>
-          {t('auth.forgot_password')}
-        </Link>
-      }
-    >
-      <AuthField
-        name="email"
-        type="email"
-        label={t('auth.email')}
-        value={email}
-        onChange={setEmail}
-        error={fieldErrors.email}
-        autoComplete="email"
-      />
-      <AuthField
-        name="password"
-        type="password"
-        label={t('auth.password')}
-        value={password}
-        onChange={setPassword}
-        error={fieldErrors.password}
-        autoComplete="current-password"
-      />
-    </AuthCard>
+    <AuthSheet onClose={closeAuth}>
+      <AuthCard
+        onSubmit={handleSubmit}
+        submitLabel={t('auth.sign_in')}
+        isSubmitting={isLoading}
+        error={formError}
+        footer={
+          <Link to="/forgotpassword" className={styles.signIn__forgot}>
+            {t('auth.forgot_password')}
+          </Link>
+        }
+      >
+        <AuthField
+          name="email"
+          type="email"
+          label={t('auth.email')}
+          value={email}
+          onChange={setEmail}
+          error={fieldErrors.email}
+          autoComplete="email"
+        />
+        <AuthField
+          name="password"
+          type="password"
+          label={t('auth.password')}
+          value={password}
+          onChange={setPassword}
+          error={fieldErrors.password}
+          autoComplete="current-password"
+        />
+      </AuthCard>
+    </AuthSheet>
+
   );
 };
