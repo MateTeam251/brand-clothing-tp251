@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../../shared/hooks/reduxHooks';
 import { useTranslation } from 'react-i18next';
 import Logo from '../../../shared/assets/images/logotype.png';
-
 import BurgerIcon from '../../../shared/assets/icons/burger.svg';
 import FavouriteIcon from '../../../shared/assets/icons/favourite.svg';
 import CartIcon from '../../../shared/assets/icons/cart.svg';
@@ -17,6 +16,7 @@ import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { CurrencySwitcher } from '../../CurrencySwitcher';
 import { useGetFavoritesQuery } from '../../../shared/api/favoritesApi';
 import FavouriteActiveIcon from '../../../shared/assets/icons/favourite-hovered.svg';
+import UserActiveIcon from '../../../shared/assets/icons/user-active.svg';
 
 export const Header: React.FC = () => {
   const cartItems = useAppSelector((state) => state.cart.items);
@@ -63,13 +63,15 @@ export const Header: React.FC = () => {
   };
   const isCartPage = location.pathname === '/cart';
   const isFavoritesPage = location.pathname === '/favorites';
-    const favoritesBadge = favoritesCount > 0 && (
+  const isAccountPage = location.pathname.startsWith('/account');
+
+  const favoritesBadge = favoritesCount > 0 && (
     <span
       className={`${styles['header__favorites-count']} ${
         isFavoritesPage ? styles['header__favorites-count--active'] : ''
       }`}
-    >
-      {favoritesCount}
+  >
+    {favoritesCount}
     </span>
   );
 
@@ -192,7 +194,7 @@ export const Header: React.FC = () => {
               </li>
               <li>
                 <Link className={styles['header__icon-button']} to="/account" aria-label="Account">
-                  <img className={styles['header__icon']} src={UserIcon} alt="User" />
+                  <img className={styles['header__icon']} src={isAccountPage ? UserActiveIcon : UserIcon} alt="User" />
                 </Link>
               </li>
             </ul>

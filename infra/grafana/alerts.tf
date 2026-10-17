@@ -55,7 +55,6 @@ locals {
           for     = "1h"
           no_data = "Alerting"
           anchor  = "origin-certificate-expiry"
-          paused  = true # until the release with the Alloy check reaches prod
         },
       ]
     }

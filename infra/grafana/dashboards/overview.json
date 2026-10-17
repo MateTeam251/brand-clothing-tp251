@@ -624,7 +624,7 @@
             "type": "loki",
             "uid": "grafanacloud-logs"
           },
-          "expr": "100 * sum(rate({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" | status >= 500 [$__auto])) / sum(rate({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" [$__auto]))",
+          "expr": "100 * (sum(rate({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" | status >= 500 [$__auto])) or vector(0)) / sum(rate({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" [$__auto]))",
           "editorMode": "code",
           "legendFormat": "5xx %",
           "queryType": "range"

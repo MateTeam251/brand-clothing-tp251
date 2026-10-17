@@ -351,7 +351,7 @@
             "type": "prometheus",
             "uid": "grafanacloud-prom"
           },
-          "expr": "node_load1{env=\"$env\"} / count(node_cpu_seconds_total{env=\"$env\", mode=\"idle\"})",
+          "expr": "sum(node_load1{env=\"$env\"}) / count(node_cpu_seconds_total{env=\"$env\", mode=\"idle\"})",
           "editorMode": "code",
           "legendFormat": "load / cpu",
           "range": true,
@@ -747,7 +747,7 @@
       "id": 12,
       "type": "table",
       "title": "Restarts and OOM kills (range)",
-      "description": "A = restarts, B = OOM kills in the selected range. Should be 0 outside deploys.",
+      "description": "In the selected time range. Restarts are normal during deploys; OOM kills should stay 0.",
       "datasource": {
         "type": "prometheus",
         "uid": "grafanacloud-prom"
@@ -802,12 +802,22 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value #A": "Restarts",
+              "Value #B": "OOM kills"
             }
           }
         }
       ],
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Restarts",
+            "desc": true
+          }
+        ]
       }
     }
   ]
