@@ -46,6 +46,7 @@ Then fix forward: fix on `develop`, release again.
 - **Never commit or revert directly on `main`.** A revert on `main` is remembered by git: the next `develop` → `main` merge silently deletes the reverted code again. To undo a release, use the rollback above.
 - **Hotfix**: branch from `develop`, PR into `develop`, check on staging, then release as usual.
 - Only one deploy per environment runs at a time; a second one waits.
+- A deploy restarts `web` (with migrations): **about 3 seconds of 502s**. Under load, release at a quiet time. On staging, tell the team before a load test so nobody merges to `develop` mid-run.
 
 ## What runs where
 
