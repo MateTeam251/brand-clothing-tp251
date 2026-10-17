@@ -1,0 +1,52 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.favorites {
+  padding: 40px 16px;
+  background-color: $dominant;
+
+  @include on-desktop {
+    padding: 72px 40px;
+  }
+
+  &__title {
+    margin: 0 0 32px;
+    text-align: center;
+    font-family: 'Bodoni', 'Cambria', serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 40px;
+
+    @include on-desktop {
+      margin-bottom: 48px;
+      text-align: left;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 16px;
+
+    @include on-desktop {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 48px 24px;
+    }
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__catalogLink {
+    padding: 10px 30px;
+    border-radius: 100px;
+    background-color: $accent;
+    color: inherit;
+    font-size: 16px;
+    line-height: 24px;
+    text-decoration: none;
+  }
+}

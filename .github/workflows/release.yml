@@ -253,6 +253,21 @@ jobs:
           echo "::error::$URL did not return 200 within 60s"
           exit 1
 
+      # Release marker on Grafana graphs (tags: release + environment).
+      # Never fails the deploy; skipped while GRAFANA_URL isn't set.
+      - name: Grafana annotation
+        if: steps.deploy.outputs.skipped != 'true' && vars.GRAFANA_URL != ''
+        continue-on-error: true
+        env:
+          GRAFANA_URL: ${{ vars.GRAFANA_URL }}
+          GRAFANA_AUTH: ${{ secrets.GRAFANA_AUTH }}
+        run: |
+          ENV_TAG=${ENVIRONMENT/production/prod} # same values as the dashboards' env switch
+          TEXT="Deploy ${IMAGE_TAG:0:7} to $ENVIRONMENT (${GITHUB_REF_NAME})"
+          curl -sS --fail-with-body --max-time 10 -X POST "$GRAFANA_URL/api/annotations" \
+            -H "Authorization: Bearer $GRAFANA_AUTH" -H "Content-Type: application/json" \
+            -d "{\"tags\": [\"release\", \"$ENV_TAG\"], \"text\": \"$TEXT\"}"
+
       - name: Summary
         if: always()
         run: |

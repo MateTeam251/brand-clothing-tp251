@@ -1,0 +1,58 @@
+name: AMI check
+
+# Monthly: is there a newer Amazon Linux 2023 AMI than the pinned one?
+# If yes, opens an issue; the bump itself is a PR (ami_id in both main.tf).
+on:
+  schedule:
+    - cron: "0 7 1 * *" # 1st of the month, 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure AWS credentials (plan role, read-only)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.TF_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Compare pinned and latest AMI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pinned=$(grep -oE 'ami-[0-9a-f]+' infra/environments/prod/main.tf | head -1)
+          latest=$(aws ssm get-parameter \
+            --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64 \
+            --query Parameter.Value --output text)
+          echo "Pinned: $pinned  Latest: $latest"
+
+          if [ "$pinned" = "$latest" ]; then
+            echo "Up to date."
+            exit 0
+          fi
+
+          name=$(aws ec2 describe-images --image-ids "$latest" --query 'Images[0].Name' --output text)
+          title="New Amazon Linux AMI: $latest"
+          if gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "Issue already open."
+            exit 0
+          fi
+
+          gh issue create --title "$title" --body "$(cat <<BODY
+          Newer Amazon Linux 2023 AMI: \`$latest\` ($name)
+          Pinned now: \`$pinned\`
+
+          1. In \`infra/environments/staging/main.tf\` and \`infra/environments/prod/main.tf\` set \`ami_id = "$latest"\`.
+          2. PR into develop: the plan shows the launch template change; merge applies it to staging (instance refresh, 08:00-20:00).
+          3. Check staging, then release to prod as usual.
+          BODY
+          )"

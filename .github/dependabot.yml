@@ -1,0 +1,55 @@
+# Monthly, one grouped PR per ecosystem, to keep Actions minutes low.
+# Security fixes come as separate PRs right away (repo Settings → Advanced Security).
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: /apps/backend
+    schedule:
+      interval: monthly
+    groups:
+      backend:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /apps/frontend
+    schedule:
+      interval: monthly
+    groups:
+      frontend:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # Base images. Majors (Python, Postgres) are upgraded by hand:
+  # a new Postgres major needs a dump/restore.
+  - package-ecosystem: docker
+    directories: [/apps/backend, /db]
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+    groups:
+      docker:
+        patterns: ["*"]
+
+  # nginx, redis, certbot, alloy in docker-compose.prod.yml.
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+    groups:
+      compose:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

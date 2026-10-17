@@ -1,0 +1,29 @@
+.checkbox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+
+  &__input {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    accent-color: #000;
+    cursor: pointer;
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 12px;
+    color: #d64545; // TODO: замінити токеном помилки, як в AuthField
+  }
+}

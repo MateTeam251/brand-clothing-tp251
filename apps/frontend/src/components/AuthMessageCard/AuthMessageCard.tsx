@@ -1,0 +1,88 @@
+import { useEffect, useId } from 'react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import styles from './AuthMessageCard.module.scss';
+
+type Variant = 'mail' | 'success' | 'error';
+
+interface AuthMessageCardProps {
+  variant: Variant;
+  title: string;
+  text: string;
+  children?: ReactNode;
+  linkTo?: string;
+  linkLabel?: string;
+}
+
+const Icon = ({ variant }: { variant: Variant }) => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {variant === 'mail' && (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <polyline points="3,7 12,13 21,7" />
+      </>
+    )}
+    {variant === 'success' && <polyline points="5,12 10,17 19,7" />}
+    {variant === 'error' && (
+      <>
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </>
+    )}
+  </svg>
+);
+
+export const AuthMessageCard = ({
+  variant,
+  title,
+  text,
+  children,
+  linkTo,
+  linkLabel,
+}: AuthMessageCardProps) => {
+  const titleId = useId();
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  return (
+    <div className={styles.overlay}>
+      <section
+        className={styles.card}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <div className={`${styles.card__icon} ${styles[`card__icon--${variant}`]}`}>
+          <Icon variant={variant} />
+        </div>
+        <h2 id={titleId} className={styles.card__title}>
+          {title}
+        </h2>
+        <p className={styles.card__text}>{text}</p>
+        {children}
+        {linkTo && linkLabel && (
+          <Link to={linkTo} className={styles.card__link}>
+            {linkLabel}
+          </Link>
+        )}
+      </section>
+    </div>
+  );
+};

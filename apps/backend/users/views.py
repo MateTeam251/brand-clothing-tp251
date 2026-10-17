@@ -7,20 +7,39 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view, inline_serializer
+from rest_framework import serializers
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from core.openapi import DETAIL_RESPONSE, UNAUTHORIZED, VALIDATION_ERROR
 from users.serializers import (RegisterSerializer,
                                UserProfileSerializer,
                                PasswordResetConfirmSerializer,
                                PasswordResetRequestSerializer,
-                               CustomTokenObtainPairSerializer)
+                               CustomTokenObtainPairSerializer,
+                               LogoutSerializer)
 from users.tokens import account_activation_token
 from users.utils import send_activation_email
 
 User = get_user_model()
 
+TOKEN_PAIR = inline_serializer("TokenPair", {
+    "access": serializers.CharField(help_text="Access token: send as `Authorization: Bearer <access>`."),
+    "refresh": serializers.CharField(help_text="Refresh token: for `/api/auth/refresh/` and `/api/auth/logout/`."),
+})
 
+
+@extend_schema(
+    tags=["auth"],
+    summary="Register a new account",
+    description="Creates an **inactive** account and sends an activation link to `email`. "
+                "The user cannot log in until they open that link "
+                "(locally the email is in MailHog, http://localhost:8025).",
+    responses={201: RegisterSerializer, 400: VALIDATION_ERROR},
+)
 class RegisterView(generics.CreateAPIView):
     """
     Register a new user account.
@@ -60,6 +79,17 @@ class ActivateAccountView(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [TemplateHTMLRenderer]
 
+    @extend_schema(
+        tags=["auth"],
+        summary="Activate an account (link from the email)",
+        description="Opened from the activation email, not called by the frontend. `uidb64` and "
+                    "`token` are the two last parts of the link. Returns an **HTML page**, not JSON. "
+                    "Opening a valid link again is fine: the success page is shown again.",
+        responses={
+            (200, "text/html"): OpenApiResponse(OpenApiTypes.STR, description="Account activated."),
+            (400, "text/html"): OpenApiResponse(OpenApiTypes.STR, description="Invalid or expired link."),
+        },
+    )
     def get(self, request, uidb64, token):
         """
         Validate the uid/token pair and activate the user if valid.
@@ -131,6 +161,21 @@ class ResendActivationView(APIView):
         return Response({"detail": "If the account exists, email was sent."})
 
 
+@extend_schema_view(
+    get=extend_schema(summary="Get my profile", responses={200: UserProfileSerializer, 401: UNAUTHORIZED}),
+    put=extend_schema(
+        summary="Replace my profile",
+        description="Full update: `instagram` must be sent, other fields not sent are left as they are. "
+                    "`id` and `email` cannot be changed.",
+        responses={200: UserProfileSerializer, 400: VALIDATION_ERROR, 401: UNAUTHORIZED},
+    ),
+    patch=extend_schema(
+        summary="Update my profile",
+        description="Partial update: send only the fields to change. `id` and `email` cannot be changed.",
+        responses={200: UserProfileSerializer, 400: VALIDATION_ERROR, 401: UNAUTHORIZED},
+    ),
+)
+@extend_schema(tags=["profile"])
 class MeView(generics.RetrieveUpdateAPIView):
     """
     Retrieve or update the currently authenticated user's profile.
@@ -153,9 +198,50 @@ class MeView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+@extend_schema(
+    tags=["auth"],
+    summary="Log in",
+    description="Returns a JWT pair. Put `access` into **Authorize**; keep `refresh` for "
+                "`/api/auth/refresh/` and `/api/auth/logout/`.\n\n"
+                "A wrong password and a not yet activated account give the same 401 "
+                "`No active account found with the given credentials`.\n\n"
+                "If the request carries a guest `sessionid` cookie, the guest cart is merged into the user's cart.",
+    responses={
+        200: TOKEN_PAIR,
+        400: VALIDATION_ERROR,
+        401: OpenApiResponse(DETAIL_RESPONSE, description="Wrong email/password, or the account is not activated."),
+    },
+)
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+
+@extend_schema(
+    tags=["auth"],
+    summary="Get a new access token",
+    description="Exchanges `refresh` for a new `access` **and a new `refresh`**. "
+                "The old refresh token is blacklisted, so using it again gives 401 `Token is blacklisted`.",
+    responses={
+        200: TOKEN_PAIR,
+        401: OpenApiResponse(DETAIL_RESPONSE, description="Refresh token is invalid, expired or blacklisted."),
+    },
+)
+class RefreshView(TokenRefreshView):
+    pass
+
+
+@extend_schema(
+    tags=["auth"],
+    summary="Log out",
+    description="Blacklists the given refresh token. Needs both the Bearer access token and `refresh` in the body. "
+                "The access token itself keeps working until it expires.",
+    request=LogoutSerializer,
+    responses={
+        205: OpenApiResponse(description="Logged out. Empty body."),
+        400: OpenApiResponse(DETAIL_RESPONSE, description="`refresh` is missing, invalid or already blacklisted."),
+        401: UNAUTHORIZED,
+    },
+)
 class LogoutView(APIView):
     """
     Log the user out by blacklisting their refresh token.
@@ -194,6 +280,17 @@ class LogoutView(APIView):
 
         return Response(status=status.HTTP_205_RESET_CONTENT)
 
+@extend_schema(
+    tags=["auth"],
+    summary="Request a password reset email",
+    description="Sends a reset link if an account with this email exists. The response is the same "
+                "whether it exists or not, so it can't be used to check which emails are registered.",
+    request=PasswordResetRequestSerializer,
+    responses={
+        200: OpenApiResponse(DETAIL_RESPONSE, description="Always, for any valid email."),
+        400: VALIDATION_ERROR,
+    },
+)
 class PasswordResetRequestView(APIView):
     """
     Request a password reset link for a given email address.
@@ -229,6 +326,21 @@ class PasswordResetRequestView(APIView):
         )
 
 
+@extend_schema(
+    tags=["auth"],
+    summary="Set a new password (link from the email)",
+    description="`uidb64` and `token` are the two last parts of the reset link from the email. "
+                "A link works once: after the password is changed it becomes invalid.",
+    request=inline_serializer(
+        "NewPassword",
+        {"new_password": PasswordResetConfirmSerializer().fields["new_password"]},
+    ),
+    responses={
+        200: OpenApiResponse(DETAIL_RESPONSE, description="Password changed."),
+        400: OpenApiResponse(
+            description="Weak `new_password`, or a broken link: the error comes under `uid` or `token`."),
+    },
+)
 class PasswordResetConfirmView(APIView):
     """
     Confirm a password reset using the uid/token from the reset link and

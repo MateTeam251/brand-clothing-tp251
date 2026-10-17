@@ -4,6 +4,9 @@
 .header {
   background-color: $dominant;
   color: #171717;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 
   &__top {
     display: flex;
@@ -114,7 +117,8 @@
     justify-self: center;
   }
 
-  &__cart-count {
+  &__cart-count,
+  &__favorites-count {
     position: absolute;
     bottom: -4px;
     right: -4px;

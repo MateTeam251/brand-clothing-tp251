@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductByIdQuery } from '../../shared/api/productsApi';
 import { useAddFavoriteMutation, useRemoveFavoriteByProductIdMutation } from '../../shared/api/favoritesApi';
@@ -8,7 +8,7 @@ import { addToCart } from '../../app/store/reducers/cartSlice';
 import { SIZES } from '../../shared/types/common';
 import { Loader } from '../../components/Loader/Loader';
 import { ErrorState } from '../../components/ErrorState/ErrorState';
-import { ProductSlider } from '../../components/Product/ProductSlider';
+import { ProductSlider } from '../../components/ProductSlider/ProductSlider';
 import { AvailabilityRequestForm } from '../../components/AvailabilityRequestForm/AvailabilityRequestForm';
 import plusIcon from '../../shared/assets/icons/plus.svg';
 import minusIcon from '../../shared/assets/icons/minus.svg';
@@ -26,6 +26,7 @@ export const ProductDetailsPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [isAvailabilityFormOpen, setIsAvailabilityFormOpen] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const location = useLocation();
 
   const { data: product, isLoading, error } = useGetProductByIdQuery({
     id: Number(id),
@@ -57,7 +58,7 @@ export const ProductDetailsPage = () => {
 
   const handleFavoriteClick = () => {
     if (!isAuthenticated) {
-      navigate('/signin');
+      navigate('/signin', { state: { from: location } });
       return;
     }
 
@@ -197,7 +198,8 @@ export const ProductDetailsPage = () => {
         <div className={styles.details__recommended}>
           <ProductSlider
             title={t('product.slider_title')}
-            queryParams={{ currency, lang: language }}
+            queryParams={{ ordering: '?', limit: 9 }}
+            excludeProductId={product.id}
             showViewAll={false}
           />
         </div>
