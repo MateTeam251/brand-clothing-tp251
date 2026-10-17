@@ -110,7 +110,7 @@ p=[]; y=0
 p.append(stat("Requests/s",[tgt(f'sum(rate({N} [$__auto]))',LOKI)],0,y,w=6,unit="reqps",ds=LOKI,decimals=2))
 p.append(stat("5xx %",[tgt(f'100 * (sum(rate({N} | status >= 500 [$__auto])) or vector(0)) / sum(rate({N} [$__auto]))',LOKI)],6,y,w=6,unit="percent",ds=LOKI,decimals=2,steps=[(None,"green"),(1,"orange"),(5,"red")]))
 p.append(stat("p95 latency",[tgt(f'quantile_over_time(0.95, {N} | unwrap request_time [$__auto]) by (env)',LOKI)],12,y,w=6,unit="s",ds=LOKI,decimals=2,steps=[(None,"green"),(1,"orange"),(3,"red")]))
-p.append(stat("429 rate-limited (range)",[tgt(f'sum(count_over_time({N} | status = 429 [$__range]))',LOKI,instant=True)],18,y,w=6,ds=LOKI,steps=[(None,"green"),(1,"orange")],desc="Requests blocked by nginx rate limits (login, registration, password reset, checkout) in the selected time range."))
+p.append(stat("429 rate-limited (range)",[tgt(f'sum(count_over_time({N} | status = 429 [$__range])) or vector(0)',LOKI,instant=True)],18,y,w=6,ds=LOKI,steps=[(None,"green"),(1,"orange")],desc="Requests blocked by nginx rate limits (login, registration, password reset, checkout) in the selected time range."))
 y+=4
 p.append(row("Rate",y)); y+=1
 p.append(ts("Requests/s by status class",[tgt(f'sum by (class) (rate({N} | label_format class=`{{{{ substr 0 1 .status }}}}xx` [$__auto]))',LOKI,"{{class}}")],0,y,w=24,unit="reqps",ds=LOKI,min=0,desc="2xx ok, 3xx redirects, 4xx client errors (incl. 401/404/429), 5xx server errors."))
