@@ -1,13 +1,13 @@
 from rest_framework import generics, status
-from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.shortcuts import redirect
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view, inline_serializer
 from rest_framework import serializers
 from rest_framework_simplejwt.exceptions import TokenError
@@ -20,7 +20,8 @@ from users.serializers import (RegisterSerializer,
                                PasswordResetConfirmSerializer,
                                PasswordResetRequestSerializer,
                                CustomTokenObtainPairSerializer,
-                               LogoutSerializer)
+                               LogoutSerializer,
+                               ResendActivationSerializer)
 from users.tokens import account_activation_token
 from users.utils import send_activation_email
 
@@ -66,33 +67,30 @@ class RegisterView(generics.CreateAPIView):
         send_activation_email(self.request, user)
 
 
-
+@extend_schema(
+    tags=["auth"],
+    summary="Activate an account (link from the email)",
+    description="Opened from the activation email, not called by the frontend. `uidb64` and "
+                "`token` are the two last parts of the link. Redirects to "
+                "`{FRONTEND_URL}/activation/success` or `{FRONTEND_URL}/activation/failed`. "
+                "The link is one-time: opening it again redirects to `/activation/failed`.",
+    responses={302: OpenApiResponse(description="Redirect to the frontend success or failed page.")},
+)
 class ActivateAccountView(APIView):
     """
     Confirm a user's email address via an activation link.
 
     Expects ``uidb64`` and ``token`` from the activation link generated
-    by ``send_activation_email``. Renders an HTML page (success or
-    invalid) rather than returning JSON, since this endpoint is meant to
-    be opened directly in a browser from the email link.
+    by ``send_activation_email``. Redirects to the frontend (success or
+    failed page) rather than returning JSON, since this endpoint is
+    meant to be opened directly in a browser from the email link.
     """
     permission_classes = [AllowAny]
-    renderer_classes = [TemplateHTMLRenderer]
 
-    @extend_schema(
-        tags=["auth"],
-        summary="Activate an account (link from the email)",
-        description="Opened from the activation email, not called by the frontend. `uidb64` and "
-                    "`token` are the two last parts of the link. Returns an **HTML page**, not JSON. "
-                    "Opening a valid link again is fine: the success page is shown again.",
-        responses={
-            (200, "text/html"): OpenApiResponse(OpenApiTypes.STR, description="Account activated."),
-            (400, "text/html"): OpenApiResponse(OpenApiTypes.STR, description="Invalid or expired link."),
-        },
-    )
     def get(self, request, uidb64, token):
         """
-        Validate the uid/token pair and activate the user if valid.
+        Validate the uid/token pair, activate the user if valid and
+        redirect to the frontend.
 
         Args:
             request (HttpRequest): The current request.
@@ -100,13 +98,16 @@ class ActivateAccountView(APIView):
             token (str): Activation token to verify against the user.
 
         Returns:
-            Response: Renders "users/activation_success.html" (200) on
-            success, or "users/activation_invalid.html" (400) if the
-            uid/token is invalid, expired, or does not match a user.
+            HttpResponseRedirect: 302 to
+            ``{FRONTEND_URL}/activation/success`` on success, or to
+            ``{FRONTEND_URL}/activation/failed`` if the uid/token is
+            invalid, expired, or does not match a user.
 
         Notes:
-            - Idempotent: if the user is already active, the view still
-              renders the success page without re-saving.
+            - One-time link: the activation token includes
+              ``is_active`` in its hash, so it becomes invalid once the
+              user is activated, and opening it again redirects to the
+              failed page.
             - Decoding/lookup failures (bad uid, non-existent user) are
               caught and treated the same as an invalid token, to avoid
               leaking which failure occurred.
@@ -121,11 +122,21 @@ class ActivateAccountView(APIView):
             if not user.is_active:
                 user.is_active = True
                 user.save(update_fields=["is_active"])
-            return Response(template_name="users/activation_success.html")
+            return redirect(f"{settings.FRONTEND_URL}/activation/success")
 
-        return Response(template_name="users/activation_invalid.html", status=400)
+        return redirect(f"{settings.FRONTEND_URL}/activation/failed")
 
 
+@extend_schema(
+    tags=["auth"],
+    summary="Resend an activation link to non active account",
+    description="Resends the activation link to `email` if an **inactive** account with it exists. "
+                "The user cannot log in until they open that link "
+                "(locally the email is in MailHog, http://localhost:8025). "
+                "Always **200** for any valid email, whether or not it was sent",
+    request=ResendActivationSerializer,
+    responses={200: DETAIL_RESPONSE, 400: VALIDATION_ERROR},
+)
 class ResendActivationView(APIView):
     """
     Resend the activation email for an inactive account.
@@ -134,6 +145,7 @@ class ResendActivationView(APIView):
     inactive account exists.
     """
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
 
     def post(self, request):
         """
@@ -143,8 +155,9 @@ class ResendActivationView(APIView):
             request (HttpRequest): Expects ``email`` in ``request.data``.
 
         Returns:
-            Response: Always 200 with a generic message, regardless of
-            whether the account exists — this prevents user enumeration
+            Response: Always 200 (Except for validation error. Then it returns 400)
+            with a generic message, regardless of whether the account exists
+            — this prevents user enumeration
             (an attacker cannot use this endpoint to check which emails
             are registered or already active).
 
@@ -152,7 +165,9 @@ class ResendActivationView(APIView):
             Only accounts with ``is_active=False`` are matched; already
             active accounts silently receive no email.
         """
-        email = request.data.get("email")
+        serializer = ResendActivationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
         try:
             user = User.objects.get(email=email, is_active=False)
         except User.DoesNotExist:

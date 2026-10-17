@@ -6,7 +6,7 @@ from users.views import (RegisterView,
                          PasswordResetRequestView,
                          PasswordResetConfirmView,
                          LoginView,
-                         RefreshView)
+                         RefreshView, ResendActivationView)
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("activate/<str:uidb64>/<str:token>/", ActivateAccountView.as_view(), name="activate"),
@@ -16,6 +16,7 @@ urlpatterns = [
     path("password-reset/", PasswordResetRequestView.as_view(), name="password_reset_request"),
     path("reset/<str:uidb64>/<str:token>/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
     path('me/', MeView.as_view(), name='me'),
+    path("resend-activation/", ResendActivationView.as_view(), name="resend_activation"),
 ]
 
 

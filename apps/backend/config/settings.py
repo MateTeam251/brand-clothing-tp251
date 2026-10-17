@@ -286,6 +286,7 @@ CORS_ALLOWED_ORIGINS = env_list(
 
 # Site URL
 SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 ACTIVATION_URL_BASE = f"{SITE_URL}/api/users/activate"
 
