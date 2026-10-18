@@ -36,6 +36,7 @@ i18n.use(initReactI18next).init({
         size: 'Size',
         cart_item_desc: 'Made to order in 5-8 days',
         generic_error: 'Something went wrong. Please try again.',
+        error_retry: 'Try again',
         collections_not_found: 'No collections found',
         header: {
           catalog: 'Catalog',
@@ -99,7 +100,8 @@ i18n.use(initReactI18next).init({
           delivery_title: 'Delivery & returns',
           invalid_phone: 'Please enter a valid phone number',
           name_required: 'Please enter your name',
-          addToCart_note: 'Before placing your order, please check the item\'s availability'
+          addToCart_note: 'Before placing your order, please check the item\'s availability',
+          not_found: 'Product not found',
         },
         slider: {
           loading: "Loading...",
@@ -286,6 +288,7 @@ i18n.use(initReactI18next).init({
         size: 'Розмір',
         cart_item_desc: 'Під замовлення 5-8 днів',
         generic_error: 'Щось пішло не так. Спробуйте ще раз.',
+        error_retry: 'Спробувати ще раз',
         collections_not_found: 'Колекцій не знайдено',
         header: {
           catalog: 'Каталог',
@@ -349,7 +352,8 @@ i18n.use(initReactI18next).init({
           delivery_title: 'Доставка та повернення',
           invalid_phone: 'Введіть коректний номер телефону',
           name_required: "Введіть ваше ім'я",
-          addToCart_note: 'Перед тим, як замовляти товар, перевірте його наявність'
+          addToCart_note: 'Перед тим, як замовляти товар, перевірте його наявність',
+          not_found: 'Товар не знайдено',
         },
         slider: {
           loading: "Завантаження...",
