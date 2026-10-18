@@ -15,6 +15,7 @@ import minusIcon from '../../shared/assets/icons/minus.svg';
 import styles from './ProductDetailsPage.module.scss';
 import { ProductGallery } from '../../components/ProductGallery';
 import { FavoriteButton } from '../../components/FavoriteButton';
+import { EmptyState } from '../../components/EmptyState';
 
 export const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +29,7 @@ export const ProductDetailsPage = () => {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const location = useLocation();
 
-  const { data: product, isLoading, error } = useGetProductByIdQuery({
+  const { data: product, isLoading, error, refetch } = useGetProductByIdQuery({
     id: Number(id),
     currency,
     lang: language,
@@ -41,8 +42,12 @@ export const ProductDetailsPage = () => {
     return <Loader />;
   }
 
+  if (error && 'status' in error && error.status === 404) {
+    return <EmptyState message={t('product.not_found')} />;
+  }
+
   if (error || !product) {
-    return <ErrorState />;
+    return <ErrorState onRetry={refetch} />;
   }
 
   const formatPrice = (price: string) =>

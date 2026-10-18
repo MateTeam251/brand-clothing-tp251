@@ -1,5 +1,4 @@
 import { useId } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useGetProductsQuery } from '../../shared/api/productsApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { ProductQueryParams } from '../../shared/types/products';
@@ -7,6 +6,8 @@ import styles from './ProductSlider.module.scss';
 import { ProductCard } from '../ProductCard';
 import { useDragScroll } from '../../shared/hooks/useDragScroll';
 import { ViewAllLink } from '../ViewAllLink';
+import { Loader } from '../Loader';
+import { ErrorState } from '../ErrorState';
 
 type ProductSliderProps = {
   title: string;
@@ -23,7 +24,6 @@ export const ProductSlider = ({
   showViewAll = true,
   excludeProductId,
 }: ProductSliderProps) => {
-  const { t } = useTranslation();
   const titleId = useId();
   const {
     ref: sliderRef,
@@ -33,7 +33,7 @@ export const ProductSlider = ({
     handleClickCapture,
   } = useDragScroll<HTMLDivElement>();
   const { currency, language } = useAppSelector((state) => state.settings);
-  const { data, isLoading, isError } = useGetProductsQuery({
+  const { data, isLoading, isError, refetch } = useGetProductsQuery({
     ...queryParams,
     currency,
     lang: language,
@@ -56,25 +56,25 @@ export const ProductSlider = ({
         {showViewAll && <ViewAllLink to={viewAllTo} placement='header' />}
       </div>
 
-      {isLoading && <p className={styles.slider__status}>{t('slider.loading')}</p>}
-      {isError && <p className={styles.slider__status}>{t('slider.error')}</p>}
-
+      {isLoading && <Loader />}
+      {isError && <ErrorState onRetry={refetch} />}
       {products.length > 0 && (
-        <div
-          ref={sliderRef}
-          className={styles.slider__track}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          onClickCapture={handleClickCapture}
-        >
-          {products.map((product) => (
-            <div className={styles.slider__item} data-slider-item='true' key={product.id}>
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </div>
+
+      <div
+        ref={sliderRef}
+        className={styles.slider__track}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClickCapture={handleClickCapture}
+      >
+        {products.map((product) => (
+          <div className={styles.slider__item} data-slider-item='true' key={product.id}>
+            <ProductCard product={product} />
+          </div>
+        ))}
+      </div>
       )}
 
       {showViewAll && <ViewAllLink to={viewAllTo} placement='footer' />}

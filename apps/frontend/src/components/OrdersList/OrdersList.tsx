@@ -24,14 +24,14 @@ const formatMoney = (value: string, currency: Currency) => {
 export const OrdersList = () => {
   const { t } = useTranslation();
   const language = useAppSelector((state) => state.settings.language);
-  const { data: orders, isLoading, isError } = useGetOrdersQuery();
+  const { data: orders, isLoading, isError, refetch } = useGetOrdersQuery();
 
   if (isLoading) {
     return <Loader />;
   }
 
   if (isError) {
-    return <ErrorState />;
+    return <ErrorState onRetry={refetch} />;
   }
 
   if (!orders || orders.length === 0) {
