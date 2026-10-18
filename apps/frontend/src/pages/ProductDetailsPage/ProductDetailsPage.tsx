@@ -171,12 +171,21 @@ export const ProductDetailsPage = () => {
                 type="button"
                 className={styles.details__checkAvailability}
                 onClick={() => setIsAvailabilityFormOpen((prev) => !prev)}
+                aria-expanded={isAvailabilityFormOpen}
               >
                 {t('product.check_availability')}
               </button>
             </div>
 
-            {isAvailabilityFormOpen && <AvailabilityRequestForm productId={product.id} />}
+            <div
+              className={`${styles.details__availability} ${
+                isAvailabilityFormOpen ? styles['details__availability--open'] : ''
+              }`}
+            >
+              <div className={styles.details__availabilityInner}>
+                <AvailabilityRequestForm productId={product.id} />
+              </div>
+            </div>
           </div>
 
           <div className={styles.details__accordion}>

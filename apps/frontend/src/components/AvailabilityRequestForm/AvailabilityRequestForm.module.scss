@@ -18,6 +18,16 @@
     }
   }
 
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    @include on-desktop {
+      flex: 1;
+    }
+  }
+
   &__title {
     font-family: 'Bodoni', serif;
     font-weight: 500;
@@ -57,7 +67,7 @@
   &__errorText {
     color: $error;
     font-size: 12px;
-    margin: -8px 0 0;
+    margin: 0;
   }
 
   &__error {
@@ -81,13 +91,21 @@
     font-weight: 500;
     font-size: 16px;
     line-height: 24px;
+    cursor: pointer;
 
     &:hover {
       background-color: $accent;
     }
 
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
     @include on-desktop {
       font-size: 20px;
+      background-color: $accent;
+      border-color: $accent;
     }
   }
 
@@ -95,6 +113,7 @@
     margin: 0;
     font-size: 13px;
     color: $color-inactive;
+    text-align: center;
 
     @include on-desktop {
       font-size: 16px;
