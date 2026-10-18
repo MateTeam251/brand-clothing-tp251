@@ -9,12 +9,28 @@ interface CartState {
 
 export const CART_STORAGE_KEY = 'cart';
 
+const isCartElement = (value: unknown): value is CartElement => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const item = value as Record<string, unknown>;
+
+  return (
+    typeof item.id === 'number' &&
+    typeof item.product === 'number' &&
+    typeof item.size === 'string' &&
+    typeof item.quantity === 'number' &&
+    item.quantity > 0
+  );
+};
+
 const loadCart = (): CartElement[] => {
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
 
-    return Array.isArray(parsed) ? (parsed as CartElement[]) : [];
+      return Array.isArray(parsed) ? parsed.filter(isCartElement) : [];
   } catch {
     return [];
   }
