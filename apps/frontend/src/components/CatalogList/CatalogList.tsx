@@ -24,7 +24,7 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   const [pages, setPages] = useState<ProductListItem[][]>([]);
   const [offset, setOffset] = useState(0);
 
-  const { data, isLoading, isFetching, error } = useGetProductsQuery({
+  const { data, currentData, isLoading, isFetching, error, refetch } = useGetProductsQuery({
     limit: PRODUCTS_LIMIT,
     offset,
     currency,
@@ -36,14 +36,14 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   });
 
   const currentPageIndex = offset / PRODUCTS_LIMIT;
-  const allPages = data && pages[currentPageIndex] !== data.results
-    ? [...pages.slice(0, currentPageIndex), data.results]
+  const allPages = currentData && pages[currentPageIndex] !== currentData.results
+    ? [...pages.slice(0, currentPageIndex), currentData.results]
     : pages;
 
   const products = allPages.flat();
 
   const handleLoadMore = () => {
-    if (data) {
+    if (currentData) {
       setPages(allPages);
     }
     setOffset((prev) => prev + PRODUCTS_LIMIT);
@@ -53,8 +53,8 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
     return <Loader />;
   }
 
-  if (error) {
-    return <ErrorState />;
+    if (error && products.length === 0) {
+    return <ErrorState onRetry={refetch} />;
   }
 
   if (products.length === 0) {
@@ -69,15 +69,19 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
         ))}
       </div>
 
-      {data?.next && (
-        <button
-          type="button"
-          className={styles.catalog__loadMore}
-          onClick={handleLoadMore}
-          disabled={isFetching}
-        >
-          {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
-        </button>
+      {error ? (
+        <ErrorState onRetry={refetch} />
+      ) : (
+        data?.next && (
+          <button
+            type="button"
+            className={styles.catalog__loadMore}
+            onClick={handleLoadMore}
+            disabled={isFetching}
+          >
+            {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
+          </button>
+        )
       )}
     </>
   );

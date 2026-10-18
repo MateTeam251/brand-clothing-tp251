@@ -5,4 +5,15 @@
   justify-content: center;
   padding: 60px 0;
   color: $color-inactive;
+
+    &__retry {
+    margin-top: 16px;
+    padding: 12px 32px;
+    border: none;
+    border-radius: 100px;
+    background-color: $accent;
+    color: inherit;
+    font-size: 16px;
+    cursor: pointer;
+  }
 }
