@@ -7,7 +7,7 @@ import searchIcon from '../../shared/assets/icons/search.svg';
 import arrowRight from '../../shared/assets/icons/arrow-right.svg';
 
 import { ProductSlider } from '../../components/ProductSlider/ProductSlider';
-import { CollectionSlider } from '../../components/Collection/CollectionSlider';
+import { CollectionSlider } from '../../components/CollectionSlider/CollectionSlider';
 
 
 export const HomePage = () => {
