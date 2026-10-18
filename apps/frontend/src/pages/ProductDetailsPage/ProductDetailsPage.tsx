@@ -75,7 +75,7 @@ export const ProductDetailsPage = () => {
   };
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
+    if (!selectedSize || !product.is_available) {
       return;
     }
 
@@ -159,7 +159,7 @@ export const ProductDetailsPage = () => {
                   type="button"
                   className={styles.details__addToCart}
                   onClick={handleAddToCart}
-                  disabled={!selectedSize}
+                  disabled={!selectedSize || !product.is_available}
                 >
                   {t('product.cart_btn')}
                 </button>
