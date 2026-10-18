@@ -7,14 +7,21 @@ interface CartState {
   items: CartElement[];
 }
 
+export const CART_STORAGE_KEY = 'cart';
+
+const loadCart = (): CartElement[] => {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+
+    return Array.isArray(parsed) ? (parsed as CartElement[]) : [];
+  } catch {
+    return [];
+  }
+};
+
 const initialState: CartState = {
-  items: [
-    { id: 101, product: 1, size: 'M', quantity: 1 },
-    { id: 102, product: 1, size: 'XS', quantity: 1 }, 
-    { id: 103, product: 3, size: 'M', quantity: 1 },
-    { id: 104, product: 4, size: 'M', quantity: 1 },
-    { id: 105, product: 5, size: 'M', quantity: 1 }
-  ],
+  items: loadCart(),
 };
 
 const cartSlice = createSlice({

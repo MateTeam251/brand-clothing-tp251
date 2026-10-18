@@ -2,7 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../shared/hooks/reduxHooks';
 import { incrementQuantity, decrementQuantity, removeFromCart, changeSize } from '../../app/store/reducers/cartSlice';
 import styles from './CartPage.module.scss';
-import { useGetProductsQuery } from '../../shared/api/productsApi';
+import { useGetProductsByIdsQuery } from '../../shared/api/productsApi';
+import { Loader } from '../../components/Loader';
+import { ErrorState } from '../../components/ErrorState';
 import { Link } from 'react-router-dom';
 import { CartItem } from '../../components/CartItem/CartItem';
 
@@ -13,14 +15,22 @@ export const CartPage = () => {
   const cartItems = useAppSelector((state) => state.cart.items);
   const { currency, language } = useAppSelector((state) => state.settings);
 
-  const { data: productsData } = useGetProductsQuery({ currency, lang: language });
-  const products = productsData?.results;
+    const productIds = [...new Set(cartItems.map((item) => item.product))].sort((a, b) => a - b);
 
-  const fullCartItems = cartItems.map(cartItem => {
-    const productDetails = products?.find(p => p.id === cartItem.product);
+  const { data: products, isLoading, isError, refetch } = useGetProductsByIdsQuery(
+    { ids: productIds, currency, lang: language },
+    { skip: productIds.length === 0 },
+  );
+
+  const fullCartItems = cartItems.map((cartItem) => {
+    const product = products?.find((p) => p.id === cartItem.product);
+
     return {
-      ...productDetails,
       ...cartItem,
+      name: product?.name,
+      price: product?.price,
+      discounted_price: product?.discounted_price,
+      main_image: product?.images[0] ?? null,
     };
   });
 
@@ -53,7 +63,9 @@ export const CartPage = () => {
           ) : (
             <div className={styles['cart__content']}>
               <div className={styles['cart__list']}>
-                {fullCartItems.map((item) => (
+                {isLoading && <Loader />}
+                {isError && <ErrorState onRetry={refetch} />}
+                {!isLoading && !isError && fullCartItems.map((item) => (
                   <CartItem
                     key={item.id}
                     item={item}
