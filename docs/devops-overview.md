@@ -30,7 +30,8 @@ flowchart LR
         WEB --> RD[redis] --> CEL[celery<br/>emails, reports]
         AL[alloy<br/>metrics + logs]
     end
-    WEB --> MEDIA[(S3 media)]
+    CF --> MEDIA[(S3 media<br/>photos · /media/*)]
+    WEB --> MEDIA
     DB --> BK[(S3 backups<br/>WAL-G)]
     AL --> GF[Grafana Cloud]
     %% Transparent boxes: readable in GitHub light and dark mode
@@ -39,7 +40,7 @@ flowchart LR
 ```
 
 - **One small server per environment** (ARM, Auto Scaling group of 1): it heals itself, and the data lives on a separate encrypted volume that survives instance replacement.
-- **CloudFront in front of everything**: HTTPS on the domain, caching for the frontend, and the server accepts traffic **from CloudFront only** (security group with AWS's prefix list). No SSH port at all.
+- **CloudFront in front of everything**: HTTPS on the domain, caching for the frontend and product photos (`/media/*`), and the server accepts traffic **from CloudFront only** (security group with AWS's prefix list). No SSH port at all.
 - **Staging** is the same stack on a t4g.micro that runs 08:00–20:00 Kyiv only (~$8/month).
 
 Details: [infrastructure.md](infrastructure.md)
@@ -149,7 +150,6 @@ k6 script simulating shoppers browsing the catalog, run on staging while watchin
 
 ## 12. What's next
 
-- Product photos through CloudFront (caching) instead of signed S3 links.
 - Extra protection for `/api/admin/`.
 - Frontend monitoring (Grafana Faro).
 - SES production access (re-apply November), WayForPay keys.
