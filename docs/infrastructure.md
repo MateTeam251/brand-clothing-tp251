@@ -31,7 +31,7 @@ Diagram: [devops-overview.md → Architecture](devops-overview.md#2-architecture
 |---|---|---|
 | `/` (everything else) | S3 frontend bucket (SPA rewrite function → `index.html`) | yes |
 | `/api/*`, `/static/*` | `https://origin.<domain>` → nginx → web → db | no |
-| `/media/*` | S3 media bucket | ready, not used by the app yet (photos are signed S3 URLs) |
+| `/media/*` | S3 media bucket. CloudFront function `media-strip-prefix` drops `/media` (files are stored at the bucket root) | yes, up to 1 year (`Managed-CachingOptimized`; a new upload always gets a new file name) |
 
 CloudFront sends the origin name as `Host`, so Django's `ALLOWED_HOSTS` contains the origin name.
 
@@ -81,7 +81,7 @@ Containers (`docker-compose.prod.yml`, memory limits in brackets):
 
 | Bucket (`<name>-875476618056`) | Use | Notes |
 |---|---|---|
-| `brand-clothing[-staging]-media` | uploaded product images (WebP) | private, versioned: old versions deleted after 30 days. `prevent_destroy` |
+| `brand-clothing[-staging]-media` | uploaded product images (WebP) | private, read by CloudFront only. Django links `https://<site>/media/...` (SSM `AWS_S3_CUSTOM_DOMAIN`; unset = signed S3 links). Versioned: old versions deleted after 30 days. `prevent_destroy` |
 | `brand-clothing[-staging]-frontend-static` | React build | private, served via CloudFront (default) |
 | `brand-clothing[-staging]-db-backups-wal` | WAL-G backups | versioned, Glacier after 90 days, app can only write. `prevent_destroy` |
 | `brand-clothing[-staging]-reports` | weekly analyst CSVs (`reports/carts/<week>/`) | private, deleted after 1 year. Analysts read via IAM group `Analysts` |
@@ -142,4 +142,4 @@ Alloy push token: `secrets/GRAFANA_CLOUD_TOKEN`.
 
 ## Not in use yet
 
-Photos via CloudFront `/media/*`, SES production sending, WayForPay (keys pending), frontend monitoring (Faro).
+SES production sending, WayForPay (keys pending), frontend monitoring (Faro).

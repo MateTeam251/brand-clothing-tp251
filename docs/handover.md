@@ -19,7 +19,7 @@ Diagram: [devops-overview.md → Architecture](devops-overview.md#2-architecture
 | redis + celery | background jobs: emails, weekly analyst reports |
 | certbot | renews the origin certificate |
 | alloy | metrics + logs → Grafana Cloud |
-| S3 | frontend, media (photos, signed URLs for now), backups, reports |
+| S3 | frontend, media (photos, served and cached via CloudFront `/media/*`), backups, reports |
 
 AWS account `875476618056`, region `eu-central-1` (CloudFront certificates: `us-east-1`).
 
@@ -87,7 +87,7 @@ Who else has access:
 - **Personal accounts.** Grafana Cloud and Resend are on Max's accounts → move before the handover (checklist).
 - **SES.** Production access was rejected 2026-10-11. Re-apply early November 2026, then switch back from Resend (`EMAIL_BACKEND=django_ses.SESBackend`). Domain identity, DKIM, DMARC are already in `prod/email.tf`.
 - **Payments.** WayForPay keys not configured yet (`secrets/WAYFORPAY_SECRET_KEY` when they arrive). Payments logs are deliberately **not** sent to Grafana.
-- **Photos** load from S3 as signed URLs, not through CloudFront `/media/*` (no caching). Switch planned (`AWS_S3_CUSTOM_DOMAIN`).
+- **API pagination links** (`next` / `previous`) contain the origin name (`origin.` / `origin-staging.`), which only CloudFront can reach. The frontend is not affected (it only checks that `next` exists and builds the offset itself). Fix when needed: nginx sends `X-Forwarded-Host`, Django `USE_X_FORWARDED_HOST = True`.
 - **`/api/admin/`** is reachable from anywhere (rate-limited login only). Extra protection planned with the backend devs.
 - **IAM as code.** Groups and policies are manual; codify in Terraform when convenient (users/passwords stay manual).
 - **TODO:** anything else Max knows of.
