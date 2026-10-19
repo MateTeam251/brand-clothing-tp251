@@ -5,25 +5,23 @@ how it is built is in [infrastructure.md](infrastructure.md).
 
 _Written 2026-10-19 by Max (DevOps). Lines marked **TODO** need an answer before the handover._
 
-## The system in one picture
+## The system
 
-```
-            theart-theartist.com / www            staging.theart-theartist.com
-                         │                                     │
-                 CloudFront (prod)                     CloudFront (staging)
-           ├─ /            → S3 frontend (React build)
-           ├─ /media/*     → S3 media (ready, but the app still links photos as signed S3 URLs)
-           └─ /api/*, /static/* → https://origin.theart-theartist.com
-                         │
-           EC2 t4g.small (Auto Scaling group of 1), Docker Compose:
-           nginx (443, rate limits) → web (Django + gunicorn, 2 workers)
-                                       ├─ db (Postgres 16 + WAL-G → S3 backups)
-                                       └─ redis → celery (worker + beat: emails, weekly reports)
-           certbot (origin certificate)   alloy (metrics + logs → Grafana Cloud)
-```
+Diagram: [devops-overview.md → Architecture](devops-overview.md#2-architecture).
 
-Staging is the same on a t4g.micro, running 08:00–20:00 Kyiv only. Everything in AWS account
-`875476618056`, region `eu-central-1` (ACM certificates for CloudFront: `us-east-1`).
+| Part | What it does |
+|---|---|
+| CloudFront | `theart-theartist.com` (+ `www`) and `staging.theart-theartist.com`. `/` → S3 frontend (React build), `/api/*` + `/static/*` → the server (`origin.` name) |
+| EC2 (Auto Scaling group of 1) | prod t4g.small, staging t4g.micro (08:00–20:00 Kyiv). Docker Compose, below |
+| nginx | TLS for the origin name, rate limits, only reachable from CloudFront |
+| web | Django + gunicorn (2 workers) |
+| db | Postgres 16 + WAL-G → S3 backups |
+| redis + celery | background jobs: emails, weekly analyst reports |
+| certbot | renews the origin certificate |
+| alloy | metrics + logs → Grafana Cloud |
+| S3 | frontend, media (photos, signed URLs for now), backups, reports |
+
+AWS account `875476618056`, region `eu-central-1` (CloudFront certificates: `us-east-1`).
 
 ## Docs
 

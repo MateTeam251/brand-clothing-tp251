@@ -25,12 +25,13 @@ Both environments are built from the same modules and share the ECR images and t
 
 ## Request path
 
-```
-browser → CloudFront ─ /            → S3 frontend (React build, SPA rewrite function)
-                     ├ /media/*     → S3 media (not used by the app yet: photos are signed S3 URLs)
-                     └ /api/*, /static/* → https://origin.<domain> (no caching)
-        → nginx (443) → web (gunicorn) → db
-```
+Diagram: [devops-overview.md → Architecture](devops-overview.md#2-architecture).
+
+| Path | CloudFront sends it to | Caching |
+|---|---|---|
+| `/` (everything else) | S3 frontend bucket (SPA rewrite function → `index.html`) | yes |
+| `/api/*`, `/static/*` | `https://origin.<domain>` → nginx → web → db | no |
+| `/media/*` | S3 media bucket | ready, not used by the app yet (photos are signed S3 URLs) |
 
 CloudFront sends the origin name as `Host`, so Django's `ALLOWED_HOSTS` contains the origin name.
 
