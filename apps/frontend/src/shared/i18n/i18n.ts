@@ -165,6 +165,9 @@ i18n.use(initReactI18next).init({
           empty: 'Cart is empty',
           products: 'Products',
           delivery_details: 'Calculated at checkout',
+          empty_title: 'Your cart is empty',
+          empty_text: 'But that’s easy to fix',
+          empty_button: 'Go to catalog',
         },
         checkout: {
           contacts: 'Contact information',
@@ -419,6 +422,9 @@ i18n.use(initReactI18next).init({
           total: 'Разом:',
           empty: 'Кошик порожній',
           delivery_details: 'Розрахунок при оформленні',
+          empty_title: 'Ваш кошик порожній',
+          empty_text: 'Але це легко виправити',
+          empty_button: 'До каталогу',
         },
         checkout: {
           contacts: 'Контактна інформація',

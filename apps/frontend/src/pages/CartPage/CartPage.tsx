@@ -7,6 +7,7 @@ import { Loader } from '../../components/Loader';
 import { ErrorState } from '../../components/ErrorState';
 import { Link } from 'react-router-dom';
 import { CartItem } from '../../components/CartItem/CartItem';
+import cartIcon from '../../shared/assets/icons/cart.svg';
 
 export const CartPage = () => {
   const { t } = useTranslation();
@@ -49,6 +50,21 @@ export const CartPage = () => {
     maximumFractionDigits: 0,
   }).format(price);
 
+    if (cartItems.length === 0) {
+    return (
+      <section className={styles.empty}>
+        <div className={styles.empty__icon}>
+          <img src={cartIcon} alt="" />
+        </div>
+        <h2 className={styles.empty__title}>{t('cart.empty_title')}</h2>
+        <p className={styles.empty__text}>{t('cart.empty_text')}</p>
+        <Link to="/catalog" className={styles.empty__button}>
+          {t('cart.empty_button')}
+        </Link>
+      </section>
+    );
+    }
+  
   return (
     <section className={styles.cart}>
         <article className={styles['cart__wrapper']}>
