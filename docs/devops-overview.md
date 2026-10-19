@@ -33,6 +33,9 @@ flowchart LR
     WEB --> MEDIA[(S3 media)]
     DB -- "backups" --> BK[(S3 backups)]
     AL --> GF[Grafana Cloud]
+    %% Transparent boxes: readable in GitHub light and dark mode
+    classDef default fill:transparent,stroke:#8b949e,stroke-width:1px
+    style EC2 fill:transparent,stroke:#8b949e,stroke-dasharray:5 5
 ```
 
 - **One small server per environment** (ARM, Auto Scaling group of 1): it heals itself, and the data lives on a separate encrypted volume that survives instance replacement.
@@ -62,6 +65,8 @@ flowchart LR
     DEV -->|automatic| STG[staging]
     DEV -->|PR develop → main| MAIN[main]
     MAIN -->|approval| PROD[production]
+    %% Transparent boxes: readable in GitHub light and dark mode
+    classDef default fill:transparent,stroke:#8b949e,stroke-width:1px
 ```
 
 - **Release pipeline**: test → build ARM images (tag = commit SHA) → push to ECR → deploy via SSM → smoke check. The same image goes to staging and then to production.
