@@ -22,16 +22,16 @@ Timeline: repo started 2026-08-29 → first production release **v0.1.0 on 2026-
 ```mermaid
 flowchart LR
     U[Shopper] --> CF[CloudFront<br/>theart-theartist.com]
-    CF -- "/" --> FE[(S3<br/>React build)]
-    CF -- "/api/*" --> NG
+    CF --> FE[(S3 frontend<br/>React build · /)]
+    CF --> NG
     subgraph EC2 ["EC2 t4g.small · Docker Compose"]
-        NG[nginx<br/>TLS, rate limits] --> WEB[web<br/>Django + gunicorn]
+        NG[nginx · /api/*<br/>TLS, rate limits] --> WEB[web<br/>Django + gunicorn]
         WEB --> DB[(Postgres 16<br/>+ WAL-G)]
         WEB --> RD[redis] --> CEL[celery<br/>emails, reports]
         AL[alloy<br/>metrics + logs]
     end
     WEB --> MEDIA[(S3 media)]
-    DB -- "backups" --> BK[(S3 backups)]
+    DB --> BK[(S3 backups<br/>WAL-G)]
     AL --> GF[Grafana Cloud]
     %% Transparent boxes: readable in GitHub light and dark mode
     classDef default fill:transparent,stroke:#8b949e,stroke-width:1px
@@ -60,11 +60,10 @@ Details: [infrastructure.md](infrastructure.md)
 
 ```mermaid
 flowchart LR
-    PR[Pull request] --> CHK{checks<br/>tests, lint, build,<br/>terraform plan}
-    CHK -->|merge| DEV[develop]
-    DEV -->|automatic| STG[staging]
-    DEV -->|PR develop → main| MAIN[main]
-    MAIN -->|approval| PROD[production]
+    PR[Pull request<br/>tests, lint, build,<br/>terraform plan] --> DEV[merge to develop]
+    DEV --> STG[staging<br/>automatic]
+    DEV --> MAIN[PR develop → main]
+    MAIN --> PROD[production<br/>after approval]
     %% Transparent boxes: readable in GitHub light and dark mode
     classDef default fill:transparent,stroke:#8b949e,stroke-width:1px
 ```
