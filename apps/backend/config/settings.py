@@ -250,6 +250,9 @@ if USE_LOCALSTACK:
     AWS_S3_CUSTOM_DOMAIN = f"localhost:4566/{AWS_STORAGE_BUCKET_NAME}"
 else:
     AWS_S3_ENDPOINT_URL = None
+    # Set on staging/prod (e.g. theart-theartist.com/media): media links go through
+    # CloudFront, unsigned and cacheable. Unset = signed S3 links as before.
+    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN") or None
 
 AWS_DEFAULT_ACL = None
 AWS_S3_FILE_OVERWRITE = False
