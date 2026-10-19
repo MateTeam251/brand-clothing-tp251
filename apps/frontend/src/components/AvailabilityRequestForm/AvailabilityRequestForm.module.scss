@@ -2,7 +2,7 @@
 @use '../../app/styles/mixins.scss' as *;
 
 .form {
-  @include flex(12px);
+    @include flex(column, 12px);
   
   padding: 16px;
   border: 1px solid $light-gray;
