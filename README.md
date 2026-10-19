@@ -21,8 +21,9 @@ apps/backend/      Django project (API, admin, Celery tasks)
 apps/frontend/     React app
 db/                Postgres image with WAL-G backups
 nginx/             nginx config for the servers
-infra/             Terraform (bootstrap, modules, staging + prod environments), Grafana exports
-docs/              CI/CD, releasing, infrastructure, database restore
+infra/             Terraform (bootstrap, modules, staging + prod environments, grafana)
+loadtest/          k6 load test
+docs/              handover, infrastructure, releasing, CI/CD, alerts, restore, secrets
 docker-compose.prod.yml   what runs on the servers
 ```
 
@@ -55,8 +56,20 @@ npm run dev
 - Merge into `develop` deploys to **staging** automatically.
 - A PR `develop` → `main` (merge commit, never squash) is a **production release**.
 
-Details: [docs/releasing.md](docs/releasing.md), [docs/ci-cd.md](docs/ci-cd.md),
-[docs/infrastructure.md](docs/infrastructure.md), [docs/database-restore.md](docs/database-restore.md).
+Docs (overview first, handover if you run the infrastructure):
+
+| Doc | What |
+|---|---|
+| [docs/devops-overview.md](docs/devops-overview.md) | DevOps walkthrough: architecture, decisions, results (demo) |
+| [docs/handover.md](docs/handover.md) | Running the infrastructure: access, routines, risks, handover checklist |
+| [docs/infrastructure.md](docs/infrastructure.md) | Everything in AWS and which Terraform owns it |
+| [docs/releasing.md](docs/releasing.md) | Releases, rollback, branch rules |
+| [docs/ci-cd.md](docs/ci-cd.md) | GitHub Actions workflows |
+| [docs/alerts.md](docs/alerts.md) | Runbook for every alert |
+| [docs/database-restore.md](docs/database-restore.md) | Backups, restore drill, real restore |
+| [docs/secrets.md](docs/secrets.md) | Secrets inventory and rotation |
+| [infra/grafana/README.md](infra/grafana/README.md) | Monitoring as Terraform, dashboards |
+| [loadtest/README.md](loadtest/README.md) | k6 load test and results |
 
 ## License
 
