@@ -39,3 +39,8 @@ UNAUTHORIZED = OpenApiResponse(
     description="No `Authorization: Bearer <access>` header, or the access token is invalid/expired.",
 )
 NOT_FOUND = OpenApiResponse(DETAIL_RESPONSE, description="Object not found.")
+THROTTLED = OpenApiResponse(
+    DETAIL_RESPONSE,
+    description="Too many requests. `detail` says in how many seconds to retry; "
+                "the same number comes in the `Retry-After` header.",
+)
