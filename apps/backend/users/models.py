@@ -18,7 +18,7 @@ class CustomUserManager(UserManager):
             email (str): The user's email address. Required.
             password (str): The raw password to hash and store.
             **extra_fields: Any additional fields defined on the User
-                model (e.g. name, phone_number, age).
+                model (e.g. name, phone_number, birth_date).
 
         Raises:
             ValueError: If ``email`` is not provided.
@@ -90,7 +90,7 @@ class User(AbstractUser):
     Attributes:
         email (EmailField): Unique email address. Used as the login
             identifier instead of username.
-        age (PositiveSmallIntegerField): User's age. Optional
+        birth_date (DateField): User's date of birth. Optional
             (nullable and blank).
         marketing_opt_in (BooleanField): Whether the user has opted in
             to receive marketing communications. Defaults to False.
@@ -117,7 +117,7 @@ class User(AbstractUser):
             user/superuser creation.
     """
     email = models.EmailField(unique=True)
-    age = models.PositiveSmallIntegerField(null=True, blank=True)
+    birth_date = models.DateField(blank=True, null=True)
 
     marketing_opt_in = models.BooleanField(default=False)
     instagram = models.TextField()
