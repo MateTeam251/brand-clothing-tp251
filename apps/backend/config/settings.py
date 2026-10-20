@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "favorites",
     "carts",
     "storages",
+    "delivery",
     # Deletes a file from S3 when its row is deleted or the file is replaced.
     # Must stay last, so it sees the file fields of every app above.
     "django_cleanup.apps.CleanupConfig",
@@ -334,6 +335,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "carts.tasks.send_weekly_cart_report_task",
         "schedule": crontab(minute=0, hour=4, day_of_week="monday"),  # previous Mon-Sun week
     },
+    "sync-delivery-branches-daily": {
+        "task": "delivery.tasks.sync_all_providers",
+        "schedule": crontab(minute=0, hour=1),  # well before the 04:00 report
+    },
 }
 
 # CART ANALYTICS
@@ -343,6 +348,15 @@ CART_ABANDON_AFTER_HOURS = int(os.getenv("CART_ABANDON_AFTER_HOURS", "24"))
 # Private bucket for analyst reports. Intentionally no default: never fall back to the media bucket.
 ANALYTICS_REPORTS_BUCKET = os.getenv("ANALYTICS_REPORTS_BUCKET")
 ANALYTICS_REPORTS_PREFIX = os.getenv("ANALYTICS_REPORTS_PREFIX", "reports/carts")
+
+# DELIVERY PROVIDERS
+
+# Nova Poshta — single JSON-RPC style endpoint (https://developers.novaposhta.ua).
+NOVA_POSHTA_API_KEY = os.environ.get("NOVA_POSHTA_API_KEY")
+NOVA_POSHTA_API_URL = os.environ.get(
+    "NOVA_POSHTA_API_URL",
+    "https://api.novaposhta.ua/v2.0/json/",
+)
 
 #LOGS
 LOGS_DIR = BASE_DIR / "logs"

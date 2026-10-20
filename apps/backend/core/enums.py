@@ -23,6 +23,10 @@ class DeliveryProvider(models.TextChoices):
     UKRPOSHTA = "UKRPOSHTA", "Ukrposhta"
     DHL = "DHL", "DHL"
 
+class DeliveryType(models.TextChoices):
+    BRANCH = "branch", "Відділення"
+    COURIER = "courier", "Кур'єром"
+
 
 class AvailabilityRequestStatusEnum(models.TextChoices):
     NEW = "new", "New"
