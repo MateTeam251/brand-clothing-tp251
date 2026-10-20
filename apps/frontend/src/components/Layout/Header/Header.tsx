@@ -76,12 +76,17 @@ export const Header: React.FC = () => {
   );
 
   useEffect(() => {
-    if(isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
+    if (!isMenuOpen) {
+      return;
     }
-  }, [isMenuOpen])
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMenuOpen]);
 
   return (
     <>
