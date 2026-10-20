@@ -30,6 +30,9 @@ env:
   POSTGRES_PASSWORD: postgres
   POSTGRES_HOST: localhost
   POSTGRES_PORT: "5432"
+  # Redis like on the servers: Celery broker + Django cache (DRF throttling).
+  REDIS_HOST: localhost
+  REDIS_PORT: "6379"
 
 jobs:
   test:
@@ -48,6 +51,15 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
