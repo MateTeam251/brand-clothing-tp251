@@ -7,6 +7,7 @@ locals {
     DEBUG                   = "False"
     ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host},${local.site_host}"
     SITE_URL                = "https://${local.site_host}"
+    FRONTEND_URL            = "https://${local.site_host}"
     CSRF_TRUSTED_ORIGINS    = "https://${local.site_host}"
     CORS_ALLOWED_ORIGINS    = "https://${local.site_host}"
     DEFAULT_FROM_EMAIL      = "The Art — The Artist <noreply@theart-theartist.com>"
