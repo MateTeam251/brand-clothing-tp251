@@ -232,6 +232,9 @@ i18n.use(initReactI18next).init({
             title: 'Check your email',
             text: 'We sent a confirmation email to {{email}}. Follow the link in the email to complete your registration.',
             home: 'Go to home page',
+            resend: "Didn't get the email? Send again",
+            resend_wait: 'Send again in {{seconds}} s',
+            resend_success: 'The email has been sent again',
           },
         },
         activation: {
@@ -489,6 +492,9 @@ i18n.use(initReactI18next).init({
             title: 'Перевірте пошту',
             text: 'Ми надіслали лист для підтвердження на {{email}}. Перейдіть за посиланням у листі, щоб завершити реєстрацію.',
             home: 'Перейти на головну',
+            resend: 'Не отримали лист? Надіслати ще раз',
+            resend_wait: 'Надіслати ще раз через {{seconds}} с',
+            resend_success: 'Лист надіслано повторно',
           },
         },
         activation: {

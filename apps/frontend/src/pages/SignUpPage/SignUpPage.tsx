@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SyntheticEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useRegisterMutation } from '../../shared/api/authApi';
+import { useRegisterMutation, useResendActivationMutation } from '../../shared/api/authApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { AuthCard } from '../../components/AuthCard';
 import { AuthField } from '../../components/AuthField';
@@ -10,8 +10,10 @@ import { AuthCheckbox } from '../../components/AuthCheckbox';
 import { AuthMessageCard } from '../../components/AuthMessageCard';
 import { AuthSheet } from '../../components/AuthSheet';
 import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
+import styles from './SignUpPage.module.scss';
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+const RESEND_COOLDOWN_SECONDS = 60;
 
 const FIELD_KEYS = [
   'email',
@@ -61,6 +63,34 @@ export const SignUpPage = () => {
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const closeAuth = useCloseAuth();
 
+  const [resendActivation, { isLoading: isResending }] = useResendActivationMutation();
+  const [resendStatus, setResendStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => setCooldown((seconds) => seconds - 1), 1000);
+
+    return () => window.clearTimeout(timerId);
+  }, [cooldown]);
+
+  const handleResend = async () => {
+    if (!registeredEmail || isResending || cooldown > 0) {
+      return;
+    }
+
+    try {
+      await resendActivation({ email: registeredEmail }).unwrap();
+      setResendStatus('success');
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch {
+      setResendStatus('error');
+    }
+  };
+
   if (isAuthenticated) {
     return <Navigate to="/account" replace />;
   }
@@ -74,7 +104,29 @@ export const SignUpPage = () => {
         linkTo="/"
         linkLabel={t('sign_up.check_email.home')}
         onClose={closeAuth}
-      />
+      >
+        <div className={styles.resend}>
+          <button
+            type="button"
+            className={styles.resend__button}
+            onClick={handleResend}
+            disabled={isResending || cooldown > 0}
+          >
+            {cooldown > 0
+              ? t('sign_up.check_email.resend_wait', { seconds: cooldown })
+              : t('sign_up.check_email.resend')}
+          </button>
+
+          {resendStatus === 'success' && (
+            <p className={styles.resend__status}>{t('sign_up.check_email.resend_success')}</p>
+          )}
+          {resendStatus === 'error' && (
+            <p className={`${styles.resend__status} ${styles['resend__status--error']}`}>
+              {t('generic_error')}
+            </p>
+          )}
+        </div>
+      </AuthMessageCard>
     );
   }
 
