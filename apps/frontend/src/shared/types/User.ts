@@ -17,9 +17,8 @@ export interface UserProfile {
   id: number;
   email: string;
   name: string;
-  age: number;
+  age: number | null;
   phone_number: string;
   marketing_opt_in: boolean;
   instagram: string;
-  address: Address;
 }

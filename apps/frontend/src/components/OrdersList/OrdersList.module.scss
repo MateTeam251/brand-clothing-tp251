@@ -1,0 +1,141 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+// TODO: take exact status colors from Figma
+$status-pending: #ececec;
+$status-processing: #fdf1c4;
+$status-shipped: #cfeefe;
+$status-delivered: #d7f6c9;
+$status-canceled: #f9d6d6;
+
+.orders {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid $light-gray;
+    border-radius: 16px;
+
+    @include on-desktop {
+      padding: 24px;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  &__number {
+    margin: 0;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 24px;
+
+    @include on-desktop {
+      font-size: 24px;
+      line-height: 32px;
+    }
+  }
+
+  &__meta {
+    margin: 4px 0 0;
+    font-family: 'Cambria', serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: $color-inactive;
+  }
+
+  &__status {
+    flex-shrink: 0;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-family: 'Cambria', serif;
+    font-size: 12px;
+    line-height: 16px;
+
+    &--pending {
+      background-color: $status-pending;
+    }
+
+    &--processing {
+      background-color: $status-processing;
+    }
+
+    &--shipped {
+      background-color: $status-shipped;
+    }
+
+    &--delivered {
+      background-color: $status-delivered;
+    }
+
+    &--canceled {
+      background-color: $status-canceled;
+    }
+  }
+
+  &__products {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__product {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: 'Cambria', serif;
+  }
+
+  &__productName {
+    margin: 0;
+    font-family: 'Bodoni', 'Cambria', serif;
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1px solid $light-gray;
+    font-family: 'Cambria', serif;
+    font-size: 14px;
+    line-height: 20px;
+
+    dt,
+    dd {
+      margin: 0;
+    }
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+
+    dd {
+      text-align: right;
+    }
+
+    &--total {
+      font-weight: 600;
+    }
+  }
+}

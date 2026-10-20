@@ -3,7 +3,7 @@
 Prod Postgres is backed up by WAL-G to `s3://brand-clothing-db-backups-wal-875476618056/wal-g`:
 
 - **base backup** every night at 03:00 UTC (`db/scripts/crontab`), result in Grafana: `{env="prod", container="db"} |= "WAL-G backup"`
-- **WAL** (every change) continuously via `archive_command`, so a restore gets everything up to the last few seconds/minutes, not just last night
+- **WAL** (every change) via `archive_command`, at least every 5 minutes (`archive_timeout = 300` in `db/postgresql.conf`), so a restore loses at most ~5 minutes, not everything since last night. Grafana → Database → *Last WAL archived*: under ~5 min while the shop is used; it can grow when nothing is written (e.g. at night), which is fine
 
 Two procedures below: the **drill** (safe, run monthly on the live prod instance) and the **real restore** (when prod data is gone or broken).
 
@@ -12,6 +12,7 @@ Two procedures below: the **drill** (safe, run monthly on the live prod instance
 | Date | Type | Backup | Fetch | WAL replay | Result |
 |---|---|---|---|---|---|
 | 2026-10-02 | A (on prod host, throwaway container) | `base_…0D` + 4 WAL files | 3.4 s | ~2 s | passed: all 24 tables match, marker written 4 h after the backup restored |
+| 2026-10-14 | B (staging, "Real restore" below, data folder moved away) | `base_…2F` + 3 WAL files | 4.2 s | ~1.5 s | passed: marker written after the backup restored, all 27 tables match, site + admin OK. Stop → online ~1 min when following the steps |
 
 ## Drill (monthly, ~15 min, prod keeps running)
 
@@ -80,7 +81,7 @@ docker ps --format '{{.Names}}'
 
 ## Real restore (prod data lost or broken)
 
-> Not rehearsed end to end yet (that is Drill B: fresh volume). Until then, follow it carefully and keep the old data folder.
+> Rehearsed on staging (Drill B, 2026-10-14). Keep the old data folder until the restore is verified.
 
 Downtime: the shop is offline from step 1 to step 5.
 
@@ -90,13 +91,15 @@ cd /opt/brand-clothing
 docker compose stop web db                                      # 1. stop writers
 mv /data/postgres /data/postgres.broken-$(date +%F-%H%M)        # 2. keep the old data until the restore is verified
 mkdir /data/postgres && chown 999:999 /data/postgres && chmod 700 /data/postgres
-docker compose run --rm --no-deps -u postgres --entrypoint wal-g db \
+docker compose run -T --rm --no-deps -u postgres --entrypoint wal-g db \
   backup-fetch /var/lib/postgresql/data LATEST                  # 3. base backup
 touch /data/postgres/recovery.signal && chown 999:999 /data/postgres/recovery.signal
 docker compose up -d db                                         # 4. replays WAL, then promotes
 docker logs --tail 30 brand_clothing_db                         #    wait for "ready to accept connections"
 docker compose up -d web                                        # 5. back online
 ```
+
+`-T` keeps step 3 from reading the terminal: without it, commands pasted after it are swallowed and never run.
 
 Then:
 - check the site and the data (Django admin, row counts)

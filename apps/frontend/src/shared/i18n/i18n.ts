@@ -36,6 +36,8 @@ i18n.use(initReactI18next).init({
         size: 'Size',
         cart_item_desc: 'Made to order in 5-8 days',
         generic_error: 'Something went wrong. Please try again.',
+        error_retry: 'Try again',
+        collections_not_found: 'No collections found',
         header: {
           catalog: 'Catalog',
           about: 'About',
@@ -98,7 +100,62 @@ i18n.use(initReactI18next).init({
           delivery_title: 'Delivery & returns',
           invalid_phone: 'Please enter a valid phone number',
           name_required: 'Please enter your name',
-          addToCart_note: 'Before placing your order, please check the item\'s availability'
+          addToCart_note: 'Before placing your order, please check the item\'s availability',
+          not_found: 'Product not found',
+        },
+        slider: {
+          loading: "Loading...",
+          error: "Unable to load products. Please try again later."
+        },
+        auth: {
+          tab_sign_in: "Sign in",
+          tab_sign_up: "Sign up",
+          email: "Email",
+          password: "Password",
+          sign_in: "Log in",
+          forgot_password: "Forgot password?",
+          errors: {
+            required: "This field is required",
+            invalid_email: "Enter a valid email",
+            invalid_credentials: "Incorrect email or password, or the account is not activated yet. Check your email.",
+            too_many_requests: "Too many attempts. Please try again later.",
+            generic: "Something went wrong. Please try again."
+          }
+        },
+        password_recovery: {
+          title: 'Password recovery',
+          subtitle: "Enter your email and we'll send you a link to reset your password.",
+          submit: 'Send link',
+          check_email: {
+            title: 'Check your email',
+            text: 'Password reset instructions have been sent to your email.',
+            resend: 'Send again',
+            resent: 'Email sent again',
+          },
+          new_password: {
+            title: 'Create a new password',
+            password: 'New password',
+            confirm: 'Repeat new password',
+            submit: 'Save new password',
+          },
+          success: {
+            title: 'Password changed',
+            text: 'You can now sign in with your new password.',
+            sign_in: 'Sign in',
+          },
+          invalid_link: {
+            title: 'Link is not valid',
+            text: 'The password reset link has expired or is not valid. Please request a new one.',
+            request_new: 'Request a new link',
+          },
+          errors: {
+            password_mismatch: 'Passwords do not match',
+          },
+        },
+        favorites_page: {
+          title: "Favorites",
+          empty: "You don't have any favorite products yet",
+          to_catalog: "Go to catalog"
         },
         order_confirmation: {},
         cart: {
@@ -108,6 +165,9 @@ i18n.use(initReactI18next).init({
           empty: 'Cart is empty',
           products: 'Products',
           delivery_details: 'Calculated at checkout',
+          empty_title: 'Your cart is empty',
+          empty_text: 'But that’s easy to fix',
+          empty_button: 'Go to catalog',
         },
         checkout: {
           contacts: 'Contact information',
@@ -119,14 +179,40 @@ i18n.use(initReactI18next).init({
           production_title: 'Production',
           production_text: "We're not a basics brand. We're about mood — about pieces that make you feel like the main character of your own day. Real people stand behind this brand, not just a store. We run a small family production in Mykolaiv. We're just getting started, but we'd be glad to have you along for the journey.",
         },
-        account: {
-          info: 'Personal information',
-          favorites: 'Favorites',
-          orders: 'Orders',
-          order_status_1: 'Processing',
-          order_status_2: 'Awaiting shipment',
-          order_status_3: 'Shipped',
-          order_status_4: 'Delivered',
+        profile: {
+          title: "Profile",
+          personal_data: "Personal details",
+          name: "Name",
+          phone: "Phone number",
+          instagram: "Instagram",
+          email: "Email",
+          marketing: "I want to receive brand news, private sales and personal offers",
+          save: "Save changes",
+          saved: "Changes saved",
+          logout: "Log out",
+          errors: {
+            instagram_required: "Please enter your Instagram",
+            save_failed: "Could not save changes. Please try again."
+          }
+        },
+        orders: {
+          title: "Order history",
+          number: "Order № {{id}}",
+          items_count: "Items: {{count}}",
+          size: "Size",
+          pcs: "pcs",
+          subtotal: "Items",
+          discount: "Discount",
+          address: "Delivery address",
+          total: "Total",
+          empty: "You don't have any orders yet",
+          status: {
+            pending: "Awaiting payment",
+            processing: "Processing",
+            shipped: "Shipped",
+            delivered: "Completed",
+            canceled: "Canceled"
+          }
         },
         sign_in: {
           title: 'Log in',
@@ -135,10 +221,41 @@ i18n.use(initReactI18next).init({
           password_reset: 'Forgot password?',
         },
         sign_up: {
-          first_name: 'First name',
-          last_name: 'Last name',
-          confirm_password: 'Confirm password',
-          sign_up_btn: 'Sign up',
+          submit: 'Sign up',
+          password_confirm: 'Repeat password',
+          agree: 'I agree to the terms of use and privacy policy',
+          errors: {
+            password_mismatch: 'Passwords do not match',
+            agree_required: 'Your consent is required',
+          },
+          check_email: {
+            title: 'Check your email',
+            text: 'We sent a confirmation email to {{email}}. Follow the link in the email to complete your registration.',
+            home: 'Go to home page',
+          },
+        },
+        activation: {
+          success: {
+            title: 'Account successfully verified!',
+            text: 'You can now complete your profile with additional details to receive personal offers and check out instantly.',
+            complete_profile: 'Complete profile',
+            skip: 'Skip and go shopping',
+          },
+          failed: {
+            title: 'Could not verify your account!',
+            text: 'The verification link has expired or is not valid. Send a new email to complete your registration.',
+            resend: 'Resend email',
+            home: 'Go to home page',
+          },
+          resend: {
+            title: 'Resend email',
+            text: 'Enter the email you used to register.',
+            submit: 'Send',
+          },
+          sent: {
+            title: 'Check your email',
+            text: 'If an account with this email exists and is not verified yet, we have sent a new email with a link.',
+          },
         },
         admin: {},
         not_found: {
@@ -174,6 +291,8 @@ i18n.use(initReactI18next).init({
         size: 'Розмір',
         cart_item_desc: 'Під замовлення 5-8 днів',
         generic_error: 'Щось пішло не так. Спробуйте ще раз.',
+        error_retry: 'Спробувати ще раз',
+        collections_not_found: 'Колекцій не знайдено',
         header: {
           catalog: 'Каталог',
           about: 'Про нас',
@@ -236,7 +355,64 @@ i18n.use(initReactI18next).init({
           delivery_title: 'Доставка та повернення',
           invalid_phone: 'Введіть коректний номер телефону',
           name_required: "Введіть ваше ім'я",
-          addToCart_note: 'Перед тим, як замовляти товар, перевірте його наявність'
+          addToCart_note: 'Перед тим, як замовляти товар, перевірте його наявність',
+          not_found: 'Товар не знайдено',
+        },
+        slider: {
+          loading: "Завантаження...",
+          error: "Не вдалося завантажити товари. Спробуйте пізніше."
+        },
+        auth: {
+          tab_sign_in: "Вхід",
+          tab_sign_up: "Реєстрація",
+          email: "Email",
+          password: "Пароль",
+          sign_in: "Увійти",
+          forgot_password: "Забули пароль?",
+          errors: {
+            required: "Це поле обов'язкове",
+            invalid_email: "Введіть коректний email",
+            invalid_credentials: "Невірний email чи пароль, або акаунт ще не активовано. Перевірте пошту.",
+            too_many_requests: "Забагато спроб. Спробуйте пізніше.",
+            generic: "Щось пішло не так. Спробуйте ще раз.",
+            password_mismatch: 'Паролі не збігаються',
+            agree_required: 'Потрібна ваша згода',
+          }
+        },
+        password_recovery: {
+          title: 'Відновлення пароля',
+          subtitle: 'Введіть email — надішлемо посилання для скидання паролю.',
+          submit: 'Надіслати посилання',
+          check_email: {
+            title: 'Перевірте пошту',
+            text: 'Інструкції щодо зміни пароля надіслано на вашу пошту.',
+            resend: 'Надіслати ще раз',
+            resent: 'Лист надіслано повторно',
+          },
+          new_password: {
+            title: 'Створіть новий пароль',
+            password: 'Новий пароль',
+            confirm: 'Повторіть новий пароль',
+            submit: 'Зберегти новий пароль',
+          },
+          success: {
+            title: 'Пароль змінено',
+            text: 'Тепер ви можете увійти з новим паролем.',
+            sign_in: 'Увійти',
+          },
+          invalid_link: {
+            title: 'Посилання недійсне',
+            text: 'Посилання для скидання пароля застаріло або недійсне. Запросіть нове.',
+            request_new: 'Запросити нове посилання',
+          },
+          errors: {
+            password_mismatch: 'Паролі не збігаються',
+          },
+        },
+        favorites_page: {
+          title: "Обране",
+          empty: "У вас ще немає обраних товарів",
+          to_catalog: "До каталогу"
         },
         order_confirmation: {},
         cart: {
@@ -246,6 +422,9 @@ i18n.use(initReactI18next).init({
           total: 'Разом:',
           empty: 'Кошик порожній',
           delivery_details: 'Розрахунок при оформленні',
+          empty_title: 'Ваш кошик порожній',
+          empty_text: 'Але це легко виправити',
+          empty_button: 'До каталогу',
         },
         checkout: {
           contacts: 'Контактна інформація',
@@ -257,14 +436,40 @@ i18n.use(initReactI18next).init({
           production_title: 'Виробництво',
           production_text: 'Ми не база. Ми про настрій. Про речі, в яких ти відчуваєш себе головною героїнею власного дня. За брендом стоять живі люди, а не просто магазин. Ми маємо невеличке сімейне виробництво в Миколаєві. Наш бренд тільки на старті, але ми будемо раді, якщо ти пройдеш цей шлях з нами.',
         },
-        account: {
-          info: 'Особиста інформація',
-          favorites: 'Обране',
-          orders: 'Замовлення',
-          order_status_1: 'В обробці',
-          order_status_2: 'Очікує відправлення',
-          order_status_3: 'Відправлено',
-          order_status_4: 'Доставлено',
+        profile: {
+          title: "Профіль",
+          personal_data: "Особисті дані",
+          name: "Ім'я",
+          phone: "Номер телефону",
+          instagram: "Інстаграм",
+          email: "Email",
+          marketing: "Хочу отримувати новини бренду, закриті сейли та персональні пропозиції",
+          save: "Зберегти зміни",
+          saved: "Зміни збережено",
+          logout: "Вийти",
+          errors: {
+            instagram_required: "Вкажіть Інстаграм",
+            save_failed: "Не вдалося зберегти зміни. Спробуйте ще раз."
+          }
+        },
+        orders: {
+          title: "Історія замовлень",
+          number: "Замовлення № {{id}}",
+          items_count: "Товарів: {{count}}",
+          size: "Розмір",
+          pcs: "шт",
+          subtotal: "Товари",
+          discount: "Знижка",
+          address: "Адреса доставки",
+          total: "Разом",
+          empty: "У вас ще немає замовлень",
+          status: {
+            pending: "Очікує оплати",
+            processing: "В обробці",
+            shipped: "Відправлено",
+            delivered: "Виконано",
+            canceled: "Скасовано"
+          }
         },
         sign_in: {
           title: 'Увійти в обліковий запис',
@@ -273,10 +478,41 @@ i18n.use(initReactI18next).init({
           password_reset: 'Забули пароль?',
         },
         sign_up: {
-          first_name: "Ім'я",
-          last_name: 'Прізвище',
-          confirm_password: 'Підтвердіть пароль',
-          sign_up_btn: 'Зареєструватись',
+          submit: 'Зареєструватися',
+          password_confirm: 'Повторіть пароль',
+          agree: 'Я погоджуюсь з умовами використання та політикою конфіденційності',
+          errors: {
+            password_mismatch: 'Паролі не збігаються',
+            agree_required: 'Потрібна ваша згода',
+          },
+          check_email: {
+            title: 'Перевірте пошту',
+            text: 'Ми надіслали лист для підтвердження на {{email}}. Перейдіть за посиланням у листі, щоб завершити реєстрацію.',
+            home: 'Перейти на головну',
+          },
+        },
+        activation: {
+          success: {
+            title: 'Акаунт успішно підтверджено!',
+            text: 'Тепер ви можете доповнити свій профіль додатковими даними, щоб отримувати персональні пропозиції та замовляти миттєво.',
+            complete_profile: 'Доповнити профіль',
+            skip: 'Пропустити та перейти до покупок',
+          },
+          failed: {
+            title: 'Не вдалося підтвердити акаунт!',
+            text: 'Посилання для підтвердження застаріло або є недійсним. Надішліть новий лист на пошту, щоб завершити реєстрацію.',
+            resend: 'Надіслати лист повторно',
+            home: 'Перейти на головну',
+          },
+          resend: {
+            title: 'Надіслати лист повторно',
+            text: 'Введіть email, який ви вказали при реєстрації.',
+            submit: 'Надіслати',
+          },
+          sent: {
+            title: 'Перевірте пошту',
+            text: 'Якщо акаунт з таким email існує і ще не підтверджений, ми надіслали новий лист із посиланням.',
+          },
         },
         admin: {},
         not_found: {

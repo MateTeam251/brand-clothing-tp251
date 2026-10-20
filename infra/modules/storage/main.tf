@@ -87,6 +87,40 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
   }
 }
 
+# Deleted or replaced images stay recoverable for 30 days.
+resource "aws_s3_bucket_versioning" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "media" {
+  bucket = aws_s3_bucket.media.id
+
+  rule {
+    id     = "expire-old-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.media]
+}
+
 ########################################################################
 # db-backups-wal — put-only for the app role, versioned, lifecycle to
 # Glacier at 90 days (see infrastructure-plan.md: the point is that a
@@ -346,6 +380,11 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
+# /media/*: cache up to a year (file names never change: new upload = new name).
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
 # HSTS, nosniff, X-Frame-Options, Referrer-Policy on every response.
 data "aws_cloudfront_response_headers_policy" "security_headers" {
   name = "Managed-SecurityHeadersPolicy"
@@ -374,6 +413,25 @@ locals {
       return request;
     }
   JS
+}
+
+# Media files are stored at the bucket root (products/x.webp), the URL is
+# /media/products/x.webp: drop the /media prefix before asking S3.
+locals {
+  media_strip_js = <<-JS
+    function handler(event) {
+      var request = event.request;
+      request.uri = request.uri.replace(/^\/media/, '');
+      return request;
+    }
+  JS
+}
+
+resource "aws_cloudfront_function" "media_strip_prefix" {
+  name    = "${var.project_name}-media-strip-prefix"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = replace(local.media_strip_js, "\r", "")
 }
 
 resource "aws_cloudfront_function" "spa_rewrite" {
@@ -466,14 +524,13 @@ resource "aws_cloudfront_distribution" "frontend" {
     target_origin_id       = "media-s3"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
 
     response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
 
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.media_strip_prefix.arn
     }
   }
 

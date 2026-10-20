@@ -37,6 +37,6 @@ export interface Order {
   discount_amount: string;
   total_amount: string;
   delivery_provider: DeliveryProvider;
-  delivery_data: string;
+  delivery_data: Record<string, unknown>;
   items: OrderItem[];
 }

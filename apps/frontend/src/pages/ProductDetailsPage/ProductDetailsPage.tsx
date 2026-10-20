@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductByIdQuery } from '../../shared/api/productsApi';
 import { useAddFavoriteMutation, useRemoveFavoriteByProductIdMutation } from '../../shared/api/favoritesApi';
@@ -8,13 +8,14 @@ import { addToCart } from '../../app/store/reducers/cartSlice';
 import { SIZES } from '../../shared/types/common';
 import { Loader } from '../../components/Loader/Loader';
 import { ErrorState } from '../../components/ErrorState/ErrorState';
-import { ProductSlider } from '../../components/Product/ProductSlider';
+import { ProductSlider } from '../../components/ProductSlider/ProductSlider';
 import { AvailabilityRequestForm } from '../../components/AvailabilityRequestForm/AvailabilityRequestForm';
 import plusIcon from '../../shared/assets/icons/plus.svg';
 import minusIcon from '../../shared/assets/icons/minus.svg';
 import styles from './ProductDetailsPage.module.scss';
 import { ProductGallery } from '../../components/ProductGallery';
 import { FavoriteButton } from '../../components/FavoriteButton';
+import { EmptyState } from '../../components/EmptyState';
 
 export const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,8 +27,9 @@ export const ProductDetailsPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [isAvailabilityFormOpen, setIsAvailabilityFormOpen] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const location = useLocation();
 
-  const { data: product, isLoading, error } = useGetProductByIdQuery({
+  const { data: product, isLoading, error, refetch } = useGetProductByIdQuery({
     id: Number(id),
     currency,
     lang: language,
@@ -40,8 +42,12 @@ export const ProductDetailsPage = () => {
     return <Loader />;
   }
 
+  if (error && 'status' in error && error.status === 404) {
+    return <EmptyState message={t('product.not_found')} />;
+  }
+
   if (error || !product) {
-    return <ErrorState />;
+    return <ErrorState onRetry={refetch} />;
   }
 
   const formatPrice = (price: string) =>
@@ -57,7 +63,7 @@ export const ProductDetailsPage = () => {
 
   const handleFavoriteClick = () => {
     if (!isAuthenticated) {
-      navigate('/signin');
+      navigate('/signin', { state: { from: location } });
       return;
     }
 
@@ -69,7 +75,7 @@ export const ProductDetailsPage = () => {
   };
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
+    if (!selectedSize || !product.is_available) {
       return;
     }
 
@@ -153,7 +159,7 @@ export const ProductDetailsPage = () => {
                   type="button"
                   className={styles.details__addToCart}
                   onClick={handleAddToCart}
-                  disabled={!selectedSize}
+                  disabled={!selectedSize || !product.is_available}
                 >
                   {t('product.cart_btn')}
                 </button>
@@ -165,12 +171,21 @@ export const ProductDetailsPage = () => {
                 type="button"
                 className={styles.details__checkAvailability}
                 onClick={() => setIsAvailabilityFormOpen((prev) => !prev)}
+                aria-expanded={isAvailabilityFormOpen}
               >
                 {t('product.check_availability')}
               </button>
             </div>
 
-            {isAvailabilityFormOpen && <AvailabilityRequestForm productId={product.id} />}
+            <div
+              className={`${styles.details__availability} ${
+                isAvailabilityFormOpen ? styles['details__availability--open'] : ''
+              }`}
+            >
+              <div className={styles.details__availabilityInner}>
+                <AvailabilityRequestForm productId={product.id} />
+              </div>
+            </div>
           </div>
 
           <div className={styles.details__accordion}>
@@ -197,7 +212,8 @@ export const ProductDetailsPage = () => {
         <div className={styles.details__recommended}>
           <ProductSlider
             title={t('product.slider_title')}
-            queryParams={{ currency, lang: language }}
+            queryParams={{ ordering: '?', limit: 9 }}
+            excludeProductId={product.id}
             showViewAll={false}
           />
         </div>

@@ -2,12 +2,9 @@ import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './app/store/store';
 import './app/styles/styles.scss';
-
 import { HomePage } from './pages/HomePage';
-import { AccountLayout } from './components/Layout/AccountLayout';
-import { AccountPersonalInformationPage } from './pages/AccountPersonalInformationPage';
-import { AccountOrdersPage} from './pages/AccountOrdersPage';
-import { AccountFavoritesPage } from './pages/AccountFavoritesPage';
+import { AccountPage} from './pages/AccountPage';
+import { FavoritesPage } from './pages/FavoritesPage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
@@ -22,6 +19,9 @@ import { SignUpPage } from './pages/SignUpPage';
 import { Header } from './components/Layout/Header';
 import { Footer } from './components/Layout/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { ActivationSuccessPage } from './pages/ActivationSuccessPage';
+import { ActivationFailedPage } from './pages/ActivationFailedPage';
 
 
 function App() {
@@ -45,11 +45,12 @@ function App() {
               <Route path='/resetpassword' element={<PasswordResetPage />} />
               <Route path='/signin' element={<SignInPage />} />
               <Route path='/signup' element={<SignUpPage />} />
+              <Route path='/activation/success' element={<ActivationSuccessPage />} />
+              <Route path='/activation/failed' element={<ActivationFailedPage />} />
 
-              <Route path="/account" element={<AccountLayout />}>
-                <Route index element={<AccountPersonalInformationPage />} />
-                <Route path="orders" element={<AccountOrdersPage />} />
-                <Route path="favorites" element={<AccountFavoritesPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="/favorites" element={<FavoritesPage />} />
               </Route>
 
               <Route path='*' element={<NotFoundPage />} />

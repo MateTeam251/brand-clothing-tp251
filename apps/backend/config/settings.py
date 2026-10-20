@@ -74,6 +74,9 @@ INSTALLED_APPS = [
     "carts",
     "storages",
     "delivery",
+    # Deletes a file from S3 when its row is deleted or the file is replaced.
+    # Must stay last, so it sees the file fields of every app above.
+    "django_cleanup.apps.CleanupConfig",
 ]
 
 MIDDLEWARE = [
@@ -122,8 +125,45 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Brand Clothing API",
-    "DESCRIPTION": "Online shop for Brand clothing",
+    "DESCRIPTION": """
+Online shop for Brand clothing.
+
+**Authorization (registered users).** Log in with `POST /api/auth/login/`, copy `access`
+from the response, press **Authorize** at the top of this page and paste it (without the
+`Bearer ` prefix). Endpoints marked with a lock need it; without it they return 401.
+
+**Guests (cart).** A guest is recognised by the `sessionid` cookie, which the server sets
+on the first cart request (`GET /api/cart/` or `POST /api/cart/items/`) and which lives
+14 days. Swagger runs in the same browser, so the cookie is kept between requests here.
+To act as a new guest, delete the `sessionid` cookie or use a private window. When a guest
+logs in, their cart is merged into the user's cart.
+
+**Language and currency.** Product data is translated by `?lang=en|ua` (default `ua`) and
+priced by `?currency=uah|usd` (default `uah`).
+
+**Prices** are strings with two decimals (`"1000.00"`), not numbers.
+
+**Lists** are paginated with `?limit=` and `?offset=` (12 per page by default) and return
+`{count, next, previous, results}`.
+
+**Errors.** 400 returns `{"<field>": ["<message>", ...]}`; 401/403/404 return `{"detail": "<message>"}`.
+""",
     "VERSION": "1.0.0",
+    # Separate request/response schemas: read-only fields (id, prices, ...) don't show up
+    # in request bodies, and "required" reflects what a request actually needs.
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,  # keep the Bearer token after a page reload
+        "displayRequestDuration": True,
+    },
+    "TAGS": [
+        {"name": "auth", "description": "Registration, activation, login, tokens, password reset."},
+        {"name": "profile", "description": "The logged-in user's own profile."},
+        {"name": "products", "description": "Catalog, product page, availability requests."},
+        {"name": "collections", "description": "Product collections (landing pages)."},
+        {"name": "cart", "description": "Cart of the current guest (session cookie) or user (Bearer token)."},
+        {"name": "favorites", "description": "Favorite products. Registered users only."},
+    ],
 }
 
 
@@ -139,6 +179,11 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
         "HOST": os.getenv("POSTGRES_HOST", "db"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        # Reuse the connection between requests (default 0 = new connection, DNS lookup
+        # and Postgres process per request; failed under load.
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        # Check a reused connection is alive first (e.g. after a db restart).
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 
@@ -206,6 +251,9 @@ if USE_LOCALSTACK:
     AWS_S3_CUSTOM_DOMAIN = f"localhost:4566/{AWS_STORAGE_BUCKET_NAME}"
 else:
     AWS_S3_ENDPOINT_URL = None
+    # Set on staging/prod (e.g. theart-theartist.com/media): media links go through
+    # CloudFront, unsigned and cacheable. Unset = signed S3 links as before.
+    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN") or None
 
 AWS_DEFAULT_ACL = None
 AWS_S3_FILE_OVERWRITE = False
@@ -247,6 +295,7 @@ CORS_ALLOWED_ORIGINS = env_list(
 
 # Site URL
 SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 ACTIVATION_URL_BASE = f"{SITE_URL}/api/users/activate"
 

@@ -1,0 +1,53 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.account {
+  padding: 40px 16px;
+  background-color: $dominant;
+
+  @include on-desktop {
+    padding: 72px 40px;
+  }
+
+  &__title {
+    margin: 0 0 32px;
+    text-align: center;
+    font-family: 'Bodoni', 'Cambria', serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 40px;
+
+    @include on-desktop {
+      margin-bottom: 48px;
+      text-align: left;
+    }
+  }
+
+  &__section {
+    max-width: 960px;
+    margin-bottom: 48px;
+  }
+
+  &__sectionTitle {
+    margin: 0 0 24px;
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  &__logout {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid $light-gray;
+    border-radius: 100px;
+    background: transparent;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+
+    @include on-desktop {
+      width: auto;
+      padding: 0 48px;
+    }
+  }
+}

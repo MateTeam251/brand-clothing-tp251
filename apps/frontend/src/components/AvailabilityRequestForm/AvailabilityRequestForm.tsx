@@ -67,23 +67,27 @@ export const AvailabilityRequestForm = ({ productId }: AvailabilityRequestFormPr
       ) : (
           <>
             <div className={styles.form__fields}>
-              <input
-                type="text"
-                placeholder={t('product.your_name')}
-                value={requestName}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className={nameError ? styles.form__inputError : styles.form__input}
-              />
-              {nameError && <p className={styles.form__errorText}>{t('product.name_required')}</p>}
+              <div className={styles.form__field}>
+                <input
+                  type="text"
+                  placeholder={t('product.your_name')}
+                  value={requestName}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className={`${styles.form__input} ${nameError ? styles.form__inputError : ''}`}
+                />
+                {nameError && <p className={styles.form__errorText}>{t('product.name_required')}</p>}
+              </div>
 
-              <input
-                type="tel"
-                placeholder={t('product.phone_number')}
-                value={requestPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                className={phoneError ? styles.form__inputError : styles.form__input}
-              />
-              {phoneError && <p className={styles.form__errorText}>{t('product.invalid_phone')}</p>}
+              <div className={styles.form__field}>
+                <input
+                  type="tel"
+                  placeholder={t('product.phone_number')}
+                  value={requestPhone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  className={`${styles.form__input} ${phoneError ? styles.form__inputError : ''}`}
+                />
+                {phoneError && <p className={styles.form__errorText}>{t('product.invalid_phone')}</p>}
+              </div>
             </div>
 
             <div className={styles.form__submitBlock}>

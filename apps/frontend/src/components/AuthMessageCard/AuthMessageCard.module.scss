@@ -1,0 +1,93 @@
+@use '../../app/styles/variables.scss' as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 648px;
+  margin: auto;
+  padding: 32px 24px;
+  border-radius: 24px;
+  background: #fff;
+  text-align: center;
+
+  > form {
+    width: 100%;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+
+    &--mail {
+      width: auto;
+      height: auto;
+    }
+
+    &--success {
+      background: $success;
+    }
+
+    &--error {
+      background: $error;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+
+    @media (min-width: 1024px) {
+      font-size: 40px;
+    }
+  }
+
+  &__text {
+    max-width: 520px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: $gray90;
+  }
+
+  &__link {
+    font-size: 14px;
+    color: inherit;
+    text-decoration: underline;
+  }
+
+    &__primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 100px;
+    background-color: $accent;
+    color: inherit;
+    font-size: 18px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+}

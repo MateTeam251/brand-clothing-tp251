@@ -37,7 +37,7 @@ Staging runs every day 08:00–20:00 Kyiv time. A deploy outside those hours is 
 - **Instance refresh**: if the running instance is on an older launch template version (user-data, compose, nginx or AMI changed), the workflow replaces it and waits for `/api/admin/login/` → 200. Staging outside working hours: skipped, the next boot uses the new version.
 - Applies and app deploys share a concurrency group per environment, so they never run on the same instance at once.
 - `infra/bootstrap` (state bucket, CI roles) is applied by hand only, never by CI.
-- AMI is pinned (`ami_id` in each environment's `main.tf`); bump it by PR.
+- AMI is pinned (`ami_id` in each environment's `main.tf`); bump it by PR. `ami-check.yml` checks monthly and opens an issue when a newer Amazon Linux AMI exists.
 
 ## Run naming
 

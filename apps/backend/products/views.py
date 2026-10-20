@@ -11,6 +11,10 @@ from products.models import Product, Collection
 from django.db.models import F, Case, When, DecimalField, ExpressionWrapper
 
 from products.utils import send_availability_request_notification
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+
+from core.openapi import CURRENCY_PARAM, LANG_PARAM, NOT_FOUND, VALIDATION_ERROR
 
 
 class CurrencyAwareOrderingFilter(filters.OrderingFilter):
@@ -39,6 +43,36 @@ class CurrencyAwareOrderingFilter(filters.OrderingFilter):
         ]
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Product catalog",
+        description="Paginated list of product cards. Filters can be combined; "
+                    "an unknown slug in `collection`/`type` just gives an empty list.",
+        parameters=[
+            LANG_PARAM,
+            CURRENCY_PARAM,
+            OpenApiParameter("collection", OpenApiTypes.STR,
+                             description="Collection slugs, comma-separated: `summer-2026,new-year`."),
+            OpenApiParameter("type", OpenApiTypes.STR,
+                             description="Product type slugs, comma-separated: `dress,skirt`."),
+            OpenApiParameter("is_bestseller", OpenApiTypes.STR, enum=["true"],
+                             description="`true` = bestsellers only. Any other value is ignored."),
+            OpenApiParameter("search", OpenApiTypes.STR,
+                             description="Part of the product name, case-insensitive."),
+            OpenApiParameter("ordering", OpenApiTypes.STR,
+                             enum=["price", "-price", "created_at", "-created_at"],
+                             description="Sort order. `price` sorts by the price after discount in the "
+                                         "`?currency=` currency. Default `-created_at` (newest first)."),
+        ],
+    ),
+    retrieve=extend_schema(
+        summary="Product page",
+        description="Full product data: description, all photos, size guide.",
+        parameters=[LANG_PARAM, CURRENCY_PARAM],
+        responses={200: ProductDetailSerializer, 404: NOT_FOUND},
+    ),
+)
+@extend_schema(tags=["products"])
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Basic ViewSet with ReadOnlyMode.
@@ -107,6 +141,26 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Collections",
+        description="Paginated list of collections, without their products.",
+        parameters=[
+            LANG_PARAM,
+            OpenApiParameter("ordering", OpenApiTypes.STR, enum=["name", "-name", "id", "-id"],
+                             description="Sort order. Without it the order is not guaranteed."),
+            # SearchFilter is enabled but has no search_fields, so ?search= does nothing.
+            OpenApiParameter("search", exclude=True),
+        ],
+    ),
+    retrieve=extend_schema(
+        summary="Collection page",
+        description="One collection by its `slug`, with all its products (not paginated).",
+        parameters=[LANG_PARAM, CURRENCY_PARAM],
+        responses={200: CollectionDetailSerializer, 404: NOT_FOUND},
+    ),
+)
+@extend_schema(tags=["collections"])
 class CollectionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Collection.objects.all()
     lookup_field = "slug"
@@ -124,6 +178,13 @@ class CollectionViewSet(viewsets.ReadOnlyModelViewSet):
         return Collection.objects.all()
 
 
+@extend_schema(
+    tags=["products"],
+    summary="Ask about availability",
+    description="\"Check availability\" form on a product that is out of stock. No login needed. "
+                "Saves the request for the manager (admin, Availability requests) and emails the manager.",
+    responses={201: AvailabilityRequestSerializer, 400: VALIDATION_ERROR},
+)
 class AvailabilityRequestView(generics.CreateAPIView):
     """
     POST /api/products/availability-requests/

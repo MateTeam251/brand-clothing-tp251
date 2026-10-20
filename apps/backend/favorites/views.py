@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -5,8 +7,47 @@ from rest_framework.response import Response
 
 from favorites.models import Favorite
 from favorites.serializers import FavoriteSerializer
+from core.openapi import NOT_FOUND, UNAUTHORIZED, VALIDATION_ERROR
+
+FAVORITE_ID_PARAM = OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH,
+                                     description="Favorite record id (`id`, not `product`).")
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="My favorites",
+        description="Paginated, only the logged-in user's favorites.",
+        responses={200: FavoriteSerializer(many=True), 401: UNAUTHORIZED},
+    ),
+    retrieve=extend_schema(
+        summary="One favorite",
+        parameters=[FAVORITE_ID_PARAM],
+        responses={200: FavoriteSerializer, 401: UNAUTHORIZED, 404: NOT_FOUND},
+    ),
+    create=extend_schema(
+        summary="Add to favorites",
+        description="Adding a product that is already in favorites is not an error: "
+                    "201 with the existing record, no duplicate is created.",
+        responses={201: FavoriteSerializer, 400: VALIDATION_ERROR, 401: UNAUTHORIZED},
+    ),
+    destroy=extend_schema(
+        summary="Remove from favorites by favorite id",
+        parameters=[FAVORITE_ID_PARAM],
+        responses={204: OpenApiResponse(description="Removed. Empty body."), 401: UNAUTHORIZED, 404: NOT_FOUND},
+    ),
+    remove_by_product=extend_schema(
+        summary="Remove from favorites by product id",
+        description="For the heart button on a product card, which knows only the product id.",
+        parameters=[OpenApiParameter("product_id", OpenApiTypes.INT, OpenApiParameter.PATH,
+                                     description="Product id.")],
+        responses={
+            204: OpenApiResponse(description="Removed. Empty body."),
+            401: UNAUTHORIZED,
+            404: OpenApiResponse(description="This product is not in favorites. Empty body."),
+        },
+    ),
+)
+@extend_schema(tags=["favorites"])
 class FavoriteViewSet(viewsets.ModelViewSet):
     """
     Manage the authenticated user's favorite products.

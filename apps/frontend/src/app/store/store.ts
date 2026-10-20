@@ -7,7 +7,7 @@ import { authApi } from '../../shared/api/authApi';
 import { favoritesApi } from '../../shared/api/favoritesApi';
 import authReducer from './reducers/authSlice';
 import settingsReducer from './reducers/settingsSlice';
-import cartReducer from './reducers/cartSlice';
+import cartReducer, { CART_STORAGE_KEY } from './reducers/cartSlice';
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +29,24 @@ export const store = configureStore({
       .concat(userApi.middleware)
       .concat(authApi.middleware)
       .concat(favoritesApi.middleware)
+});
+
+let previousCartItems = store.getState().cart.items;
+
+store.subscribe(() => {
+  const items = store.getState().cart.items;
+
+  if (items === previousCartItems) {
+    return;
+  }
+
+  previousCartItems = items;
+
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    // unavailable
+  }
 });
 
 export type RootState = ReturnType<typeof store.getState>;

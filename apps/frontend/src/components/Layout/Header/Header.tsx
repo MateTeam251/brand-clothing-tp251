@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Header.module.scss';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../../shared/hooks/reduxHooks';
-import { setCurrency, setLanguage } from '../../../app/store/reducers/settingsSlice';
+import { useAppSelector } from '../../../shared/hooks/reduxHooks';
 import { useTranslation } from 'react-i18next';
 import Logo from '../../../shared/assets/images/logotype.png';
-
 import BurgerIcon from '../../../shared/assets/icons/burger.svg';
 import FavouriteIcon from '../../../shared/assets/icons/favourite.svg';
 import CartIcon from '../../../shared/assets/icons/cart.svg';
@@ -14,13 +12,19 @@ import SearchIcon from '../../../shared/assets/icons/search.svg';
 import closeIcon from '../../../shared/assets/icons/close.svg';
 import cartActive from '../../../shared/assets/icons/cart-active.svg';
 import { useDebouncedSearchParam } from '../../../shared/hooks/useDebouncedSearchParam';
+import { LanguageSwitcher } from '../../LanguageSwitcher';
+import { CurrencySwitcher } from '../../CurrencySwitcher';
+import { useGetFavoritesQuery } from '../../../shared/api/favoritesApi';
+import FavouriteActiveIcon from '../../../shared/assets/icons/favourite-hovered.svg';
+import UserActiveIcon from '../../../shared/assets/icons/user-active.svg';
 
 export const Header: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { currency, language } = useAppSelector((state) => state.settings);
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const { t, i18n } = useTranslation();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { data: favoritesData } = useGetFavoritesQuery({ limit: 1 }, { skip: !isAuthenticated });
+  const favoritesCount = isAuthenticated ? (favoritesData?.count ?? 0) : 0;
+  const { t } = useTranslation();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -58,11 +62,18 @@ export const Header: React.FC = () => {
     navigate(value ? `/catalog?search=${encodeURIComponent(value)}` : '/catalog');
   };
   const isCartPage = location.pathname === '/cart';
+  const isFavoritesPage = location.pathname === '/favorites';
+  const isAccountPage = location.pathname.startsWith('/account');
 
-  const handleLanguageChange = (nextLanguage: 'ua' | 'en') => {
-    dispatch(setLanguage(nextLanguage));
-    void i18n.changeLanguage(nextLanguage);
-  };
+  const favoritesBadge = favoritesCount > 0 && (
+    <span
+      className={`${styles['header__favorites-count']} ${
+        isFavoritesPage ? styles['header__favorites-count--active'] : ''
+      }`}
+  >
+    {favoritesCount}
+    </span>
+  );
 
   useEffect(() => {
     if(isMenuOpen) {
@@ -76,26 +87,8 @@ export const Header: React.FC = () => {
     <>
       <header className={styles.header}>
         <div className={`${styles['header__top']} container`}>
-          <div className={styles['header__currency']}>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('uah'))} aria-pressed={currency === 'uah'}>UAH</button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('usd'))} aria-pressed={currency === 'usd'}>USD</button>
-          </div>
-          <div className={styles['header__lang']}>
-            <button className={styles['header__select-button']} 
-            onClick={() => handleLanguageChange('ua')}
-              aria-pressed={language === 'ua'}
-            >
-                UA
-            </button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} 
-            onClick={() => handleLanguageChange('en')}
-              aria-pressed={language === 'en'}
-            >
-                EN
-            </button>
-          </div>
+          <CurrencySwitcher />
+          <LanguageSwitcher />
         </div>
         <hr className={styles['header__divider']} />
         <div className={`${styles['header__main']} ${isSearchOpen ? styles['header__main--search'] : ''} container`}>
@@ -119,9 +112,10 @@ export const Header: React.FC = () => {
                 </button>
               </li>
               <li>
-                <Link className={styles['header__icon-button']} to="/account/favorites" aria-label="Favorites">
-                  <img className={styles['header__icon']} src={FavouriteIcon} alt="" aria-hidden="true" />
-                </Link>
+                <Link className={styles['header__icon-button']} to="/favorites" aria-label="Favorites">
+                <img className={styles['header__icon']} src={isFavoritesPage ? FavouriteActiveIcon : FavouriteIcon} alt="" aria-hidden="true" />
+                {favoritesBadge}
+              </Link>
               </li>
             </ul>
           </nav>
@@ -158,16 +152,8 @@ export const Header: React.FC = () => {
           )}
           <nav className={`${styles['header__nav']} ${styles['header__nav--account']}`} aria-label="Account navigation">
             <div className={styles['header__actions'] }>
-              <div className={styles['header__currency']}>
-                <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('uah'))} aria-pressed={currency === 'uah'}>UAH</button>
-                <div className={styles['header__select-divider']}></div>
-                <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('usd'))} aria-pressed={currency === 'usd'}>USD</button>
-              </div>
-              <div className={styles['header__lang']}>
-                <button className={styles['header__select-button']} onClick={() => handleLanguageChange('ua')} aria-pressed={language === 'ua'}>UA</button>
-                <div className={styles['header__select-divider']}></div>
-                <button className={styles['header__select-button']} onClick={() => handleLanguageChange('en')} aria-pressed={language === 'en'}>EN</button>
-              </div>
+              <CurrencySwitcher />
+              <LanguageSwitcher />
             </div>
             <ul className={styles['header__list']}>
               <li>
@@ -182,10 +168,16 @@ export const Header: React.FC = () => {
               <li>
                 <Link
                   className={`${styles['header__icon-button']} ${styles['header__favourite-button']}`}
-                  to="/account/favorites"
+                  to="/favorites"
                   aria-label="Favorites"
                 >
-                  <img className={styles['header__icon']} src={FavouriteIcon} alt="" aria-hidden="true" />
+                  <img
+                    className={styles['header__icon']}
+                    src={isFavoritesPage ? FavouriteActiveIcon : FavouriteIcon}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  {favoritesBadge}
                 </Link>
               </li>
               <li>
@@ -202,7 +194,7 @@ export const Header: React.FC = () => {
               </li>
               <li>
                 <Link className={styles['header__icon-button']} to="/account" aria-label="Account">
-                  <img className={styles['header__icon']} src={UserIcon} alt="User" />
+                  <img className={styles['header__icon']} src={isAccountPage ? UserActiveIcon : UserIcon} alt="User" />
                 </Link>
               </li>
             </ul>
@@ -212,16 +204,8 @@ export const Header: React.FC = () => {
 
       <aside id="menu" className={`${styles.menu} ${isMenuOpen ? styles['menu--open'] : ''}`}>
         <div className={styles.menu__topRow}>
-          <div className={styles['header__currency']}>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('uah'))} aria-pressed={currency === 'uah'}>UAH</button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} onClick={() => dispatch(setCurrency('usd'))} aria-pressed={currency === 'usd'}>USD</button>
-          </div>
-          <div className={styles['header__lang']}>
-            <button className={styles['header__select-button']} onClick={() => handleLanguageChange('ua')} aria-pressed={language === 'ua'}>UA</button>
-            <div className={styles['header__select-divider']}></div>
-            <button className={styles['header__select-button']} onClick={() => handleLanguageChange('en')} aria-pressed={language === 'en'}>EN</button>
-          </div>
+          <CurrencySwitcher />
+          <LanguageSwitcher />
         </div>
 
         <hr className={styles.menu__divider} />
@@ -229,7 +213,7 @@ export const Header: React.FC = () => {
         <div className={styles.menu__header}>
           <Link 
             className={styles.menu__actionIcon} 
-            to="/account/favorites" 
+            to="/favorites" 
             onClick={() => setIsMenuOpen(false)}
             aria-label="Favorites"
           >
@@ -252,7 +236,7 @@ export const Header: React.FC = () => {
         <div className={styles.menu__content}>
           <ul className={styles.menu__list}>
             <li><Link className={styles.menu__link} to="/catalog" onClick={() => setIsMenuOpen(false)}>{t('catalog', { defaultValue: 'Каталог' })}</Link></li>
-            <li><Link className={styles.menu__link} to="/catalog?filter=bestsellers" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
+            <li><Link className={styles.menu__link} to="/catalog?is_bestseller=true" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
             <li><Link className={styles.menu__link} to="/collections" onClick={() => setIsMenuOpen(false)}>{t('collections', { defaultValue: 'Колекції' })}</Link></li>
             <li><Link className={styles.menu__link} to="/about" onClick={() => setIsMenuOpen(false)}>{t('about', { defaultValue: 'Про нас' })}</Link></li>
           </ul>
