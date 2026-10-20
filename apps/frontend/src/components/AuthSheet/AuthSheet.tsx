@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
-import type { MouseEvent, ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
+import type { MouseEvent, PointerEvent, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSwipeToClose } from '../../shared/hooks/useSwipeToClose';
+import closeIcon from '../../shared/assets/icons/close.svg';
 import styles from './AuthSheet.module.scss';
 
 interface AuthSheetProps {
@@ -11,6 +13,8 @@ interface AuthSheetProps {
 export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
   const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } =
     useSwipeToClose(onClose);
+  const { t } = useTranslation();
+  const pressStartedOnOverlay = useRef(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -24,15 +28,25 @@ export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const handleOverlayPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    pressStartedOnOverlay.current = event.target === event.currentTarget;
+  };
+
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
-    // закриваємо лише по кліку саме на фон, а не на вміст шторки
-    if (event.target === event.currentTarget) {
+    const startedOnOverlay = pressStartedOnOverlay.current;
+    pressStartedOnOverlay.current = false;
+
+    if (startedOnOverlay && event.target === event.currentTarget) {
       onClose();
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={handleOverlayClick}>
+    <div
+      className={styles.overlay}
+      onPointerDown={handleOverlayPointerDown}
+      onClick={handleOverlayClick}
+    >
       <div
         className={styles.sheet}
         style={
@@ -49,6 +63,14 @@ export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
         >
           <span className={styles.sheet__handleBar} />
         </div>
+        <button
+          type="button"
+          className={styles.sheet__close}
+          onClick={onClose}
+          aria-label={t('close')}
+        >
+          <img src={closeIcon} alt="" />
+        </button>
         {children}
       </div>
     </div>

@@ -1,6 +1,8 @@
-import { useEffect, useId } from 'react';
-import type { MouseEvent, ReactNode } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import type { MouseEvent, PointerEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import closeIcon from '../../shared/assets/icons/close.svg';
 import styles from './AuthMessageCard.module.scss';
 
 type Variant = 'mail' | 'success' | 'error';
@@ -58,7 +60,9 @@ export const AuthMessageCard = ({
   linkLabel,
   onClose,
 }: AuthMessageCardProps) => {
+  const { t } = useTranslation();
   const titleId = useId();
+  const pressStartedOnOverlay = useRef(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -85,20 +89,41 @@ export const AuthMessageCard = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const handleOverlayPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    pressStartedOnOverlay.current = event.target === event.currentTarget;
+  };
+
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (onClose && event.target === event.currentTarget) {
+    const startedOnOverlay = pressStartedOnOverlay.current;
+    pressStartedOnOverlay.current = false;
+
+    if (onClose && startedOnOverlay && event.target === event.currentTarget) {
       onClose();
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={handleOverlayClick}>
+    <div
+      className={styles.overlay}
+      onPointerDown={handleOverlayPointerDown}
+      onClick={handleOverlayClick}
+    >
       <section
         className={styles.card}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
       >
+        {onClose && (
+          <button
+            type="button"
+            className={styles.card__close}
+            onClick={onClose}
+            aria-label={t('close')}
+          >
+            <img src={closeIcon} alt="" />
+          </button>
+        )}
         {variant && (
           <div className={`${styles.card__icon} ${styles[`card__icon--${variant}`]}`}>
             <Icon variant={variant} />
