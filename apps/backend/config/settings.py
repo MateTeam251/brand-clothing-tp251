@@ -349,6 +349,9 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour=1),  # well before the 04:00 report
     },
 }
+# Staging: no weekly analyst report (CELERY_WEEKLY_REPORT=False in SSM).
+if not env_bool("CELERY_WEEKLY_REPORT", "True"):
+    CELERY_BEAT_SCHEDULE.pop("weekly-cart-report")
 
 # CART ANALYTICS
 # A cart is abandoned when it has items, no checkout, and was not changed for this long.

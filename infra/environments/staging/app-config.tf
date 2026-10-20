@@ -44,8 +44,11 @@ locals {
     # Public name nginx passes to Django as X-Forwarded-Host.
     SITE_HOST = local.site_host
 
-    # No COMPOSE_PROFILES = "celery" here: redis + celery don't fit next to
-    # web + db in 1 GB. Run the jobs by hand (see docker-compose.prod.yml).
+    # Celery on staging too (abandoned carts, Nova Poshta sync), with a lower
+    # memory cap (~140 MB used with --pool=solo). No weekly analyst report here.
+    COMPOSE_PROFILES     = "celery"
+    CELERY_MEM_LIMIT     = "192m"
+    CELERY_WEEKLY_REPORT = "False"
 
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "staging"
