@@ -73,7 +73,9 @@ class RegisterView(generics.CreateAPIView):
     description="Opened from the activation email, not called by the frontend. `uidb64` and "
                 "`token` are the two last parts of the link. Redirects to "
                 "`{FRONTEND_URL}/activation/success` or `{FRONTEND_URL}/activation/failed`. "
-                "The link is one-time: opening it again redirects to `/activation/failed`.",
+                "The link is valid for 1 hour; an expired link redirects to `/activation/failed` "
+                "(request a new one via `resend-activation/`). Opening the link for an already "
+                "active account redirects to `/activation/success`.",
     responses={302: OpenApiResponse(description="Redirect to the frontend success or failed page.")},
 )
 class ActivateAccountView(APIView):
@@ -104,10 +106,12 @@ class ActivateAccountView(APIView):
             invalid, expired, or does not match a user.
 
         Notes:
-            - One-time link: the activation token includes
-              ``is_active`` in its hash, so it becomes invalid once the
-              user is activated, and opening it again redirects to the
-              failed page.
+            - An already active user is redirected to the success page
+              before the token is checked: the activation token includes
+              ``is_active`` in its hash, so it is no longer valid after
+              activation.
+            - The link expires after ``settings.ACTIVATION_TOKEN_TIMEOUT``
+              (1 hour); an expired link redirects to the failed page.
             - Decoding/lookup failures (bad uid, non-existent user) are
               caught and treated the same as an invalid token, to avoid
               leaking which failure occurred.
@@ -118,11 +122,14 @@ class ActivateAccountView(APIView):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
 
-        if user is not None and account_activation_token.check_token(user, token):
-            if not user.is_active:
-                user.is_active = True
-                user.save(update_fields=["is_active"])
+        if user is not None and user.is_active:
             return redirect(f"{settings.FRONTEND_URL}/activation/success")
+
+        if user is not None and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+            return redirect(f"{settings.FRONTEND_URL}/activation/success")
+
 
         return redirect(f"{settings.FRONTEND_URL}/activation/failed")
 
@@ -298,8 +305,9 @@ class LogoutView(APIView):
 @extend_schema(
     tags=["auth"],
     summary="Request a password reset email",
-    description="Sends a reset link if an account with this email exists. The response is the same "
-                "whether it exists or not, so it can't be used to check which emails are registered.",
+    description="Sends a reset link if an account with this email exists. The link is valid for 1 hour. "
+                "The response is the same whether the account exists or not, so it can't be used to check "
+                "which emails are registered.",
     request=PasswordResetRequestSerializer,
     responses={
         200: OpenApiResponse(DETAIL_RESPONSE, description="Always, for any valid email."),
@@ -345,7 +353,8 @@ class PasswordResetRequestView(APIView):
     tags=["auth"],
     summary="Set a new password (link from the email)",
     description="`uidb64` and `token` are the two last parts of the reset link from the email. "
-                "A link works once: after the password is changed it becomes invalid.",
+                "The link is valid for 1 hour and works once: after the password is changed it becomes "
+                "invalid. An expired link gives 400 with the error under `token`; request a new one.",
     request=inline_serializer(
         "NewPassword",
         {"new_password": PasswordResetConfirmSerializer().fields["new_password"]},

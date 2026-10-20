@@ -200,6 +200,10 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
+ACTIVATION_TOKEN_TIMEOUT = 60 * 60 # 1 hour
+
+PASSWORD_RESET_TIMEOUT = 60 * 60 # 1 hour
+
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
