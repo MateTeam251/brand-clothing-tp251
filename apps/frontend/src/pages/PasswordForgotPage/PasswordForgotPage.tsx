@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { SyntheticEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useRequestPasswordResetMutation } from '../../shared/api/authApi';
 import { AuthField } from '../../components/AuthField';
@@ -13,8 +14,10 @@ const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 export const PasswordForgotPage = () => {
   const { t } = useTranslation();
   const [requestReset, { isLoading }] = useRequestPasswordResetMutation();
+  const location = useLocation();
+  const initialEmail = (location.state as { email?: string } | null)?.email ?? '';
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [fieldError, setFieldError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -114,6 +117,7 @@ export const PasswordForgotPage = () => {
           onChange={setEmail}
           error={fieldError}
           autoComplete="email"
+          disabled={Boolean(initialEmail)}
         />
       </AuthModalForm>
     </AuthMessageCard>

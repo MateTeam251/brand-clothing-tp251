@@ -17,6 +17,21 @@
     }
   }
 
+  &__changePassword {
+    width: 100%;
+    min-height: 48px;
+    border: 1px solid $color-inactive;
+    border-radius: 100px;
+    background: none;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+
+    @include on-desktop {
+      width: calc(50% - 8px);
+    }
+  }
+
   &__checkbox {
     display: flex;
     align-items: flex-start;
