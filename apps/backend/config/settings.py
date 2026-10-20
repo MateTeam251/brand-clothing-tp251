@@ -126,7 +126,18 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 12,
+    "DEFAULT_THROTTLE_RATES": {
+        "change_password": "5/minute",
+        "activation": "30/hour",
+        "password_reset": "10/hour",
+        "resend_activation": "10/hour",
+        "availability_request": "20/hour",
+    },
+    # Prod chain: browser -> CloudFront -> nginx -> Django. Throttles take the client IP
+    # from the 2nd-to-last X-Forwarded-For entry (added by CloudFront), so it can't be spoofed.
+    "NUM_PROXIES": 2,
 }
+
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Brand Clothing API",
@@ -357,6 +368,14 @@ CART_ABANDON_AFTER_HOURS = int(os.getenv("CART_ABANDON_AFTER_HOURS", "24"))
 # Private bucket for analyst reports. Intentionally no default: never fall back to the media bucket.
 ANALYTICS_REPORTS_BUCKET = os.getenv("ANALYTICS_REPORTS_BUCKET")
 ANALYTICS_REPORTS_PREFIX = os.getenv("ANALYTICS_REPORTS_PREFIX", "reports/carts")
+
+# CACHE
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
+    }
+}
 
 # DELIVERY PROVIDERS
 
