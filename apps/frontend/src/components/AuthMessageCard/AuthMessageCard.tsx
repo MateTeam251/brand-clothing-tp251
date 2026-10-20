@@ -1,5 +1,5 @@
-import { useEffect, useId } from 'react';
-import type { MouseEvent, ReactNode } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import type { MouseEvent, PointerEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './AuthMessageCard.module.scss';
 
@@ -59,6 +59,7 @@ export const AuthMessageCard = ({
   onClose,
 }: AuthMessageCardProps) => {
   const titleId = useId();
+  const pressStartedOnOverlay = useRef(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -85,14 +86,25 @@ export const AuthMessageCard = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const handleOverlayPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    pressStartedOnOverlay.current = event.target === event.currentTarget;
+  };
+
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (onClose && event.target === event.currentTarget) {
+    const startedOnOverlay = pressStartedOnOverlay.current;
+    pressStartedOnOverlay.current = false;
+
+    if (onClose && startedOnOverlay && event.target === event.currentTarget) {
       onClose();
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={handleOverlayClick}>
+    <div
+      className={styles.overlay}
+      onPointerDown={handleOverlayPointerDown}
+      onClick={handleOverlayClick}
+    >
       <section
         className={styles.card}
         role="dialog"

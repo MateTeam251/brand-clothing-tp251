@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import type { MouseEvent, ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
+import type { MouseEvent, PointerEvent, ReactNode } from 'react';
 import { useSwipeToClose } from '../../shared/hooks/useSwipeToClose';
 import styles from './AuthSheet.module.scss';
 
@@ -11,6 +11,7 @@ interface AuthSheetProps {
 export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
   const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } =
     useSwipeToClose(onClose);
+  const pressStartedOnOverlay = useRef(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -24,15 +25,25 @@ export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  const handleOverlayPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    pressStartedOnOverlay.current = event.target === event.currentTarget;
+  };
+
   const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
-    // закриваємо лише по кліку саме на фон, а не на вміст шторки
-    if (event.target === event.currentTarget) {
+    const startedOnOverlay = pressStartedOnOverlay.current;
+    pressStartedOnOverlay.current = false;
+
+    if (startedOnOverlay && event.target === event.currentTarget) {
       onClose();
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={handleOverlayClick}>
+    <div
+      className={styles.overlay}
+      onPointerDown={handleOverlayPointerDown}
+      onClick={handleOverlayClick}
+    >
       <div
         className={styles.sheet}
         style={
