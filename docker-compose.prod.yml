@@ -101,16 +101,13 @@ services:
     mem_limit: 128m
     logging: *logging
 
-  # Background jobs (carts.tasks: hourly abandoned-cart marking, weekly
-  # report to the reports bucket). Only started where COMPOSE_PROFILES
-  # contains "celery" (SSM app-config): prod yes, staging no (1 GB RAM).
-  # Run the same jobs by hand on staging:
-  #   docker compose run --rm web python manage.py cart_report --mark-abandoned
+  # Celery broker (db 0) and Django cache (db 1: DRF throttle counters).
+  # Runs everywhere, a few MB. Celery itself only where COMPOSE_PROFILES
+  # contains "celery" (SSM app-config).
   redis:
     image: public.ecr.aws/docker/library/redis:7.4-alpine
     container_name: brand_clothing_redis
     restart: always
-    profiles: ["celery"]
     # Broker only: no persistence (a lost queued task is re-sent by beat on
     # its next run), fixed memory cap, refuse writes instead of evicting tasks.
     command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "48mb", "--maxmemory-policy", "noeviction"]
@@ -130,7 +127,10 @@ services:
     container_name: brand_clothing_celery
     restart: always
     profiles: ["celery"]
-    command: ["celery", "-A", "config", "worker", "-B", "--concurrency=1", "--loglevel=INFO", "-s", "/tmp/celerybeat-schedule"]
+    # --pool=solo: tasks run in the main process, no extra worker process
+    # (~70 MB less). Tasks run one at a time anyway. Solo can't enforce
+    # time_limit, so long tasks stop themselves (delivery.tasks MAX_SYNC_SECONDS).
+    command: ["celery", "-A", "config", "worker", "-B", "--pool=solo", "--loglevel=INFO", "-s", "/tmp/celerybeat-schedule"]
     env_file:
       - .env
     environment:

@@ -10,6 +10,10 @@ from delivery.models import DeliveryCity, DeliveryBranch
 
 logger = logging.getLogger(__name__)
 
+# Celery runs with --pool=solo, which can't enforce time_limit: the sync
+# stops itself instead. A normal run is a few minutes.
+MAX_SYNC_SECONDS = 30 * 60
+
 
 @shared_task
 def sync_provider_branches(provider_code: str):
@@ -26,6 +30,11 @@ def sync_provider_branches(provider_code: str):
     synced = 0
 
     for page in provider.iter_all_warehouses():
+        # Checked between pages; nothing is deleted on a stopped run (deletes only after success).
+        if time.monotonic() - started > MAX_SYNC_SECONDS:
+            raise RuntimeError(
+                f"Provider '{provider_code}' sync stopped after {MAX_SYNC_SECONDS}s ({synced} branches saved)."
+            )
         if page:
             _save_page(provider_code, page)
             synced += len(page)
