@@ -190,6 +190,7 @@ i18n.use(initReactI18next).init({
           save: "Save changes",
           saved: "Changes saved",
           logout: "Log out",
+          change_password: 'Change password',
           errors: {
             instagram_required: "Please enter your Instagram",
             save_failed: "Could not save changes. Please try again."
@@ -447,6 +448,7 @@ i18n.use(initReactI18next).init({
           save: "Зберегти зміни",
           saved: "Зміни збережено",
           logout: "Вийти",
+          change_password: 'Змінити пароль',
           errors: {
             instagram_required: "Вкажіть Інстаграм",
             save_failed: "Не вдалося зберегти зміни. Спробуйте ще раз."

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { SyntheticEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUpdateMeMutation } from '../../shared/api/userApi';
 import type { UserProfile } from '../../shared/types/User';
@@ -13,6 +14,7 @@ interface ProfileFormProps {
 export const ProfileForm = ({ profile }: ProfileFormProps) => {
   const { t } = useTranslation();
   const [updateMe, { isLoading }] = useUpdateMeMutation();
+  const navigate = useNavigate();
 
   const [name, setName] = useState(profile.name ?? '');
   const [phone, setPhone] = useState(profile.phone_number ?? '');
@@ -26,6 +28,10 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
     setter(value);
     setIsSaved(false);
     setFormError(null);
+  };
+
+  const handleChangePassword = () => {
+    navigate('/forgotpassword', { state: { email: profile.email } });
   };
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
@@ -87,6 +93,10 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
           disabled
         />
       </div>
+
+      <button type="button" className={styles.form__changePassword} onClick={handleChangePassword}>
+        {t('profile.change_password')}
+      </button>
 
       <label className={styles.form__checkbox}>
         <input
