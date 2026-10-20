@@ -153,8 +153,8 @@ i18n.use(initReactI18next).init({
           },
         },
         favorites_page: {
-          title: "Favorites",
-          empty: "You don't have any favorite products yet",
+          empty_title: "Favorites",
+          empty_text: "You don't have any favorite products yet",
           to_catalog: "Go to catalog"
         },
         order_confirmation: {},
@@ -410,8 +410,8 @@ i18n.use(initReactI18next).init({
           },
         },
         favorites_page: {
-          title: "Обране",
-          empty: "У вас ще немає обраних товарів",
+          empty_title: "Обране",
+          empty_text: "У вас ще немає обраних товарів",
           to_catalog: "До каталогу"
         },
         order_confirmation: {},
