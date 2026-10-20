@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { MouseEvent, PointerEvent, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSwipeToClose } from '../../shared/hooks/useSwipeToClose';
+import closeIcon from '../../shared/assets/icons/close.svg';
 import styles from './AuthSheet.module.scss';
 
 interface AuthSheetProps {
@@ -11,6 +13,7 @@ interface AuthSheetProps {
 export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
   const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } =
     useSwipeToClose(onClose);
+  const { t } = useTranslation();
   const pressStartedOnOverlay = useRef(false);
 
   useEffect(() => {
@@ -60,6 +63,14 @@ export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
         >
           <span className={styles.sheet__handleBar} />
         </div>
+        <button
+          type="button"
+          className={styles.sheet__close}
+          onClick={onClose}
+          aria-label={t('close')}
+        >
+          <img src={closeIcon} alt="" />
+        </button>
         {children}
       </div>
     </div>
