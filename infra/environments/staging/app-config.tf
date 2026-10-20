@@ -5,7 +5,7 @@
 locals {
   app_config = {
     DEBUG                   = "False"
-    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host}"
+    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host},${local.site_host}"
     SITE_URL                = "https://${local.site_host}"
     CSRF_TRUSTED_ORIGINS    = "https://${local.site_host}"
     CORS_ALLOWED_ORIGINS    = "https://${local.site_host}"
@@ -39,6 +39,9 @@ locals {
 
     # Name CloudFront uses for the backend (dns.tf); certbot gets its certificate.
     ORIGIN_HOST = local.origin_host
+
+    # Public name nginx passes to Django as X-Forwarded-Host.
+    SITE_HOST = local.site_host
 
     # No COMPOSE_PROFILES = "celery" here: redis + celery don't fit next to
     # web + db in 1 GB. Run the jobs by hand (see docker-compose.prod.yml).

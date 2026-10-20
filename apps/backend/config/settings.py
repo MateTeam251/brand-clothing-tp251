@@ -47,6 +47,11 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 # nginx terminates HTTPS in prod and forwards the original scheme
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# nginx sets X-Forwarded-Host to the public site name (it overwrites any value
+# from the client). Links Django builds then use it instead of the origin name.
+# The name must be in ALLOWED_HOSTS.
+USE_X_FORWARDED_HOST = True
+
 # Cookies only over HTTPS on servers (local dev runs on plain http).
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
