@@ -1,7 +1,7 @@
 from rest_framework import (viewsets,
                             filters, generics)
 from rest_framework.permissions import AllowAny
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import ScopedRateThrottle
 
 from products.serializers import (ProductListSerializer,
                                   ProductDetailSerializer,
@@ -14,7 +14,7 @@ from products.utils import send_availability_request_notification
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 
-from core.openapi import CURRENCY_PARAM, LANG_PARAM, NOT_FOUND, VALIDATION_ERROR
+from core.openapi import CURRENCY_PARAM, LANG_PARAM, NOT_FOUND, THROTTLED, VALIDATION_ERROR
 
 
 class CurrencyAwareOrderingFilter(filters.OrderingFilter):
@@ -183,7 +183,7 @@ class CollectionViewSet(viewsets.ReadOnlyModelViewSet):
     summary="Ask about availability",
     description="\"Check availability\" form on a product that is out of stock. No login needed. "
                 "Saves the request for the manager (admin, Availability requests) and emails the manager.",
-    responses={201: AvailabilityRequestSerializer, 400: VALIDATION_ERROR},
+    responses={201: AvailabilityRequestSerializer, 400: VALIDATION_ERROR, 429: THROTTLED},
 )
 class AvailabilityRequestView(generics.CreateAPIView):
     """
@@ -193,7 +193,8 @@ class AvailabilityRequestView(generics.CreateAPIView):
     """
     serializer_class = AvailabilityRequestSerializer
     permission_classes = [AllowAny]
-    throttle_classes = [AnonRateThrottle]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "availability_request"
 
     def perform_create(self, serializer):
         instance = serializer.save()
