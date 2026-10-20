@@ -4,6 +4,7 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils import timezone
 from django.utils.encoding import force_str
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -145,17 +146,34 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "age", "phone_number",
+        fields = ["id", "email", "name", "birth_date", "phone_number",
                   "marketing_opt_in", "instagram",]
         read_only_fields = ['id', 'email']
         extra_kwargs = {
             "email": {"help_text": "Cannot be changed here; a sent value is ignored."},
             "name": {"help_text": "Display name. Can be empty."},
-            "age": {"help_text": "Age in years, 0 or more. Can be null."},
+            "birth_date": {"help_text": "Date of birth, `YYYY-MM-DD`. Cannot be in the future. Can be null."},
             "phone_number": {"help_text": "Phone number, up to 20 characters. Format is not checked. Can be empty."},
             "marketing_opt_in": {"help_text": "Consent to marketing emails."},
             "instagram": {"help_text": "Instagram handle or profile link. Cannot be empty."},
         }
+
+    def validate_birth_date(self, value):
+        """
+        Reject a birth date in the future.
+
+        Args:
+            value (date | None): The submitted date of birth.
+
+        Raises:
+            serializers.ValidationError: If ``value`` is later than today.
+
+        Returns:
+            date | None: The validated date, unchanged.
+        """
+        if value and value > timezone.localdate():
+            raise serializers.ValidationError("Birth date can't be in the future.")
+        return value
 
     def update(self, instance, validated_data):
 
