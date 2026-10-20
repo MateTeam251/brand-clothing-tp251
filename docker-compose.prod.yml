@@ -67,6 +67,7 @@ services:
       - "443:443"
     environment:
       ORIGIN_HOST: ${ORIGIN_HOST:-}
+      SITE_HOST: ${SITE_HOST:-}
     volumes:
       - ./nginx/default.conf:/etc/nginx/templates/default.conf.template:ro
       - /data/letsencrypt:/etc/letsencrypt:ro
