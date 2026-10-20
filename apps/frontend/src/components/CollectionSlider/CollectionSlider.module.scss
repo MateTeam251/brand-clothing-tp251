@@ -98,9 +98,15 @@
   &__image {
     display: block;
     width: 100%;
-    aspect-ratio: 1 / 0.62;
+    aspect-ratio: 7 / 5;
     object-fit: cover;
-    object-position: 0 -150px;
+    object-position: center;
+  }
+
+  &__imagePlaceholder {
+    width: 100%;
+    aspect-ratio: 7 / 5;
+    background: $color-inactive;
   }
 
   &__title {
