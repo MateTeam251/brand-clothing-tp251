@@ -1,6 +1,5 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
@@ -13,15 +12,17 @@ from rest_framework import serializers
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.throttling import ScopedRateThrottle
 
-from core.openapi import DETAIL_RESPONSE, UNAUTHORIZED, VALIDATION_ERROR
+from core.openapi import DETAIL_RESPONSE, THROTTLED, UNAUTHORIZED, VALIDATION_ERROR
 from users.serializers import (RegisterSerializer,
                                UserProfileSerializer,
                                PasswordResetConfirmSerializer,
                                PasswordResetRequestSerializer,
                                CustomTokenObtainPairSerializer,
                                LogoutSerializer,
-                               ResendActivationSerializer)
+                               ResendActivationSerializer,
+                               UpdatePasswordInProfileSerializer)
 from users.tokens import account_activation_token
 from users.utils import send_activation_email
 
@@ -73,10 +74,15 @@ class RegisterView(generics.CreateAPIView):
     description="Opened from the activation email, not called by the frontend. `uidb64` and "
                 "`token` are the two last parts of the link. Redirects to "
                 "`{FRONTEND_URL}/activation/success` or `{FRONTEND_URL}/activation/failed`. "
-                "The link is valid for 1 hour; an expired link redirects to `/activation/failed` "
+                "The link is valid for 24 hours; an expired link redirects to `/activation/failed` "
                 "(request a new one via `resend-activation/`). Opening the link for an already "
                 "active account redirects to `/activation/success`.",
-    responses={302: OpenApiResponse(description="Redirect to the frontend success or failed page.")},
+    responses={
+        302: OpenApiResponse(description="Redirect to the frontend success or failed page."),
+        429: OpenApiResponse(
+            DETAIL_RESPONSE,
+            description="Too many requests from this IP (30/hour). JSON instead of a redirect."),
+    },
 )
 class ActivateAccountView(APIView):
     """
@@ -88,6 +94,9 @@ class ActivateAccountView(APIView):
     meant to be opened directly in a browser from the email link.
     """
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "activation"
+
 
     def get(self, request, uidb64, token):
         """
@@ -111,7 +120,7 @@ class ActivateAccountView(APIView):
               ``is_active`` in its hash, so it is no longer valid after
               activation.
             - The link expires after ``settings.ACTIVATION_TOKEN_TIMEOUT``
-              (1 hour); an expired link redirects to the failed page.
+              (24 hours); an expired link redirects to the failed page.
             - Decoding/lookup failures (bad uid, non-existent user) are
               caught and treated the same as an invalid token, to avoid
               leaking which failure occurred.
@@ -142,7 +151,7 @@ class ActivateAccountView(APIView):
                 "(locally the email is in MailHog, http://localhost:8025). "
                 "Always **200** for any valid email, whether or not it was sent",
     request=ResendActivationSerializer,
-    responses={200: DETAIL_RESPONSE, 400: VALIDATION_ERROR},
+    responses={200: DETAIL_RESPONSE, 400: VALIDATION_ERROR, 429: THROTTLED},
 )
 class ResendActivationView(APIView):
     """
@@ -152,7 +161,8 @@ class ResendActivationView(APIView):
     inactive account exists.
     """
     permission_classes = [AllowAny]
-    throttle_classes = [AnonRateThrottle]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "resend_activation"
 
     def post(self, request):
         """
@@ -312,18 +322,20 @@ class LogoutView(APIView):
     responses={
         200: OpenApiResponse(DETAIL_RESPONSE, description="Always, for any valid email."),
         400: VALIDATION_ERROR,
+        429: THROTTLED,
     },
 )
 class PasswordResetRequestView(APIView):
     """
     Request a password reset link for a given email address.
 
-    Throttled per anonymous client (``AnonRateThrottle``) to reduce the
-    risk of abuse (e.g. spamming a user's inbox with reset emails or
-    probing for registered emails).
+    Throttled per client (``ScopedRateThrottle``, scope
+    ``password_reset``) to reduce the risk of abuse (e.g. spamming a
+    user's inbox with reset emails or probing for registered emails).
     """
     permission_classes = [AllowAny]
-    throttle_classes = [AnonRateThrottle]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password_reset"
 
     def post(self, request):
         """
@@ -396,6 +408,36 @@ class PasswordResetConfirmView(APIView):
             "new_password": request.data.get("new_password"),
         }
         serializer = PasswordResetConfirmSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+
+@extend_schema(
+    tags=["auth"],
+    summary="Change password from the profile",
+    description="For a logged-in user. Requires the current password. "
+                "Already issued access/refresh tokens keep working.",
+    request=UpdatePasswordInProfileSerializer,
+    responses={
+        200: OpenApiResponse(DETAIL_RESPONSE, description="Password changed."),
+        400: VALIDATION_ERROR,
+        401: UNAUTHORIZED,
+        429: THROTTLED,
+    },
+)
+class UpdatePasswordInProfileView(APIView):
+    """
+        Change the authenticated user's password after checking the current one.
+        """
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "change_password"
+
+    def post(self, request):
+        serializer = UpdatePasswordInProfileSerializer(
+            data=request.data,
+            context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)

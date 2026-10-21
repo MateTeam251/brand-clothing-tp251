@@ -316,3 +316,51 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class ResendActivationSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+
+class UpdatePasswordInProfileSerializer(serializers.Serializer):
+    old_password = serializers.CharField(
+        write_only=True,
+        help_text="Must be equal to old password")
+
+    new_password = serializers.CharField(
+        write_only=True, min_length=8,
+        help_text="New password: at least 8 characters, not a common password, not entirely numeric.")
+
+    new_password_confirm = serializers.CharField(
+        write_only=True, help_text="Must be equal to `new_password`.")
+
+    def validate_old_password(self, value):
+        """
+        Check that ``value`` matches the user's current password.
+        """
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Wrong password.")
+        return value
+
+    def validate_new_password(self, value):
+        """
+        Run the new password through Django's password validators.
+        ...
+        """
+        user = self.context["request"].user
+        try:
+            validate_password(value, user=user)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.messages)
+        return value
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["new_password_confirm"]:
+            raise serializers.ValidationError(
+                {"new_password_confirm": "Passwords do not match"}
+            )
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user
+
+
