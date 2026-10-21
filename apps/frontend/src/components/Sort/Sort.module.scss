@@ -20,14 +20,18 @@
 }
 
 .sort {
+  position: relative;
   width: 100%;
-  height: 55%;
+  height: 65%;
   max-width: 480px;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 32px 16px;
   background: #fff;
   border-radius: 24px 24px 0 0;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   transition: transform 0.2s ease-out;
 
   @include on-desktop {
@@ -37,15 +41,22 @@
   }
 
   &__wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
+    @include flex(column, 32px);
+
+    @include on-desktop {
+      gap: 40px;
+    }
   }
 
   &__title {
     font-weight: 500;
     font-size: 32px;
     line-height: 40px;
+    margin: 0 auto;
+
+    @include on-desktop {
+      margin: 0;
+    }
   }
 
   &__label {
@@ -118,15 +129,25 @@
     cursor: pointer;
   }
 
-   &__handle {
-    width: 40px;
-    height: 4px;
-    background: $color-inactive;
-    border-radius: 999px;
-    margin: 0 auto 16px;
+  &__handle {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translate(-50%);
+    display: flex;
+    justify-content: center;
+    padding: 12px 0;
+    touch-action: none;
 
     @include on-desktop {
       display: none;
     }
+  }
+
+  &__handleBar {
+    width: 40px;
+    height: 4px;
+    background: $color-inactive;
+    border-radius: 999px;
   }
 }

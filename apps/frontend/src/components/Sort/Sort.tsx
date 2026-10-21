@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './Sort.module.scss';
 import { useSwipeToClose } from '../../shared/hooks/useSwipeToClose';
@@ -29,6 +29,15 @@ export const Sort = ({ currentValue, onApply, onClose }: SortProps) => {
   const [draftValue, setDraftValue] = useState<SortValue>(currentValue);
   const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeToClose(onClose);
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   const handleApply = () => {
     onApply(draftValue);
     onClose();
@@ -39,13 +48,21 @@ export const Sort = ({ currentValue, onApply, onClose }: SortProps) => {
       <div
         className={styles.sort}
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ transform: `translateY(${dragOffset}px)` }}
+        style={
+          dragOffset > 0
+            ? { transform: `translateY(${dragOffset}px)`, transition: 'none' }
+            : undefined
+        }
       >
         <div className={styles.sort__wrapper}>
-          <div className={styles.sort__handle} />
+          <div
+            className={styles.sort__handle}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <span className={styles.sort__handleBar} />
+          </div>
           <h2 className={styles.sort__title}>{t('catalog_page.sort_title')}</h2>
 
           <div className={styles.sort__block}>
