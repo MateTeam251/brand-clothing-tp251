@@ -74,7 +74,7 @@ class RegisterView(generics.CreateAPIView):
     description="Opened from the activation email, not called by the frontend. `uidb64` and "
                 "`token` are the two last parts of the link. Redirects to "
                 "`{FRONTEND_URL}/activation/success` or `{FRONTEND_URL}/activation/failed`. "
-                "The link is valid for 1 hour; an expired link redirects to `/activation/failed` "
+                "The link is valid for 24 hours; an expired link redirects to `/activation/failed` "
                 "(request a new one via `resend-activation/`). Opening the link for an already "
                 "active account redirects to `/activation/success`.",
     responses={
@@ -120,7 +120,7 @@ class ActivateAccountView(APIView):
               ``is_active`` in its hash, so it is no longer valid after
               activation.
             - The link expires after ``settings.ACTIVATION_TOKEN_TIMEOUT``
-              (1 hour); an expired link redirects to the failed page.
+              (24 hours); an expired link redirects to the failed page.
             - Decoding/lookup failures (bad uid, non-existent user) are
               caught and treated the same as an invalid token, to avoid
               leaking which failure occurred.
