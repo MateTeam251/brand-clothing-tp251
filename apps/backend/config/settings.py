@@ -357,7 +357,8 @@ CELERY_BEAT_SCHEDULE = {
     },
     "sync-delivery-branches-daily": {
         "task": "delivery.tasks.sync_all_providers",
-        "schedule": crontab(minute=0, hour=1),  # well before the 04:00 report
+        # UTC. Staging runs 08:00-20:00 Kyiv only, so it sets DELIVERY_SYNC_HOUR=7.
+        "schedule": crontab(minute=0, hour=int(os.getenv("DELIVERY_SYNC_HOUR", "1"))),
     },
 }
 # Staging: no weekly analyst report (CELERY_WEEKLY_REPORT=False in SSM).

@@ -49,6 +49,8 @@ locals {
     COMPOSE_PROFILES     = "celery"
     CELERY_MEM_LIMIT     = "192m"
     CELERY_WEEKLY_REPORT = "False"
+    # Nova Poshta sync at 07:00 UTC (prod 01:00): staging is off at night.
+    DELIVERY_SYNC_HOUR = "7"
 
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "staging"
