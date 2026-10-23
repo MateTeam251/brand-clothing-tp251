@@ -19,7 +19,17 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['User'],
     }),
+    changePassword: builder.mutation<
+      { detail: string },
+      { old_password: string; new_password: string; new_password_confirm: string }
+    >({
+      query: (body) => ({
+        url: 'auth/me/password/',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useGetMeQuery, useUpdateMeMutation } = userApi;
+export const { useGetMeQuery, useUpdateMeMutation, useChangePasswordMutation } = userApi;

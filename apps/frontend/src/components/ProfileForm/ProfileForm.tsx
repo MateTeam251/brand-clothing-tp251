@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import type { SyntheticEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUpdateMeMutation } from '../../shared/api/userApi';
 import type { UserProfile } from '../../shared/types/User';
 import { AuthField } from '../AuthField';
+import { ChangePasswordModal } from '../ChangePasswordModal';
 import styles from './ProfileForm.module.scss';
 
 interface ProfileFormProps {
@@ -14,7 +14,7 @@ interface ProfileFormProps {
 export const ProfileForm = ({ profile }: ProfileFormProps) => {
   const { t } = useTranslation();
   const [updateMe, { isLoading }] = useUpdateMeMutation();
-  const navigate = useNavigate();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const [name, setName] = useState(profile.name ?? '');
   const [phone, setPhone] = useState(profile.phone_number ?? '');
@@ -31,7 +31,7 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
   };
 
   const handleChangePassword = () => {
-    navigate('/forgotpassword', { state: { email: profile.email } });
+    setIsPasswordModalOpen(true);
   };
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
@@ -61,69 +61,75 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
   };
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <div className={styles.form__fields}>
-        <AuthField
-          name="profile-name"
-          label={t('profile.name')}
-          value={name}
-          onChange={handleChange(setName)}
-          autoComplete="name"
-        />
-        <AuthField
-          name="profile-phone"
-          type="tel"
-          label={t('profile.phone')}
-          value={phone}
-          onChange={handleChange(setPhone)}
-          autoComplete="tel"
-        />
-        <AuthField
-          name="profile-instagram"
-          label={t('profile.instagram')}
-          value={instagram}
-          onChange={handleChange(setInstagram)}
-          error={instagramError}
-        />
-        <AuthField
-          name="profile-email"
-          type="email"
-          label={t('profile.email')}
-          value={profile.email}
-          disabled
-        />
-      </div>
+    <>
+      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <div className={styles.form__fields}>
+          <AuthField
+            name="profile-name"
+            label={t('profile.name')}
+            value={name}
+            onChange={handleChange(setName)}
+            autoComplete="name"
+          />
+          <AuthField
+            name="profile-phone"
+            type="tel"
+            label={t('profile.phone')}
+            value={phone}
+            onChange={handleChange(setPhone)}
+            autoComplete="tel"
+          />
+          <AuthField
+            name="profile-instagram"
+            label={t('profile.instagram')}
+            value={instagram}
+            onChange={handleChange(setInstagram)}
+            error={instagramError}
+          />
+          <AuthField
+            name="profile-email"
+            type="email"
+            label={t('profile.email')}
+            value={profile.email}
+            disabled
+          />
+        </div>
 
-      <button type="button" className={styles.form__changePassword} onClick={handleChangePassword}>
-        {t('profile.change_password')}
-      </button>
+        <button type="button" className={styles.form__changePassword} onClick={handleChangePassword}>
+          {t('profile.change_password')}
+        </button>
 
-      <label className={styles.form__checkbox}>
-        <input
-          type="checkbox"
-          checked={marketingOptIn}
-          onChange={(event) => {
-            setMarketingOptIn(event.target.checked);
-            setIsSaved(false);
-          }}
-        />
-        <span>{t('profile.marketing')}</span>
-      </label>
+        <label className={styles.form__checkbox}>
+          <input
+            type="checkbox"
+            checked={marketingOptIn}
+            onChange={(event) => {
+              setMarketingOptIn(event.target.checked);
+              setIsSaved(false);
+            }}
+          />
+          <span>{t('profile.marketing')}</span>
+        </label>
 
-      {formError && (
-        <p className={styles.form__error} role="alert">
-          {formError}
-        </p>
-      )}
-      {isSaved && (
-        <p className={styles.form__success} role="status">
-          {t('profile.saved')}
-        </p>
-      )}
+        {formError && (
+          <p className={styles.form__error} role="alert">
+            {formError}
+          </p>
+        )}
+        {isSaved && (
+          <p className={styles.form__success} role="status">
+            {t('profile.saved')}
+          </p>
+        )}
 
-      <button type="submit" className={styles.form__submit} disabled={isLoading}>
-        {t('profile.save')}
-      </button>
-    </form>
+        <button type="submit" className={styles.form__submit} disabled={isLoading}>
+          {t('profile.save')}
+        </button>
+      </form>
+
+    {isPasswordModalOpen && (
+      <ChangePasswordModal onClose={() => setIsPasswordModalOpen(false)} />
+    )}
+    </>
   );
 };
