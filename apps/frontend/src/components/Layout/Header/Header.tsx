@@ -17,10 +17,11 @@ import { CurrencySwitcher } from '../../CurrencySwitcher';
 import { useGetFavoritesQuery } from '../../../shared/api/favoritesApi';
 import FavouriteActiveIcon from '../../../shared/assets/icons/favourite-hovered.svg';
 import UserActiveIcon from '../../../shared/assets/icons/user-active.svg';
+import { useCart } from '../../../shared/hooks/useCart';
 
 export const Header: React.FC = () => {
-  const cartItems = useAppSelector((state) => state.cart.items);
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const { data: cart } = useCart();
+  const cartCount = cart?.items_count ?? 0;
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { data: favoritesData } = useGetFavoritesQuery({ limit: 1 }, { skip: !isAuthenticated });
   const favoritesCount = isAuthenticated ? (favoritesData?.count ?? 0) : 0;

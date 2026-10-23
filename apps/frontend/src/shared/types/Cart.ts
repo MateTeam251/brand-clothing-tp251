@@ -1,16 +1,33 @@
 import type { Size } from './common';
+import type { ProductImage } from './products';
 
-export interface CartElement {
-  id: number; 
-  product: number;    
-  size: string | Size; 
-  quantity: number;    
+export interface CartLine {
+  id: number;
+  product: number;
+  name: string;
+  main_image: ProductImage | null;
+  size: string | Size;
+  quantity: number;
+  price: string;
+  total_price: string;
+  is_available: boolean;
 }
 
-export type Cart = {
+export interface Cart {
   id: number;
   status: string;
-  items: CartElement[];
+  items: CartLine[];
   items_count: number;
   items_total: string;
+}
+
+export interface AddCartItemBody {
+  product: number;
+  size: string | Size;
+  quantity?: number;
+}
+
+export interface CartQueryArg {
+  currency: string;
+  isAuthenticated: boolean;
 }

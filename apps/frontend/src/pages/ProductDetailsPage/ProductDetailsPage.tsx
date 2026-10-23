@@ -3,8 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductByIdQuery } from '../../shared/api/productsApi';
 import { useAddFavoriteMutation, useRemoveFavoriteByProductIdMutation } from '../../shared/api/favoritesApi';
-import { useAppSelector, useAppDispatch } from '../../shared/hooks/reduxHooks';
-import { addToCart } from '../../app/store/reducers/cartSlice';
+import { useAppSelector } from '../../shared/hooks/reduxHooks';
+import { useAddCartItemMutation } from '../../shared/api/cartApi';
 import { SIZES } from '../../shared/types/common';
 import { Loader } from '../../components/Loader/Loader';
 import { ErrorState } from '../../components/ErrorState/ErrorState';
@@ -21,7 +21,7 @@ export const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const [addCartItem, { isLoading: isAddingToCart }] = useAddCartItemMutation();
   const { currency, language } = useAppSelector((state) => state.settings);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [selectedSize, setSelectedSize] = useState('');
@@ -74,17 +74,20 @@ export const ProductDetailsPage = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    if (!selectedSize || !product.is_available) {
+  const handleAddToCart = async () => {
+    if (!selectedSize || !product.is_available || isAddingToCart) {
       return;
     }
 
-    dispatch(addToCart({
-      id: Date.now(),
-      product: product.id,
-      size: selectedSize,
-      quantity: 1,
-    }));
+    try {
+      await addCartItem({
+        product: product.id,
+        size: selectedSize,
+        quantity: 1,
+      }).unwrap();
+    } catch {
+      // TODO: show an error message when adding to cart fails
+    }
   };
 
   return (
