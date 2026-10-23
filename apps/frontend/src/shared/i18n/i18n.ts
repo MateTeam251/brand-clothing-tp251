@@ -170,9 +170,13 @@ i18n.use(initReactI18next).init({
           empty_button: 'Go to catalog',
         },
         checkout: {
-          contacts: 'Contact information',
           comment: 'Order comment',
           title: 'Checkout',
+          contact_title: 'Contact information',
+          first_name: 'First name',
+          last_name: 'Last name',
+          phone: 'Phone number',
+          email: 'Email',
         },
         about_page: {
           title: 'About Us',
@@ -432,9 +436,13 @@ i18n.use(initReactI18next).init({
           empty_button: 'До каталогу',
         },
         checkout: {
-          contacts: 'Контактна інформація',
           comment: 'Коментар до замовлення',
           title: 'Оформлення замовлення',
+          contact_title: 'Контактна інформація',
+          first_name: "Ім'я",
+          last_name: 'Прізвище',
+          phone: 'Номер телефону',
+          email: 'Email',
         },
         about_page: {
           title: 'Про нас',
