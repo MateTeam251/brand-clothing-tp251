@@ -243,6 +243,20 @@ i18n.use(initReactI18next).init({
             resend_success: 'The email has been sent again',
           },
         },
+        change_password: {
+          title: 'Change password',
+          subtitle: 'Enter your current password and choose a new one.',
+          old_password: 'Current password',
+          new_password: 'New password',
+          new_password_confirm: 'Repeat new password',
+          submit: 'Change password',
+          success_title: 'Password changed',
+          success_text: 'Your password has been updated successfully.',
+          done: 'Done',
+          errors: {
+            too_short: 'Password must be at least 8 characters',
+          },
+        },
         activation: {
           success: {
             title: 'Account successfully verified!',
@@ -507,6 +521,20 @@ i18n.use(initReactI18next).init({
             resend: 'Не отримали лист? Надіслати ще раз',
             resend_wait: 'Надіслати ще раз через {{seconds}} с',
             resend_success: 'Лист надіслано повторно',
+          },
+        },
+        change_password: {
+          title: 'Зміна пароля',
+          subtitle: 'Введіть поточний пароль і придумайте новий.',
+          old_password: 'Поточний пароль',
+          new_password: 'Новий пароль',
+          new_password_confirm: 'Повторіть новий пароль',
+          submit: 'Змінити пароль',
+          success_title: 'Пароль змінено',
+          success_text: 'Ваш пароль успішно оновлено.',
+          done: 'Готово',
+          errors: {
+            too_short: 'Пароль має містити щонайменше 8 символів',
           },
         },
         activation: {
