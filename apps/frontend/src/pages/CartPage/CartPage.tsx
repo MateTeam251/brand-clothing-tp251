@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { useCart } from '../../shared/hooks/useCart';
 import {
@@ -15,6 +15,7 @@ import cartIcon from '../../shared/assets/icons/cart.svg';
 
 export const CartPage = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { currency } = useAppSelector((state) => state.settings);
 
   const { data: cart, isLoading, isError, refetch } = useCart();
@@ -113,7 +114,11 @@ export const CartPage = () => {
           </div>
 
           <div className={styles['cart__buttons']}>
-            <button className={styles['cart__checkout-btn']}>
+            <button
+              type="button"
+              className={styles['cart__checkout-btn']}
+              onClick={() => navigate('/checkout')}
+            >
               {t('checkout_btn')}
             </button>
 
