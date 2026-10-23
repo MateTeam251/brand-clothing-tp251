@@ -28,31 +28,6 @@ export const productsApi = createApi({
       }),
       providesTags: ['Products'],
     }),
-        getProductsByIds: builder.query<ProductDetails[], { ids: number[] } & ProductQueryParams>({
-      async queryFn({ ids, ...params }, _api, _extraOptions, fetchWithBQ) {
-        const results = await Promise.all(
-          ids.map((id) => fetchWithBQ({ url: `products/${id}/`, params })),
-        );
-
-        const products: ProductDetails[] = [];
-
-        for (const result of results) {
-          if (result.error) {
-          
-            if (result.error.status === 404) {
-              continue;
-            }
-
-            return { error: result.error };
-          }
-
-          products.push(result.data as ProductDetails);
-        }
-
-        return { data: products };
-      },
-      providesTags: ['Products'],
-    }),
     submitAvailabilityRequest: builder.mutation<AvailabilityRequestBody, AvailabilityRequestBody>({
       query: (body) => ({
         url: 'products/availability-requests/',
@@ -66,6 +41,5 @@ export const productsApi = createApi({
 export const {
   useGetProductsQuery,
   useGetProductByIdQuery,
-  useGetProductsByIdsQuery,
   useSubmitAvailabilityRequestMutation
 } = productsApi;

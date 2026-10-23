@@ -1,0 +1,23 @@
+@use '../../app/styles/mixins.scss' as *;
+
+.checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px;
+
+  @include on-desktop {
+    padding: 40px;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: 'Bodoni', serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 40px;
+  }
+}

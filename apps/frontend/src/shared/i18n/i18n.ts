@@ -172,6 +172,7 @@ i18n.use(initReactI18next).init({
         checkout: {
           contacts: 'Contact information',
           comment: 'Order comment',
+          title: 'Checkout',
         },
         about_page: {
           title: 'About Us',
@@ -433,6 +434,7 @@ i18n.use(initReactI18next).init({
         checkout: {
           contacts: 'Контактна інформація',
           comment: 'Коментар до замовлення',
+          title: 'Оформлення замовлення',
         },
         about_page: {
           title: 'Про нас',
