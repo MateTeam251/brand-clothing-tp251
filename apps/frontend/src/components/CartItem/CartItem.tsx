@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
-import type { ProductListItem } from '../../shared/types/products';
 import type { Size } from '../../shared/types/common';
 import styles from './CartItem.module.scss';
 import { useTranslation } from 'react-i18next';
@@ -8,14 +7,14 @@ import { useState } from 'react';
 
 import arrowBottom from '../../shared/assets/icons/arrow-bottom.svg';
 import classNames from 'classnames';
-import type { CartElement } from '../../shared/types/Cart';
+import type { CartLine } from '../../shared/types/Cart';
 import minusIcon from '../../shared/assets/icons/minus.svg';
 import plusIcon from '../../shared/assets/icons/plus.svg';
 
 const ALL_SIZES: Size[] = ['2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
 type CartItemProps = {
-  item: CartElement & Partial<ProductListItem>;
+  item: CartLine;
   onIncrement: () => void;
   onDecrement: () => void;
   onRemove: () => void;
@@ -26,8 +25,6 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
   const { currency } = useAppSelector((state) => state.settings);
   const { t } = useTranslation();
   const [isDropdownOpened, setIsDropdownOpened] = useState(false);
-
-  const rawPrice = Number(item.discounted_price ?? item.price ?? 0);
 
   const formatPrice = (price: number) =>
   new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
@@ -124,7 +121,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
           </div>
 
           <span className={styles.card__price}>
-            {formatPrice(rawPrice * item.quantity)}
+            {formatPrice(Number(item.total_price))}
           </span>
         </div>
       </div>
