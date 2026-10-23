@@ -15,7 +15,7 @@
 
   &__wrapper {
     position: relative;
-    background-image: url('./home_bg-phone.png');
+    background-image: url('../../shared/assets/images/home_bg-phone.png');
     min-height: 504px;
     background-repeat: no-repeat;
     background-size: cover;
@@ -29,7 +29,7 @@
     align-items: center;
 
     @include on-desktop {
-      background-image: url('./home_bg-desktop.png');
+      background-image: url('../../shared/assets/images/home_bg-desktop.png');
       margin-inline: -40px;
     }
   }
