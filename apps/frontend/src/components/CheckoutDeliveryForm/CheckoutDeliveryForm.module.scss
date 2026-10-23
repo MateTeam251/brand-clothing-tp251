@@ -1,0 +1,30 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.delivery {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  &__carrier {
+    margin: 0;
+    font-size: 14px;
+    color: $secondary;
+  }
+
+  &__fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+
+    @include on-desktop {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}

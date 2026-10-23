@@ -1,0 +1,79 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 12px;
+    align-items: center;
+
+    &--unavailable {
+      opacity: 0.6;
+    }
+  }
+
+  &__image,
+  &__imagePlaceholder {
+    width: 64px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    background: $light-gray;
+  }
+
+  &__info {
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 14px;
+    color: $dominant;
+  }
+
+  &__meta {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: $secondary;
+  }
+
+  &__price {
+    margin: 0;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  &__warning {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: $error;
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid $color-inactive;
+    font-size: 16px;
+    font-weight: 500;
+  }
+}

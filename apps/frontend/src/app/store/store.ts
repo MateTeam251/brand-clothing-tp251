@@ -6,6 +6,7 @@ import { userApi } from '../../shared/api/userApi';
 import { authApi } from '../../shared/api/authApi';
 import { favoritesApi } from '../../shared/api/favoritesApi';
 import { cartApi } from '../../shared/api/cartApi';
+import { deliveryApi } from '../../shared/api/deliveryApi';
 import authReducer from './reducers/authSlice';
 import settingsReducer from './reducers/settingsSlice';
 
@@ -18,6 +19,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [favoritesApi.reducerPath]: favoritesApi.reducer,
     [cartApi.reducerPath]: cartApi.reducer,
+    [deliveryApi.reducerPath]: deliveryApi.reducer,
     auth: authReducer,
     settings: settingsReducer,
   },
@@ -30,6 +32,7 @@ export const store = configureStore({
       .concat(authApi.middleware)
       .concat(favoritesApi.middleware)
       .concat(cartApi.middleware)
+      .concat(deliveryApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;
