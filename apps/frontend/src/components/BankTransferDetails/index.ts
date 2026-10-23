@@ -1,0 +1,1 @@
+export { BankTransferDetails } from './BankTransferDetails';

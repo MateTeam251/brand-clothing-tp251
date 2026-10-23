@@ -16,6 +16,12 @@ export const ordersApi = createApi({
     getOrderById: builder.query<Order, number>({
       query: (id) => `orders/${id}/`,
     }),
+    retryPayment: builder.mutation<CheckoutResponse, number>({
+      query: (orderId) => ({
+        url: `orders/${orderId}/retry-payment/`,
+        method: 'POST',
+      }),
+    }),
     checkout: builder.mutation<CheckoutResponse, CheckoutRequest>({
       query: (body) => ({
         url: 'orders/checkout/',
@@ -26,5 +32,9 @@ export const ordersApi = createApi({
   }),
 });
 
-export const { useGetOrdersQuery, useGetOrderByIdQuery, useCheckoutMutation } =
-  ordersApi;
+export const {
+  useGetOrdersQuery,
+  useGetOrderByIdQuery,
+  useCheckoutMutation,
+  useRetryPaymentMutation,
+} = ordersApi;

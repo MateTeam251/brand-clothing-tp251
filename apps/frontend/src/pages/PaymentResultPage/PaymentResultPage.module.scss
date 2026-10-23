@@ -1,0 +1,152 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.result {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 64px;
+
+  @include on-desktop {
+    padding: 64px 32px 96px;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 648px;
+    padding: 24px 16px;
+    border-radius: 24px;
+    background: #fff;
+    text-align: center;
+
+    @include on-desktop {
+      padding: 48px;
+      border-radius: 32px;
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: $dominant;
+
+    &--success {
+      background: #a6e87a;
+    }
+
+    &--failed {
+      background: #e0706a;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: $dominant;
+
+    @include on-desktop {
+      font-size: 36px;
+    }
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 12px;
+    color: $secondary;
+
+    @include on-desktop {
+      font-size: 16px;
+    }
+  }
+
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0 0 16px;
+    border-bottom: 1px solid $color-inactive;
+    list-style: none;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 12px;
+    text-align: left;
+
+    @include on-desktop {
+      font-size: 14px;
+    }
+
+    &--total {
+      font-size: 14px;
+
+      @include on-desktop {
+        font-size: 18px;
+      }
+    }
+  }
+
+  &__price {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 14px;
+    color: $error;
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 999px;
+    background: $accent;
+    color: $dominant;
+    font: inherit;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    @include on-desktop {
+      height: 56px;
+    }
+  }
+
+  &__link {
+    font-size: 12px;
+    color: $dominant;
+    text-decoration: underline;
+
+    @include on-desktop {
+      font-size: 14px;
+    }
+  }
+}
