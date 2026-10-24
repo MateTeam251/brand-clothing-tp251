@@ -7,20 +7,26 @@
 
   &__title {
     margin: 0;
-    font-family: 'Bodoni', serif;
-    font-weight: 400;
-    font-size: 24px;
-    line-height: 32px;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 28px;
   }
 
   &__fields {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 
     @include on-desktop {
-      grid-template-columns: repeat(2, 1fr);
       gap: 16px;
+    }
+
+    input {
+      @include on-desktop {
+        min-height: 56px;
+        padding: 0 16px;
+        font-size: 16px;
+      }
     }
   }
 }

@@ -7,7 +7,7 @@
 
   &__summary {
     font-size: 14px;
-    color: $dominant;
+    color: #000;
     text-align: center;
     text-decoration: underline;
     cursor: pointer;
@@ -21,7 +21,7 @@
   &__hint {
     margin: 16px 0 0;
     font-size: 12px;
-    color: $secondary;
+    color: $gray90;
     text-align: center;
   }
 
@@ -40,7 +40,7 @@
 
   &__label {
     font-size: 12px;
-    color: $secondary;
+    color: $gray90;
   }
 
   &__value {
@@ -50,7 +50,7 @@
     gap: 12px;
     margin: 0;
     font-size: 14px;
-    color: $dominant;
+    color: #000;
     overflow-wrap: anywhere;
   }
 
@@ -61,7 +61,7 @@
     background: none;
     font: inherit;
     font-size: 12px;
-    color: $dominant;
+    color: #000;
     text-decoration: underline;
     cursor: pointer;
   }

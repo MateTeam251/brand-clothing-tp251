@@ -227,8 +227,8 @@ i18n.use(initReactI18next).init({
           password_reset: 'Forgot password?',
         },
         checkout_delivery: {
-          title: 'Delivery',
-          carrier: 'Nova Poshta',
+          title: 'Delivery address',
+          method: 'Delivery method: Nova Poshta',
           city: 'City',
           city_placeholder: 'Start typing the city name',
           city_hint: 'Enter at least 2 letters',
@@ -240,7 +240,8 @@ i18n.use(initReactI18next).init({
           load_error: 'Failed to load. Please try again',
         },
         checkout_summary: {
-          title: 'Your order',
+          title: 'Order',
+          size_inline: 'size',
           size: 'Size',
           quantity: 'Qty',
           total: 'Total',
@@ -255,6 +256,7 @@ i18n.use(initReactI18next).init({
           select_branch: 'Select a branch from the list',
           submit: 'Proceed to payment',
           submitting: 'Please wait…',
+          continue_shopping: 'Continue shopping',
           submit_error: 'Could not place the order. Please try again',
         },
         payment_result: {
@@ -567,8 +569,8 @@ i18n.use(initReactI18next).init({
           password_reset: 'Забули пароль?',
         },
         checkout_delivery: {
-          title: 'Доставка',
-          carrier: 'Нова пошта',
+          title: 'Адреса доставки',
+          method: 'Спосіб доставки: Нова пошта',
           city: 'Місто',
           city_placeholder: 'Почніть вводити назву міста',
           city_hint: 'Введіть мінімум 2 літери',
@@ -580,7 +582,8 @@ i18n.use(initReactI18next).init({
           load_error: 'Не вдалося завантажити. Спробуйте ще раз',
         },
         checkout_summary: {
-          title: 'Ваше замовлення',
+          title: 'Замовлення',
+          size_inline: 'розмір',
           size: 'Розмір',
           quantity: 'Кількість',
           total: 'Разом',
@@ -595,6 +598,7 @@ i18n.use(initReactI18next).init({
           select_branch: 'Оберіть відділення зі списку',
           submit: 'Перейти до оплати',
           submitting: 'Зачекайте…',
+          continue_shopping: 'Продовжити покупки',
           submit_error: 'Не вдалося оформити замовлення. Спробуйте ще раз',
         },
         payment_result: {

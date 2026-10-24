@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { useCart } from '../../shared/hooks/useCart';
@@ -165,30 +165,44 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     <section className={styles.checkout}>
       <h1 className={styles.checkout__title}>{t('checkout.title')}</h1>
 
-      <CheckoutContactForm
-        values={contact}
-        errors={contactErrors}
-        onChange={handleContactChange}
-      />
+      <div className={styles.checkout__layout}>
+        <div className={styles.checkout__contact}>
+          <CheckoutContactForm
+            values={contact}
+            errors={contactErrors}
+            onChange={handleContactChange}
+          />
+        </div>
 
-      <CheckoutDeliveryForm
-        value={delivery}
-        errors={deliveryErrors}
-        onChange={handleDeliveryChange}
-      />
+        <div className={styles.checkout__delivery}>
+          <CheckoutDeliveryForm
+            value={delivery}
+            errors={deliveryErrors}
+            onChange={handleDeliveryChange}
+          />
+        </div>
 
-      <CheckoutSummary cart={cart} currency={currency} />
+        <div className={styles.checkout__order}>
+          <CheckoutSummary cart={cart} currency={currency} />
 
-      {submitError && <p className={styles.checkout__error}>{submitError}</p>}
+          <div className={styles.checkout__actions}>
+            {submitError && <p className={styles.checkout__error}>{submitError}</p>}
 
-      <button
-        type="button"
-        className={styles.checkout__submit}
-        disabled={isBusy || hasUnavailable}
-        onClick={() => void handleSubmit()}
-      >
-        {isBusy ? t('checkout_form.submitting') : t('checkout_form.submit')}
-      </button>
+            <button
+              type="button"
+              className={styles.checkout__submit}
+              disabled={isBusy || hasUnavailable}
+              onClick={() => void handleSubmit()}
+            >
+              {isBusy ? t('checkout_form.submitting') : t('checkout_form.submit')}
+            </button>
+
+            <Link to="/catalog" className={styles.checkout__continue}>
+              {t('checkout_form.continue_shopping')}
+            </Link>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };

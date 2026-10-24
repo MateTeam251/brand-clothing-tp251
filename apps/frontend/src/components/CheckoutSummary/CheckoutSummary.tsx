@@ -8,12 +8,14 @@ interface CheckoutSummaryProps {
 }
 
 export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const currencyCode = currency.toUpperCase();
 
   const formatPrice = (value: string | number) =>
-    new Intl.NumberFormat(i18n.language, {
+    new Intl.NumberFormat(currencyCode === 'UAH' ? 'uk-UA' : 'en-US', {
       style: 'currency',
-      currency: currency.toUpperCase(),
+      currency: currencyCode,
+      currencyDisplay: 'narrowSymbol',
       maximumFractionDigits: 2,
     }).format(Number(value));
 
@@ -31,37 +33,28 @@ export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
               item.is_available ? '' : styles['summary__item--unavailable']
             }`}
           >
-            {item.main_image ? (
-              <img
-                className={styles.summary__image}
-                src={item.main_image.image}
-                alt={item.name}
-              />
-            ) : (
-              <div className={styles.summary__imagePlaceholder} />
-            )}
+            <span>
+              {item.name}, {t('checkout_summary.size_inline')} {item.size}
+              {item.quantity > 1 && ` × ${item.quantity}`}
+            </span>
+            <span className={styles.summary__price}>
+              {formatPrice(item.total_price)}
+            </span>
 
-            <div className={styles.summary__info}>
-              <p className={styles.summary__name}>{item.name}</p>
-              <p className={styles.summary__meta}>
-                {t('checkout_summary.size')}: {item.size} ·{' '}
-                {t('checkout_summary.quantity')}: {item.quantity}
+            {!item.is_available && (
+              <p className={styles.summary__warning}>
+                {t('checkout_summary.unavailable')}
               </p>
-              {!item.is_available && (
-                <p className={styles.summary__warning}>
-                  {t('checkout_summary.unavailable')}
-                </p>
-              )}
-            </div>
-
-            <p className={styles.summary__price}>{formatPrice(item.total_price)}</p>
+            )}
           </li>
         ))}
       </ul>
 
       <div className={styles.summary__total}>
         <span>{t('checkout_summary.total')}</span>
-        <span>{formatPrice(cart.items_total)}</span>
+        <span className={styles.summary__totalPrice}>
+          {formatPrice(cart.items_total)}
+        </span>
       </div>
 
       {hasUnavailable && (

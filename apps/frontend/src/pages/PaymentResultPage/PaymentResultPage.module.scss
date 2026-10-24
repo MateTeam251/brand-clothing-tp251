@@ -35,14 +35,14 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    color: $dominant;
+    color: #000;
 
     &--success {
-      background: #a6e87a;
+      background: $success;
     }
 
     &--failed {
-      background: #e0706a;
+      background: $error;
     }
   }
 
@@ -50,7 +50,7 @@
     margin: 0;
     font-size: 20px;
     font-weight: 500;
-    color: $dominant;
+    color: #000;
 
     @include on-desktop {
       font-size: 36px;
@@ -60,7 +60,7 @@
   &__text {
     margin: 0;
     font-size: 12px;
-    color: $secondary;
+    color: $gray90;
 
     @include on-desktop {
       font-size: 16px;
@@ -124,11 +124,16 @@
     border: none;
     border-radius: 999px;
     background: $accent;
-    color: $dominant;
+    color: #000;
     font: inherit;
     font-size: 16px;
     text-decoration: none;
     cursor: pointer;
+    transition: filter 0.2s ease;
+
+    &:hover:not(:disabled) {
+      filter: brightness(0.95);
+    }
 
     &:disabled {
       cursor: not-allowed;
@@ -142,7 +147,7 @@
 
   &__link {
     font-size: 12px;
-    color: $dominant;
+    color: #000;
     text-decoration: underline;
 
     @include on-desktop {

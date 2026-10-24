@@ -135,12 +135,13 @@ export function CheckoutDeliveryForm({
   return (
     <section className={styles.delivery}>
       <h2 className={styles.delivery__title}>{t('checkout_delivery.title')}</h2>
-      <p className={styles.delivery__carrier}>{t('checkout_delivery.carrier')}</p>
 
       <div className={styles.delivery__fields}>
+        <div className={styles.delivery__method}>{t('checkout_delivery.method')}</div>
+
         <SearchSelect
           label={t('checkout_delivery.city')}
-          placeholder={t('checkout_delivery.city_placeholder')}
+          placeholder={t('checkout_delivery.city')}
           value={cityQuery}
           onInputChange={handleCityInput}
           onSelect={handleCitySelect}
@@ -151,7 +152,7 @@ export function CheckoutDeliveryForm({
 
         <SearchSelect
           label={t('checkout_delivery.branch')}
-          placeholder={t('checkout_delivery.branch_placeholder')}
+          placeholder={t('checkout_delivery.branch')}
           value={branchQuery}
           onInputChange={handleBranchInput}
           onSelect={handleBranchSelect}

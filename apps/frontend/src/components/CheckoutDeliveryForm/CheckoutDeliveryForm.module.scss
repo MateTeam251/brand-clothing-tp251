@@ -10,21 +10,32 @@
     margin: 0;
     font-size: 20px;
     font-weight: 500;
-  }
-
-  &__carrier {
-    margin: 0;
-    font-size: 14px;
-    color: $secondary;
+    line-height: 28px;
   }
 
   &__fields {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
+  }
+
+  &__method {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid #d6d6d6;
+    border-radius: 8px;
+    background-color: #fff;
+    font-family: $font-body;
+    font-size: 14px;
+    color: $color-inactive;
 
     @include on-desktop {
-      grid-template-columns: 1fr 1fr;
+      min-height: 56px;
+      padding: 0 16px;
+      font-size: 16px;
     }
   }
 }
