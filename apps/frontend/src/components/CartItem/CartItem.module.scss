@@ -8,6 +8,20 @@
   margin-bottom: 24px;
   position: relative;
 
+  &--unavailable &__imageWrapper,
+  &--unavailable &__name,
+  &--unavailable &__size,
+  &--unavailable &__delivery,
+  &--unavailable &__footer {
+    opacity: 0.5;
+  }
+
+  &__status {
+    margin: 0;
+    font-size: 14px;
+    color: $color-inactive;
+  }
+
   &__link {
     flex-shrink: 0;
     text-decoration: none;

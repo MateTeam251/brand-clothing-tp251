@@ -35,7 +35,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
   }).format(price);
 
   return (
-    <article className={styles.card}>
+    <article className={classNames(styles.card, { [styles['card--unavailable']]: !item.is_available })}>
       <Link className={styles.card__link} to={`/product/${item.product}`}>
         <div className={styles.card__imageWrapper}>
           {item.main_image ? (
@@ -98,6 +98,8 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
             </div>
           )}
         </div>
+
+        {!item.is_available && <p className={styles.card__status}>{t('cart.unavailable')}</p>}
 
         <p className={styles.card__delivery}>{t('cart_item_desc')}</p>
 

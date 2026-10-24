@@ -171,6 +171,7 @@ i18n.use(initReactI18next).init({
           empty_title: 'Your cart is empty',
           empty_text: 'But that’s easy to fix',
           empty_button: 'Go to catalog',
+          unavailable: 'Unavailable',
         },
         checkout: {
           comment: 'Order comment',
@@ -601,6 +602,7 @@ i18n.use(initReactI18next).init({
           empty_title: 'Ваш кошик порожній',
           empty_text: 'Але це легко виправити',
           empty_button: 'До каталогу',
+          unavailable: 'Недоступно',
         },
         checkout: {
           comment: 'Коментар до замовлення',
