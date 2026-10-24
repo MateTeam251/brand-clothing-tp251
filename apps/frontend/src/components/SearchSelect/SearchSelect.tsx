@@ -74,6 +74,18 @@ export function SearchSelect({
           }}
         />
 
+        <svg
+          className={`${styles.select__chevron} ${
+            hasList ? styles['select__chevron--open'] : ''
+          }`}
+          viewBox="0 0 24 24"
+          width="20"
+          height="20"
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+
         {hasList && (
           <ul id={listId} className={styles.select__list}>
             {message ? (

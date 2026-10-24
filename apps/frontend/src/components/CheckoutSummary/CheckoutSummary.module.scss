@@ -6,74 +6,81 @@
   flex-direction: column;
   gap: 16px;
 
+  @include on-desktop {
+    padding: 24px 16px;
+    border: 1px solid $color-inactive;
+    border-radius: 24px;
+  }
+
   &__title {
     margin: 0;
     font-size: 20px;
     font-weight: 500;
+
+    @include on-desktop {
+      display: none;
+    }
   }
 
   &__list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     margin: 0;
-    padding: 0;
+    padding: 0 0 16px;
+    border-bottom: 1px solid $color-inactive;
     list-style: none;
   }
 
   &__item {
-    display: grid;
-    grid-template-columns: 64px 1fr auto;
-    gap: 12px;
-    align-items: center;
+    font-family: $font-body;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    font-size: 12px;
+    color: #000;
+
+    @include on-desktop {
+      font-size: 16px;
+    }
 
     &--unavailable {
       opacity: 0.6;
     }
   }
 
-  &__image,
-  &__imagePlaceholder {
-    width: 64px;
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-    background: $light-gray;
-  }
-
-  &__info {
-    min-width: 0;
-  }
-
-  &__name {
-    margin: 0;
-    font-size: 14px;
-    color: $dominant;
-  }
-
-  &__meta {
-    margin: 4px 0 0;
-    font-size: 12px;
-    color: $secondary;
-  }
-
   &__price {
-    margin: 0;
-    font-size: 14px;
+    font-weight: 600;
     white-space: nowrap;
   }
 
   &__warning {
-    margin: 4px 0 0;
+    flex-basis: 100%;
+    margin: 0;
     font-size: 12px;
     color: $error;
   }
 
   &__total {
+    font-family: $font-body;
     display: flex;
+    align-items: baseline;
     justify-content: space-between;
-    padding-top: 16px;
-    border-top: 1px solid $color-inactive;
+    font-size: 14px;
+    color: #000;
+
+    @include on-desktop {
+      font-size: 16px;
+    }
+  }
+
+  &__totalPrice {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
+
+    @include on-desktop {
+      font-size: 24px;
+    }
   }
 }
