@@ -7,7 +7,7 @@ import Logo from '../../../shared/assets/images/logotype.png';
 const firstColumnLinks = [
   { key: 'about', to: '/about' },
   { key: 'instagram', href: 'https://www.instagram.com/theart.theartist.ua/' },
-  { key: 'care', to: '/catalog' },
+  { key: 'care', to: '/garment-care' },
 ] as const;
 
 const secondColumnLinks = [

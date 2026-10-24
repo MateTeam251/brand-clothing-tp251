@@ -11,6 +11,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { PasswordResetPage } from './pages/PasswordResetPage';
 import { PasswordForgotPage } from './pages/PasswordForgotPage';
 import { AboutPage } from './pages/AboutPage';
+import { GarmentCarePage } from './pages/GarmentCarePage';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
 import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -41,6 +42,7 @@ function App() {
               <Route path='/checkout' element={<CheckoutPage />} />
               <Route path='/confirmation' element={<OrderConfirmationPage />} />
               <Route path='/about' element={<AboutPage />} />
+              <Route path='/garment-care' element={<GarmentCarePage />} />
               <Route path='/forgotpassword' element={<PasswordForgotPage />} />
               <Route path='/resetpassword' element={<PasswordResetPage />} />
               <Route path='/signin' element={<SignInPage />} />
