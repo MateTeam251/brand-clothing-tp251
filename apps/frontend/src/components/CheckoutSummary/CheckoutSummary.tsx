@@ -48,6 +48,11 @@ export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
             )}
           </li>
         ))}
+
+        <li className={styles.summary__item}>
+          <span>{t('checkout_summary.delivery')}</span>
+          <span>{t('checkout_summary.delivery_value')}</span>
+        </li>
       </ul>
 
       <div className={styles.summary__total}>
