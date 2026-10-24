@@ -3,7 +3,7 @@
 
 .home {
   position: relative;
-  width: 100vw;
+  width: 100%;
   padding-inline: 16px;
   background-color: $dominant;
 
@@ -20,7 +20,7 @@
     background-repeat: no-repeat;
     background-size: cover;
 
-    width: 100vw;
+    width: calc(100% + 32px);
     margin-inline: -16px;
 
     display: flex;
@@ -30,6 +30,7 @@
 
     @include on-desktop {
       background-image: url('../../shared/assets/images/home_bg-desktop.png');
+      width: calc(100% + 80px);
       margin-inline: -40px;
     }
   }
@@ -106,7 +107,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    width: min(calc(100vw - 32px), 330px);
+    width: min(calc(100% - 32px), 330px);
     padding: 8px 15px;
     background: #fff;
     border-radius: 999px;

@@ -9,7 +9,7 @@ export function useDragScroll<T extends HTMLElement>() {
   const hasDragged = useRef(false);
 
   const handlePointerDown = (event: ReactPointerEvent<T>) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
     const el = ref.current;
     if (!el || el.scrollWidth <= el.clientWidth) return;
 
