@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import styles from './AboutPage.module.scss';
 
-import headerImage from '../../shared/assets/images/about-leeloo.jpg';
-import productionImage from '../../shared/assets/images/about-leeloo-det.jpg';
-import galleryImage1 from '../../shared/assets/images/about-lottie-det.jpg';
-import galleryImage2 from '../../shared/assets/images/about-lottie.jpg';
-import galleryImage3 from '../../shared/assets/images/about-daisy-det.jpg';
-import galleryImage4 from '../../shared/assets/images/about-daisy.jpg';
+import headerImage from '../../shared/assets/images/about-leeloo.webp';
+import productionImage from '../../shared/assets/images/about-leeloo-det.webp';
+import galleryImage1 from '../../shared/assets/images/about-lottie-det.webp';
+import galleryImage2 from '../../shared/assets/images/about-lottie.webp';
+import galleryImage3 from '../../shared/assets/images/about-daisy-det.webp';
+import galleryImage4 from '../../shared/assets/images/about-daisy.webp';
 
 export const AboutPage = () => {
   const { t } = useTranslation();
