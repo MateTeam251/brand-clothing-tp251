@@ -88,14 +88,14 @@
     font: inherit;
     font-size: 16px;
     cursor: pointer;
-    transition: filter 0.2s ease;
+    transition: background-color 0.2s ease;
 
     @include on-desktop {
       height: 56px;
     }
 
     &:hover:not(:disabled) {
-      filter: brightness(0.95);
+      background-color: $pink100;
     }
 
     &:disabled {
