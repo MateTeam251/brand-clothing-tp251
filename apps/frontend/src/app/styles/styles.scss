@@ -90,6 +90,10 @@
     font-display: swap;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 html,
 body,
 #root {
