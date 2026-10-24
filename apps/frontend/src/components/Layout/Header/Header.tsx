@@ -199,7 +199,12 @@ export const Header: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link className={styles['header__icon-button']} to="/account" aria-label="Account">
+                <Link
+                  className={styles['header__icon-button']}
+                  to={isAuthenticated ? '/account' : '/signin'}
+                  state={isAuthenticated ? undefined : { from: location }}
+                  aria-label="Account"
+                >
                   <img className={styles['header__icon']} src={isAccountPage ? UserActiveIcon : UserIcon} alt="User" />
                 </Link>
               </li>
