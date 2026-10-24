@@ -1,0 +1,22 @@
+@use '../../app/styles/variables.scss' as *;
+
+.policy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: $font-body;
+
+  p {
+    margin: 0;
+  }
+}
+
+.heading {
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+}

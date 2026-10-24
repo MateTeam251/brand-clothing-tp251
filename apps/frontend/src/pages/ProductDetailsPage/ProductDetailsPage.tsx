@@ -16,6 +16,7 @@ import styles from './ProductDetailsPage.module.scss';
 import { ProductGallery } from '../../components/ProductGallery';
 import { FavoriteButton } from '../../components/FavoriteButton';
 import { EmptyState } from '../../components/EmptyState';
+import { ReturnsPolicy } from '../../components/ReturnsPolicy';
 
 export const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -170,33 +171,42 @@ export const ProductDetailsPage = () => {
                 <p className={styles.details__note}>{t('product.addToCart_note')}</p>
               </div>
 
-              <button
-                type="button"
-                className={styles.details__checkAvailability}
-                onClick={() => setIsAvailabilityFormOpen((prev) => !prev)}
-                aria-expanded={isAvailabilityFormOpen}
-              >
-                {t('product.check_availability')}
-              </button>
+              {!product.is_available && (
+                <button
+                  type="button"
+                  className={styles.details__checkAvailability}
+                  onClick={() => setIsAvailabilityFormOpen((prev) => !prev)}
+                  aria-expanded={isAvailabilityFormOpen}
+                >
+                  {t('product.check_availability')}
+                </button>
+              )}
             </div>
 
-            <div
-              className={`${styles.details__availability} ${
-                isAvailabilityFormOpen ? styles['details__availability--open'] : ''
-              }`}
-            >
-              <div className={styles.details__availabilityInner}>
-                <AvailabilityRequestForm productId={product.id} />
+            {!product.is_available && (
+              <div
+                className={`${styles.details__availability} ${
+                  isAvailabilityFormOpen ? styles['details__availability--open'] : ''
+                }`}
+              >
+                <div className={styles.details__availabilityInner}>
+                  <AvailabilityRequestForm productId={product.id} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className={styles.details__accordion}>
             {[
               { key: 'description_title', content: product.description },
-              { key: 'material_title', content: product.fabric_composition },
-              { key: 'care_title', content: t('care') },
-              { key: 'delivery_title', content: t('delivery') },
+              {
+                key: 'material_care_title',
+                content: [product.fabric_composition, t('product.care_text')]
+                  .filter(Boolean)
+                  .join('\n\n'),
+              },
+              { key: 'returns_title', content: <ReturnsPolicy /> },
+              { key: 'delivery_title', content: t('product.delivery_text') },
             ].map((item) => (
               <details key={item.key} className={styles.details__accordionItem}>
                 <summary className={styles.details__accordionSummary}>
@@ -206,7 +216,7 @@ export const ProductDetailsPage = () => {
                     <img src={minusIcon} alt="" className={styles.details__accordionIconMinus} />
                   </span>
                 </summary>
-                <p className={styles.details__accordionContent}>{item.content}</p>
+                 <div className={styles.details__accordionContent}>{item.content}</div>
               </details>
             ))}
           </div>
