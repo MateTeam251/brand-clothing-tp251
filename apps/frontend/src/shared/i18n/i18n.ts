@@ -288,6 +288,11 @@ i18n.use(initReactI18next).init({
           copy: 'Copy',
           copied: 'Copied',
         },
+        orders_pay: {
+          pay: 'Pay',
+          paying: 'Please wait…',
+          error: 'Could not start the payment. Please try again',
+        },
         sign_up: {
           submit: 'Sign up',
           password_confirm: 'Repeat password',
@@ -629,6 +634,11 @@ i18n.use(initReactI18next).init({
           purpose_with_id: 'Оплата замовлення № {{id}}',
           copy: 'Копіювати',
           copied: 'Скопійовано',
+        },
+        orders_pay: {
+          pay: 'Оплатити',
+          paying: 'Зачекайте…',
+          error: 'Не вдалося почати оплату. Спробуйте ще раз',
         },
         sign_up: {
           submit: 'Зареєструватися',

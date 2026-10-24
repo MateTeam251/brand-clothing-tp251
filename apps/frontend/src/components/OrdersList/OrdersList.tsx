@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useGetOrdersQuery } from '../../shared/api/ordersApi';
+import { useGetOrdersQuery, useRetryPaymentMutation } from '../../shared/api/ordersApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { Currency, OrderStatus } from '../../shared/types/orders';
 import { Loader } from '../Loader/Loader';
@@ -25,6 +26,23 @@ export const OrdersList = () => {
   const { t } = useTranslation();
   const language = useAppSelector((state) => state.settings.language);
   const { data: orders, isLoading, isError, refetch } = useGetOrdersQuery();
+  const [retryPayment] = useRetryPaymentMutation();
+  const [payingOrderId, setPayingOrderId] = useState<number | null>(null);
+  const [failedOrderId, setFailedOrderId] = useState<number | null>(null);
+
+  const handlePay = async (orderId: number) => {
+    setFailedOrderId(null);
+    setPayingOrderId(orderId);
+
+    try {
+      const response = await retryPayment(orderId).unwrap();
+
+      window.location.assign(response.payment_url);
+    } catch {
+      setPayingOrderId(null);
+      setFailedOrderId(orderId);
+    }
+  };
 
   if (isLoading) {
     return <Loader />;
@@ -99,7 +117,26 @@ export const OrdersList = () => {
                 <dt>{t('orders.total')}</dt>
                 <dd>{formatMoney(order.total_amount, order.currency)}</dd>
               </div>
-            </dl>
+                       </dl>
+
+            {order.status === 'PENDING' && (
+              <div className={styles.orders__payBlock}>
+                <button
+                  type="button"
+                  className={styles.orders__pay}
+                  disabled={payingOrderId !== null}
+                  onClick={() => void handlePay(order.id)}
+                >
+                  {payingOrderId === order.id
+                    ? t('orders_pay.paying')
+                    : t('orders_pay.pay')}
+                </button>
+
+                {failedOrderId === order.id && (
+                  <p className={styles.orders__payError}>{t('orders_pay.error')}</p>
+                )}
+              </div>
+            )}
           </li>
         );
       })}
