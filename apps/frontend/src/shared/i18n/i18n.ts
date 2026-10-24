@@ -370,6 +370,13 @@ i18n.use(initReactI18next).init({
           how_title: 'How to Start a Return or Exchange',
           how_text: "Message us on Instagram Direct or email us with your order number and the reason for the return, and we'll walk you through the next steps.",
         },
+        privacy_page: {
+          title: 'Privacy Policy',
+          text_1: 'We collect: name, email, phone number, and delivery address — to place and deliver your order.',
+          text_2: 'Your data is shared with Wayforpay (payment) and delivery services (Nova Poshta, Ukrposhta, DHL) — only to the extent needed to fulfil your order.',
+          text_3: 'We do not sell or share your data with third parties for advertising.',
+          text_4: 'You can request to view or delete your data by writing to us.',
+        },
         sign_up: {
           submit: 'Sign up',
           password_confirm: 'Repeat password',
@@ -792,6 +799,13 @@ i18n.use(initReactI18next).init({
           note_text_2: 'Товар обміну та поверненню не підлягає, якщо він пошитий індивідуально під ваші мірки (за окремим замовленням).',
           how_title: 'Як оформити повернення/обмін',
           how_text: 'Напишіть нам у Instagram Direct або на пошту, вказавши номер замовлення та причину повернення — підкажемо, що робити далі.',
+        },
+        privacy_page: {
+          title: 'Політика конфіденційності',
+          text_1: "Ми збираємо: ім'я, email, телефон, адресу доставки — для оформлення й доставки замовлення.",
+          text_2: 'Дані передаються Wayforpay (оплата) та службам доставки (Нова пошта, Укрпошта, DHL) — лише в обсязі, потрібному для виконання замовлення.',
+          text_3: 'Ми не продаємо й не передаємо дані третім особам для реклами.',
+          text_4: 'Ви можете запросити перегляд або видалення своїх даних, написавши нам.',
         },
         sign_up: {
           submit: 'Зареєструватися',

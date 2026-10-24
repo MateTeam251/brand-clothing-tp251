@@ -1,19 +1,20 @@
 import styles from './Footer.module.scss';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
 import Logo from '../../../shared/assets/images/logotype.png';
+import instagramIcon from '../../../shared/assets/icons/instagram.svg';
+import mailIcon from '../../../shared/assets/icons/mail.svg';
+import { CONTACT_EMAIL, INSTAGRAM_URL } from '../../../shared/config/contacts';
 
 const firstColumnLinks = [
   { key: 'about', to: '/about' },
-  { key: 'instagram', href: 'https://www.instagram.com/theart.theartist.ua/' },
   { key: 'care', to: '/garment-care' },
 ] as const;
 
 const secondColumnLinks = [
   { key: 'delivery', to: '/delivery' },
   { key: 'refund', to: '/returns' },
-  { key: 'privacy', to: '/about' },
+  { key: 'privacy', to: '/privacy' },
 ] as const;
 
 export const Footer: React.FC = () => {
@@ -62,6 +63,16 @@ export const Footer: React.FC = () => {
                     {renderLink(item)}
                   </li>
                 ))}
+                <li className={styles['footer__item']}>
+                  <div className={styles['footer__icons']}>
+                    <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram">
+                      <img className={styles['footer__icon']} src={instagramIcon} alt="" />
+                    </a>
+                    <a href={`mailto:${CONTACT_EMAIL}`} aria-label="Email">
+                      <img className={styles['footer__icon']} src={mailIcon} alt="" />
+                    </a>
+                  </div>
+                </li>
               </ul>
             </nav>
           </div>

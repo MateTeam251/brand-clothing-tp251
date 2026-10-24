@@ -95,6 +95,28 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  &__icons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    a {
+      display: inline-flex;
+      transition: opacity 0.2s ease;
+
+      &:hover,
+      &:focus-visible {
+        opacity: 0.7;
+      }
+    }
+  }
+
+  &__icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
 }
 
 @include mixins.on-desktop {
@@ -163,6 +185,11 @@
       overflow: visible;
       text-overflow: clip;
       white-space: normal;
+    }
+
+    &__icon {
+      width: 24px;
+      height: 24px;
     }
   }
 }
