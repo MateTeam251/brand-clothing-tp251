@@ -23,6 +23,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ActivationSuccessPage } from './pages/ActivationSuccessPage';
 import { ActivationFailedPage } from './pages/ActivationFailedPage';
+import { DeliveryPage } from './pages/DeliveryPage';
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
               <Route path='/confirmation' element={<OrderConfirmationPage />} />
               <Route path='/about' element={<AboutPage />} />
               <Route path='/garment-care' element={<GarmentCarePage />} />
+              <Route path='/delivery' element={<DeliveryPage />} />
               <Route path='/forgotpassword' element={<PasswordForgotPage />} />
               <Route path='/resetpassword' element={<PasswordResetPage />} />
               <Route path='/signin' element={<SignInPage />} />
