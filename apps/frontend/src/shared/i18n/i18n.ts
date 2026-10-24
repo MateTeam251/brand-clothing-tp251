@@ -128,7 +128,7 @@ i18n.use(initReactI18next).init({
           submit: 'Send link',
           check_email: {
             title: 'Check your email',
-            text: 'Password reset instructions have been sent to your email.',
+            text: 'If an account with this email exists, we have sent password reset instructions to it.',
             resend: 'Send again',
             resent: 'Email sent again',
           },
@@ -475,7 +475,7 @@ i18n.use(initReactI18next).init({
           submit: 'Надіслати посилання',
           check_email: {
             title: 'Перевірте пошту',
-            text: 'Інструкції щодо зміни пароля надіслано на вашу пошту.',
+            text: 'Якщо акаунт із цією поштою існує, ми надіслали на неї посилання для скидання пароля.',
             resend: 'Надіслати ще раз',
             resent: 'Лист надіслано повторно',
           },
