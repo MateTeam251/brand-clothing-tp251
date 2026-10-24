@@ -157,8 +157,8 @@
 
       @include on-desktop {
         flex-direction: row;
-
         align-items: center;
+        gap: 40px;
       }
     }
 
