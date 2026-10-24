@@ -1,0 +1,47 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.privacy {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 32px;
+  padding-bottom: 64px;
+  font-family: $font-body;
+
+  @include on-desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 440px) minmax(0, 765px);
+    justify-content: space-between;
+    align-items: start;
+    gap: 40px;
+    padding-top: 56px;
+    padding-bottom: 96px;
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.3;
+
+  @include on-desktop {
+    font-size: 32px;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+
+  @include on-desktop {
+    font-size: 18px;
+  }
+}

@@ -25,6 +25,7 @@ import { ActivationSuccessPage } from './pages/ActivationSuccessPage';
 import { ActivationFailedPage } from './pages/ActivationFailedPage';
 import { DeliveryPage } from './pages/DeliveryPage';
 import { ReturnsPage } from './pages/ReturnsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
               <Route path='/garment-care' element={<GarmentCarePage />} />
               <Route path='/delivery' element={<DeliveryPage />} />
               <Route path='/returns' element={<ReturnsPage />} />
+              <Route path='/privacy' element={<PrivacyPage />} />
               <Route path='/forgotpassword' element={<PasswordForgotPage />} />
               <Route path='/resetpassword' element={<PasswordResetPage />} />
               <Route path='/signin' element={<SignInPage />} />
