@@ -242,6 +242,8 @@ i18n.use(initReactI18next).init({
         checkout_summary: {
           title: 'Order',
           size_inline: 'size',
+          delivery: 'Delivery',
+          delivery_value: 'According to carrier rates',
           size: 'Size',
           quantity: 'Qty',
           total: 'Total',
@@ -589,6 +591,8 @@ i18n.use(initReactI18next).init({
         checkout_summary: {
           title: 'Замовлення',
           size_inline: 'розмір',
+          delivery: 'Доставка',
+          delivery_value: 'За тарифами перевізника',
           size: 'Розмір',
           quantity: 'Кількість',
           total: 'Разом',
