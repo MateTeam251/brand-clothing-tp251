@@ -1,0 +1,146 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.returns {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 32px;
+  padding-bottom: 64px;
+  font-family: $font-body;
+
+  @include on-desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 440px) minmax(0, 668px);
+    justify-content: space-between;
+    align-items: start;
+    gap: 40px;
+    padding-top: 56px;
+    padding-bottom: 96px;
+  }
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.3;
+
+  @include on-desktop {
+    font-size: 32px;
+  }
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $color-inactive;
+
+  @include on-desktop {
+    font-size: 18px;
+  }
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  margin-top: 8px;
+  border-radius: 1000px;
+  background: $accent;
+  color: #000;
+  font-family: $font-body;
+  font-size: 16px;
+  text-decoration: none;
+  transition: background 0.2s;
+
+  &:hover,
+  &:focus-visible {
+    background: $pink100;
+  }
+
+  @include on-desktop {
+    height: 56px;
+    font-size: 18px;
+  }
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  @include on-desktop {
+    gap: 24px;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 8px;
+  background: $secondary;
+
+  @include on-desktop {
+    padding: 32px;
+  }
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+
+  @include on-desktop {
+    font-size: 20px;
+  }
+}
+
+.cardText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $color-inactive;
+
+  @include on-desktop {
+    font-size: 18px;
+  }
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $color-inactive;
+
+  @include on-desktop {
+    font-size: 18px;
+  }
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #000;
+  border-radius: 50%;
+  font-size: 10px;
+  font-style: italic;
+}

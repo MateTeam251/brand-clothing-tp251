@@ -12,7 +12,7 @@ const firstColumnLinks = [
 
 const secondColumnLinks = [
   { key: 'delivery', to: '/delivery' },
-  { key: 'refund', to: '/about' },
+  { key: 'refund', to: '/returns' },
   { key: 'privacy', to: '/about' },
 ] as const;
 
