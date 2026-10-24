@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { MouseEvent, PointerEvent, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useSwipeToClose } from '../../shared/hooks/useSwipeToClose';
 import closeIcon from '../../shared/assets/icons/close.svg';
@@ -41,7 +42,7 @@ export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
     }
   };
 
-  return (
+  return createPortal(
     <div
       className={styles.overlay}
       onPointerDown={handleOverlayPointerDown}
@@ -73,6 +74,7 @@ export const AuthSheet = ({ children, onClose }: AuthSheetProps) => {
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
