@@ -343,6 +343,15 @@ i18n.use(initReactI18next).init({
           fabric_satin_text: "Hand wash or dry clean only. Don't rub, and avoid ironing directly on the right side.",
           note: "Check the fabric composition on each product page first — it's always your best guide.",
         },
+        delivery_page: {
+          title: 'Delivery & Production',
+          intro_1: 'Every piece is made to order, so production takes 5–8 business days. After that, we ship your order within 1 business day.',
+          intro_2: 'We send you the tracking number as soon as your order is shipped.',
+          ukraine_title: 'Delivery within Ukraine:',
+          ukraine_text: 'Nova Poshta and Ukrposhta — to a branch or by courier to the address you provide.',
+          abroad_title: 'International delivery:',
+          abroad_text: 'DHL — delivery time and cost are calculated individually depending on the destination country.',
+        },
         sign_up: {
           submit: 'Sign up',
           password_confirm: 'Repeat password',
@@ -738,6 +747,15 @@ i18n.use(initReactI18next).init({
           fabric_satin_name: 'Атлас / тканини з блиском',
           fabric_satin_text: 'Тільки ручне прання або хімчистка. Не терти, без прасування безпосередньо по лицьовій стороні.',
           note: 'Точний склад тканини вказано на сторінці кожного товару — орієнтуйтесь на нього в першу чергу.',
+        },
+        delivery_page: {
+          title: 'Доставка та виготовлення',
+          intro_1: 'Кожна річ шиється під замовлення, тому виготовлення займає 5–8 робочих днів. Після цього ми відправляємо замовлення протягом 1 робочого дня.',
+          intro_2: 'Трек-номер надсилаємо одразу після відправки замовлення.',
+          ukraine_title: 'Доставка по Україні:',
+          ukraine_text: "Нова Пошта та Укрпошта — на відділення або кур'єром за вказаною адресою.",
+          abroad_title: 'Доставка за кордон:',
+          abroad_text: 'DHL — терміни та вартість розраховуються індивідуально залежно від країни доставки.',
         },
         sign_up: {
           submit: 'Зареєструватися',
