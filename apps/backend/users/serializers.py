@@ -9,7 +9,9 @@ from django.utils.encoding import force_str
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-from users.utils import send_password_reset_link
+from users.tokens import make_email_change_token
+from users.utils import (send_password_reset_link,
+                         send_email_change_confirmation)
 from carts.services import merge_guest_cart_into_user_cart
 
 
@@ -135,9 +137,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for reading and updating the authenticated user's profile.
 
-    ``id`` and ``email`` are read-only: the user's email cannot be
-    changed through this serializer (e.g. to avoid breaking the
-    email-based login identifier without a dedicated change-email flow).
+    ``id`` and ``email`` are read-only: the email is the login
+    identifier, so it is changed only through the dedicated flow with
+    password check and confirmation of the new address
+    (``UpdateEmailRequestSerializer`` and ``EmailChangeConfirmView``).
 
     ``addresses`` is read-only here — managing (adding/editing/deleting)
     addresses is handled through a dedicated AddressViewSet, not through
@@ -150,7 +153,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                   "marketing_opt_in", "instagram",]
         read_only_fields = ['id', 'email']
         extra_kwargs = {
-            "email": {"help_text": "Cannot be changed here; a sent value is ignored."},
+            "email": {"help_text": "Cannot be changed here; a sent value is ignored. Use `me/email/` to change it."},
             "name": {"help_text": "Display name. Can be empty."},
             "birth_date": {"help_text": "Date of birth, `YYYY-MM-DD`. Cannot be in the future. Can be null."},
             "phone_number": {"help_text": "Phone number, up to 20 characters. Format is not checked. Can be empty."},
@@ -364,3 +367,62 @@ class UpdatePasswordInProfileSerializer(serializers.Serializer):
         return user
 
 
+
+class UpdateEmailRequestSerializer(serializers.Serializer):
+    """
+    First step of the email change: checks the password and the new
+    email and sends a confirmation link to the new address.
+
+    The email itself is not changed here; that happens in
+    ``EmailChangeConfirmView`` once the link is opened.
+    """
+    password = serializers.CharField(
+        write_only=True,
+        help_text="Current password of the account."
+    )
+    new_email = serializers.EmailField(
+        write_only=True,
+        help_text="New email. Must differ from the current one and not be used by another account. "
+                  "The confirmation link is sent here."
+    )
+
+    def validate_password(self, value):
+        """
+        Check that ``value`` matches the user's current password.
+        """
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Wrong password.")
+        return value
+
+    def validate_new_email(self, value):
+        """
+        Normalize the new email and make sure it can be used.
+
+        Raises:
+            serializers.ValidationError: If the email equals the current
+                one (case-insensitive) or belongs to another account.
+
+        Returns:
+            str: The normalized email.
+        """
+        user = self.context["request"].user
+        value = User.objects.normalize_email(value)
+        if user.email.lower() == value.lower():
+            raise serializers.ValidationError("New email must be different from the current one.")
+        if User.objects.filter(email__iexact=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
+    def save(self, **kwargs):
+        """
+        Send a confirmation link to the new email.
+
+        Returns:
+            User: The requesting user, unchanged.
+        """
+        request = self.context["request"]
+        user = request.user
+        new_email = self.validated_data["new_email"]
+        token = make_email_change_token(user, new_email)
+        send_email_change_confirmation(request, user, new_email, token)
+        return user
