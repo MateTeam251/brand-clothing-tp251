@@ -1,9 +1,13 @@
+import logging
+
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.core import signing
+from django.db import IntegrityError, transaction
 from django.shortcuts import redirect
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -22,9 +26,13 @@ from users.serializers import (RegisterSerializer,
                                CustomTokenObtainPairSerializer,
                                LogoutSerializer,
                                ResendActivationSerializer,
-                               UpdatePasswordInProfileSerializer)
-from users.tokens import account_activation_token
-from users.utils import send_activation_email
+                               UpdatePasswordInProfileSerializer,
+                               UpdateEmailRequestSerializer)
+from users.tokens import account_activation_token, read_email_change_token
+from users.utils import (send_activation_email,
+                         send_email_change_notification)
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -198,12 +206,13 @@ class ResendActivationView(APIView):
     put=extend_schema(
         summary="Replace my profile",
         description="Full update: `instagram` must be sent, other fields not sent are left as they are. "
-                    "`id` and `email` cannot be changed.",
+                    "`id` and `email` cannot be changed here; to change the email use `me/email/`.",
         responses={200: UserProfileSerializer, 400: VALIDATION_ERROR, 401: UNAUTHORIZED},
     ),
     patch=extend_schema(
         summary="Update my profile",
-        description="Partial update: send only the fields to change. `id` and `email` cannot be changed.",
+        description="Partial update: send only the fields to change. `id` and `email` cannot be changed here; "
+                    "to change the email use `me/email/`.",
         responses={200: UserProfileSerializer, 400: VALIDATION_ERROR, 401: UNAUTHORIZED},
     ),
 )
@@ -214,7 +223,8 @@ class MeView(generics.RetrieveUpdateAPIView):
 
     GET returns the profile; PUT/PATCH updates it. Uses
     ``UserProfileSerializer``, which keeps ``id`` and ``email``
-    read-only. Requires authentication.
+    read-only (the email is changed via ``UpdateEmailInProfileView``).
+    Requires authentication.
     """
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
@@ -441,3 +451,127 @@ class UpdatePasswordInProfileView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=["profile"],
+    summary="Request an email change",
+    description="For a logged-in user. Requires the current password. The email is **not** changed yet: "
+                "a confirmation link is sent to `new_email` "
+                "(locally the email is in MailHog, http://localhost:8025). "
+                "The change is applied once the link is opened; it is valid for 24 hours.",
+    request=UpdateEmailRequestSerializer,
+    responses={
+        200: OpenApiResponse(DETAIL_RESPONSE, description="Confirmation link sent to the new email."),
+        400: VALIDATION_ERROR,
+        401: UNAUTHORIZED,
+        429: THROTTLED,
+    },
+)
+class UpdateEmailInProfileView(APIView):
+    """
+    Start an email change for the authenticated user.
+
+    Checks the password and the new email via
+    ``UpdateEmailRequestSerializer`` and sends a confirmation link to
+    the new address. The email is changed later by
+    ``EmailChangeConfirmView``.
+    """
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "change_email"
+
+    def post(self, request):
+        serializer = UpdateEmailRequestSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Confirmation link sent to the new email."}, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=["profile"],
+    summary="Confirm an email change (link from the email)",
+    description="Opened from the confirmation email, not called by the frontend. `token` is the last part "
+                "of the link. Changes the account email and redirects to "
+                "`{FRONTEND_URL}/email-change/success` or `{FRONTEND_URL}/email-change/failed`. "
+                "The link is valid for 24 hours and works once. It also fails if the new email has been "
+                "taken by another account meanwhile. On success a notification is sent to the old email.",
+    responses={
+        302: OpenApiResponse(description="Redirect to the frontend success or failed page."),
+        429: OpenApiResponse(
+            DETAIL_RESPONSE,
+            description="Too many requests from this IP (30/hour). JSON instead of a redirect."),
+    },
+)
+class EmailChangeConfirmView(APIView):
+    """
+    Apply an email change via the link sent by ``UpdateEmailInProfileView``.
+
+    Redirects to the frontend instead of returning JSON, since this
+    endpoint is opened directly in a browser from the email link.
+    """
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "change_email_confirm"
+
+    def get(self, request, token):
+        """
+        Verify the token, change ``email`` and ``username`` and redirect.
+
+        Args:
+            request (HttpRequest): The current request.
+            token (str): Signed token from ``make_email_change_token``.
+
+        Returns:
+            HttpResponseRedirect: 302 to
+            ``{FRONTEND_URL}/email-change/success`` on success, or to
+            ``{FRONTEND_URL}/email-change/failed`` otherwise.
+
+        Notes:
+            - The link works once: the token stores the old email, and
+              after the change ``user.email`` no longer matches it. For
+              the same reason only the first of several requested links
+              can be used.
+            - ``username`` is updated together with ``email``, because
+              ``create_user`` sets ``username`` to the email and it is
+              unique: a stale value would block a new registration with
+              the old email.
+            - All failure reasons (bad/expired token, unknown user, used
+              link, email taken) lead to the same failed page.
+            - A failure to send the notification to the old email is
+              logged and does not affect the result: the email is
+              already changed at that point.
+        """
+        failed = redirect(f"{settings.FRONTEND_URL}/email-change/failed")
+
+        try:
+            payload = read_email_change_token(token)
+            user = User.objects.get(pk=payload["user_id"])
+        except (signing.BadSignature, KeyError, User.DoesNotExist):
+            return failed
+
+        old_email = payload["old_email"]
+        new_email = payload["new_email"]
+
+        if user.email != old_email:
+            return failed
+        if User.objects.filter(email__iexact=new_email).exclude(pk=user.pk).exists():
+            return failed
+
+        user.email = new_email
+        user.username = new_email
+        try:
+            with transaction.atomic():
+                user.save(update_fields=["email", "username"])
+        except IntegrityError:
+            return failed
+
+        try:
+            send_email_change_notification(user, old_email)
+        except Exception:
+            logger.exception("Failed to send email change notification to user %s", user.pk)
+
+        return redirect(f"{settings.FRONTEND_URL}/email-change/success")
