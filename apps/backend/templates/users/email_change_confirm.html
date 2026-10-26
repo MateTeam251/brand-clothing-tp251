@@ -1,0 +1,4 @@
+<p>Hello, {{ user.name|default:user.email }}!</p>
+<p>Use a link below to confirm {{ new_email }} as the new email of your account:</p>
+<p><a href="{{ confirm_link }}">Confirm email</a></p>
+<p>If you didn't request this, ignore this message. Your email will not be changed.</p>
