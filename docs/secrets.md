@@ -84,3 +84,5 @@ between the `ALTER` and the redeploy (~1 min). Never only one side.
 | Date | Env | Rotated |
 |---|---|---|
 | 2026-10-17 | staging, prod | `SECRET_KEY`, `GRAFANA_CLOUD_TOKEN` (new Alloy token `alloy-2026-10`) |
+| 2026-10-22 | staging, prod | `NOVA_POSHTA_API_KEY` added (Nova Poshta branch sync) |
+| 2026-10-26 | staging | `WAYFORPAY_SECRET_KEY` added: public TEST merchant `test_merch_n1` (no real money) |

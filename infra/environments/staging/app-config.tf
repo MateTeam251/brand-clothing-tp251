@@ -52,6 +52,13 @@ locals {
     # Nova Poshta sync at 07:00 UTC (prod 01:00): staging is off at night.
     DELIVERY_SYNC_HOUR = "7"
 
+    # WayForPay public TEST merchant (no real money). Prod gets the real
+    # account later. Secret key: secrets/WAYFORPAY_SECRET_KEY (by hand).
+    WAYFORPAY_MERCHANT_ACCOUNT = "test_merch_n1"
+    WAYFORPAY_MERCHANT_DOMAIN  = local.site_host
+    WAYFORPAY_SERVICE_URL      = "https://${local.site_host}/api/payments/wayforpay/callback/"
+    WAYFORPAY_RETURN_URL       = "https://${local.site_host}/api/payments/success/"
+
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "staging"
     GRAFANA_PROM_URL  = "https://prometheus-prod-65-prod-eu-west-2.grafana.net/api/prom/push"
