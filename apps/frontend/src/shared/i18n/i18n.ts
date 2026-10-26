@@ -349,9 +349,9 @@ i18n.use(initReactI18next).init({
           intro_1: 'Every piece is made to order, so production takes 5–8 business days. After that, we ship your order within 1 business day.',
           intro_2: 'We send you the tracking number as soon as your order is shipped.',
           ukraine_title: 'Delivery within Ukraine:',
-          ukraine_text: 'Nova Poshta and Ukrposhta — to a branch or by courier to the address you provide.',
+          ukraine_text: 'Nova Poshta — to a branch or by courier to the address you provide.',
           abroad_title: 'International delivery:',
-          abroad_text: 'DHL — delivery time and cost are calculated individually depending on the destination country.',
+          abroad_text: 'Nova Post — to a branch or by courier to the address you provide. Delivery time and cost are calculated individually depending on the rates and destination country.',
         },
         returns_page: {
           title: 'Returns & Exchanges',
@@ -374,7 +374,7 @@ i18n.use(initReactI18next).init({
         privacy_page: {
           title: 'Privacy Policy',
           text_1: 'We collect: name, email, phone number, and delivery address — to place and deliver your order.',
-          text_2: 'Your data is shared with Wayforpay (payment) and delivery services (Nova Poshta, Ukrposhta, DHL) — only to the extent needed to fulfil your order.',
+          text_2: 'Your data is shared with Wayforpay (payment) and delivery services (Nova Poshta, Nova Post) — only to the extent needed to fulfil your order.',
           text_3: 'We do not sell or share your data with third parties for advertising.',
           text_4: 'You can request to view or delete your data by writing to us.',
         },
@@ -780,9 +780,9 @@ i18n.use(initReactI18next).init({
           intro_1: 'Кожна річ шиється під замовлення, тому виготовлення займає 5–8 робочих днів. Після цього ми відправляємо замовлення протягом 1 робочого дня.',
           intro_2: 'Трек-номер надсилаємо одразу після відправки замовлення.',
           ukraine_title: 'Доставка по Україні:',
-          ukraine_text: "Нова Пошта та Укрпошта — на відділення або кур'єром за вказаною адресою.",
+          ukraine_text: "Нова Пошта — на відділення або кур'єром за вказаною адресою.",
           abroad_title: 'Доставка за кордон:',
-          abroad_text: 'DHL — терміни та вартість розраховуються індивідуально залежно від країни доставки.',
+          abroad_text: "Nova Post — на відділення або кур'єром за вказаною адресою. Терміни та вартість розраховуються індивідуально залежно від тарифів та країни доставки.",
         },
         returns_page: {
           title: 'Умови повернення та обміну',
@@ -805,7 +805,7 @@ i18n.use(initReactI18next).init({
         privacy_page: {
           title: 'Політика конфіденційності',
           text_1: "Ми збираємо: ім'я, email, телефон, адресу доставки — для оформлення й доставки замовлення.",
-          text_2: 'Дані передаються Wayforpay (оплата) та службам доставки (Нова пошта, Укрпошта, DHL) — лише в обсязі, потрібному для виконання замовлення.',
+          text_2: 'Дані передаються Wayforpay (оплата) та службам доставки (Нова пошта, Nova Post) — лише в обсязі, потрібному для виконання замовлення.',
           text_3: 'Ми не продаємо й не передаємо дані третім особам для реклами.',
           text_4: 'Ви можете запросити перегляд або видалення своїх даних, написавши нам.',
         },
