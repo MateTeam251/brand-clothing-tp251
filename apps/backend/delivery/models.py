@@ -11,7 +11,7 @@ class DeliveryCity(models.Model):
     provider = models.CharField(max_length=30, choices=DeliveryProvider.choices)
     country = CountryField()
     external_ref = models.CharField(max_length=100)  # city_ref in delivery_data
-    name = models.CharField(max_length=150)           # city
+    name = models.CharField(max_length=150, db_collation="uk-x-icu")           # city
 
     class Meta:
         constraints = [
