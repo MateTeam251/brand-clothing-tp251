@@ -29,6 +29,33 @@ def get_product_price(product, currency):
     )
 
 
+def _create_payment_record(order):
+    """
+    Creates the next payment attempt for an order.
+
+    Must be called inside a transaction where the order row is locked
+    (or the order has just been created) so attempt numbers do not race.
+    """
+
+    last_attempt = (
+        Payment.objects
+        .filter(order=order)
+        .aggregate(last=Max("attempt"))["last"]
+        or 0
+    )
+    attempt = last_attempt + 1
+
+    return Payment.objects.create(
+        order=order,
+        currency=order.currency,
+        amount=order.total_amount,
+        provider=PaymentProvider.WAYFORPAY,
+        status=PaymentStatus.PENDING,
+        attempt=attempt,
+        provider_order_reference=f"{order.order_reference}-{attempt}",
+    )
+
+
 @transaction.atomic
 def create_order_from_cart(*, cart, checkout_data):
     """
