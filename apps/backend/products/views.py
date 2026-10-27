@@ -102,7 +102,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         return ProductDetailSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = Product.objects.all().filter(is_archived=False)
 
         collection_slugs = self.request.query_params.get("collection")
         if collection_slugs:
