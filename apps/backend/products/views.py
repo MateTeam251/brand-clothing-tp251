@@ -8,7 +8,7 @@ from products.serializers import (ProductListSerializer,
                                   CollectionSerializer,
                                   CollectionDetailSerializer, AvailabilityRequestSerializer)
 from products.models import Product, Collection
-from django.db.models import F, Case, When, DecimalField, ExpressionWrapper
+from django.db.models import F, Case, When, DecimalField, ExpressionWrapper, Prefetch
 
 from products.utils import send_availability_request_notification
 from drf_spectacular.types import OpenApiTypes
@@ -46,8 +46,8 @@ class CurrencyAwareOrderingFilter(filters.OrderingFilter):
 @extend_schema_view(
     list=extend_schema(
         summary="Product catalog",
-        description="Paginated list of product cards. Filters can be combined; "
-                    "an unknown slug in `collection`/`type` just gives an empty list.",
+        description="Paginated list of product cards. Archived products are never included. "
+                    "Filters can be combined; an unknown slug in `collection`/`type` just gives an empty list.",
         parameters=[
             LANG_PARAM,
             CURRENCY_PARAM,
@@ -67,7 +67,8 @@ class CurrencyAwareOrderingFilter(filters.OrderingFilter):
     ),
     retrieve=extend_schema(
         summary="Product page",
-        description="Full product data: description, all photos, size guide.",
+        description="Full product data: description, all photos, size guide. "
+                    "An archived product gives 404, the same as a non-existent one.",
         parameters=[LANG_PARAM, CURRENCY_PARAM],
         responses={200: ProductDetailSerializer, 404: NOT_FOUND},
     ),
@@ -85,8 +86,8 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     - filtering to bestsellers only (?is_bestseller=true)
 
     Default ordering is by created_at descending (newest products first).
+    Archived products are excluded from both list and retrieve.
     """
-    queryset = Product.objects.all()
     filter_backends =  [filters.SearchFilter, CurrencyAwareOrderingFilter]
 
     search_fields = ["name"]
@@ -102,7 +103,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         return ProductDetailSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.all().filter(is_archived=False)
+        queryset = Product.objects.filter(is_archived=False)
 
         collection_slugs = self.request.query_params.get("collection")
         if collection_slugs:
@@ -155,7 +156,8 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     ),
     retrieve=extend_schema(
         summary="Collection page",
-        description="One collection by its `slug`, with all its products (not paginated).",
+        description="One collection by its `slug`, with all its products (not paginated). "
+                    "Archived products are not included.",
         parameters=[LANG_PARAM, CURRENCY_PARAM],
         responses={200: CollectionDetailSerializer, 404: NOT_FOUND},
     ),
@@ -174,14 +176,16 @@ class CollectionViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         if self.action == "retrieve":
-            return Collection.objects.prefetch_related("products__images")
+            return Collection.objects.prefetch_related(
+                Prefetch("products", queryset=Product.objects.filter(is_archived=False).prefetch_related("images"))
+            )
         return Collection.objects.all()
 
 
 @extend_schema(
     tags=["products"],
     summary="Ask about availability",
-    description="\"Check availability\" form on a product that is out of stock. No login needed. "
+    description="\"Check availability\" form on a product that is out of stock (and not archived). No login needed. "
                 "Saves the request for the manager (admin, Availability requests) and emails the manager.",
     responses={201: AvailabilityRequestSerializer, 400: VALIDATION_ERROR, 429: THROTTLED},
 )
