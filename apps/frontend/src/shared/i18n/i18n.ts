@@ -157,6 +157,7 @@ i18n.use(initReactI18next).init({
           },
         },
         favorites_page: {
+          title: "Favorites",
           empty_title: "Favorites",
           empty_text: "You don't have any favorite products yet",
           to_catalog: "Go to catalog"
@@ -589,6 +590,7 @@ i18n.use(initReactI18next).init({
           },
         },
         favorites_page: {
+          title: "Обране",
           empty_title: "Обране",
           empty_text: "У вас ще немає обраних товарів",
           to_catalog: "До каталогу"
