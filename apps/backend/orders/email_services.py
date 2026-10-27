@@ -5,7 +5,8 @@ from django.core.mail import EmailMessage
 from django.db import transaction
 from django.template.loader import render_to_string
 
-from orders.models import Order, OrderStatus
+from core.enums import OrderStatus
+from orders.models import Order
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ def _send_email(*, order: Order, template_name: str, subject: str) -> None:
     """
 
     if not order.email:
-        logger.warning("Order #%s has no email address. Skipping.", order.id)
+        logger.warning("Order #%s has no email address. Skipping.", order.order_reference)
         return
 
     context = {
@@ -27,16 +28,16 @@ def _send_email(*, order: Order, template_name: str, subject: str) -> None:
     try:
         html_content = render_to_string(template_name, context)
         email = EmailMessage(
-            subject=f"{subject} (Order #{order.id})",
+            subject=f"{subject} ({order.order_reference})",
             body=html_content,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[order.email],
         )
         email.content_subtype = "html"
-        email.send(fail_silently=False)
-        logger.info("Email '%s' sent for Order #%s to %s", subject, order.id, order.email)
+        email.send(fail_silently=True)
+        logger.info("Email '%s' sent for %s to %s", subject, order.order_reference, order.email)
     except Exception as e:
-        logger.error("Failed to send email '%s' for Order #%s: %s", subject, order.id, str(e), exc_info=True)
+        logger.error("Failed to send email '%s' for %s: %s", subject, order.order_reference, str(e), exc_info=True)
 
 
 def _send_safe(order: Order, template_name: str, subject: str) -> None:
