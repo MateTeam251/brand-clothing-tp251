@@ -64,6 +64,7 @@ class Product(models.Model):
     is_new_collection = models.BooleanField(default=False)  # For frontend. New collection flag for frontend logic
     is_available = models.BooleanField(default=False)  # For frontend. Button notify of availability
     created_at = models.DateTimeField(auto_now_add=True)  # for publication time sorting
+    is_archived = models.BooleanField(default=False)  # Hidden everywhere on the site; can't be added to cart or ordered
 
     class Meta:
         constraints = [

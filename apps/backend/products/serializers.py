@@ -59,7 +59,7 @@ class CollectionSerializer(LanguageMixin, serializers.ModelSerializer):
 
 class CollectionDetailSerializer(CollectionSerializer):
     """Full variant — with ProductList, for a page with a specific page."""
-    products = serializers.SerializerMethodField(help_text="All products of the collection, not paginated.")
+    products = serializers.SerializerMethodField(help_text="All non-archived products of the collection, not paginated.")
 
     class Meta(CollectionSerializer.Meta):
         fields = CollectionSerializer.Meta.fields + ("products",)
@@ -266,7 +266,8 @@ class AvailabilityRequestSerializer(serializers.ModelSerializer):
         model = AvailabilityRequest
         fields = ("product", "name", "phone_number")
         extra_kwargs = {
-            "product": {"help_text": "Product id. Must be a product with `is_available: false`, otherwise 400."},
+            "product": {"help_text": "Product id. Must be a product with `is_available: false` "
+                                       "that is not archived, otherwise 400."},
             "name": {"help_text": "Name of the person to call back, up to 100 characters."},
             "phone_number": {"help_text": "Phone to call back, up to 20 characters. Format is not checked."},
         }
@@ -275,4 +276,6 @@ class AvailabilityRequestSerializer(serializers.ModelSerializer):
     def validate_product(self, product):
         if product.is_available:
             raise serializers.ValidationError("This product is already available.")
+        elif product.is_archived:
+            raise serializers.ValidationError("This product is archived")
         return product

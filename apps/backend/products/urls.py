@@ -5,7 +5,7 @@ from products.views import ProductViewSet, CollectionViewSet, AvailabilityReques
 
 router = routers.DefaultRouter()
 router.register("collections", CollectionViewSet, basename="collection")
-router.register("", ProductViewSet)
+router.register("", ProductViewSet, basename="product")
 
 urlpatterns = [
     path("availability-requests/", AvailabilityRequestView.as_view(), name="availability-request"),
