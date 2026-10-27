@@ -5,6 +5,7 @@
   position: relative;
   width: 100%;
   padding-inline: 16px;
+  overflow-x: clip;
   background-color: $dominant;
 
   @include flex(column, 72px);
