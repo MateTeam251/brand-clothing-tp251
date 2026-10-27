@@ -28,9 +28,9 @@ class ProductImageInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         "name", "type", "collection", "price_uah", "discount_percent",
-        "is_available", "is_bestseller", "is_new_collection",
+        "is_available", "is_bestseller", "is_new_collection", "is_archived"
     )
-    list_editable = ("is_available", "is_bestseller", "is_new_collection")
+    list_editable = ("is_available", "is_bestseller", "is_new_collection", "is_archived")
     list_filter = ("is_available", "is_bestseller", "is_new_collection", "type", "collection")
     inlines = [ProductImageInline]
     search_fields = ("name",)
