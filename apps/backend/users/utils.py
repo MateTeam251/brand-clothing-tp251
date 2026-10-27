@@ -9,6 +9,35 @@ from django.conf import settings
 
 from users.tokens import account_activation_token
 
+
+def split_full_name(full_name):
+    """
+    Splits a full name on the first space: first word = first name, the rest = last name.
+    Same rule as migration 0006. Cut to 150 characters (AbstractUser fields).
+    """
+    parts = (full_name or "").strip().split(maxsplit=1)
+    first = parts[0][:150] if parts else ""
+    last = parts[1][:150] if len(parts) > 1 else ""
+    return first, last
+
+
+def sync_name_fields(attrs, instance=None):
+    """
+    Keeps the legacy ``name`` and ``first_name``/``last_name`` in step while
+    the frontend still sends and reads ``name``. Remove together with ``name``.
+
+    - only ``name`` sent: split it into first/last;
+    - first and/or last sent: rebuild ``name`` from them.
+    """
+    has_parts = "first_name" in attrs or "last_name" in attrs
+    if "name" in attrs and not has_parts:
+        attrs["first_name"], attrs["last_name"] = split_full_name(attrs["name"])
+    elif has_parts:
+        first = attrs.get("first_name", getattr(instance, "first_name", ""))
+        last = attrs.get("last_name", getattr(instance, "last_name", ""))
+        attrs["name"] = f"{first} {last}".strip()
+    return attrs
+
 def send_activation_email(request, user):
     """
     Send an account activation email to a newly registered user.
