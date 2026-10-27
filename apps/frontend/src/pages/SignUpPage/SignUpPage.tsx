@@ -16,6 +16,8 @@ const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 const FIELD_KEYS = [
+  'first_name',
+  'last_name',
   'email',
   'password',
   'password_confirm',
@@ -50,7 +52,8 @@ export const SignUpPage = () => {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [register, { isLoading }] = useRegisterMutation();
 
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -173,7 +176,8 @@ export const SignUpPage = () => {
         email: trimmedEmail,
         password,
         password_confirm: passwordConfirm,
-        name: name.trim() || undefined,
+        first_name: firstName.trim() || undefined,
+        last_name: lastName.trim() || undefined,
         instagram: trimmedInstagram,
         agree_to_terms: agree,
         marketing_opt_in: marketing,
@@ -208,12 +212,22 @@ export const SignUpPage = () => {
         error={formError}
       >
         <AuthField
-          name="name"
+          name="first_name"
           type="text"
-          label={t('profile.name')}
-          value={name}
-          onChange={setName}
-          autoComplete="name"
+          label={t('profile.first_name')}
+          value={firstName}
+          onChange={setFirstName}
+          error={fieldErrors.first_name}
+          autoComplete="given-name"
+        />
+        <AuthField
+          name="last_name"
+          type="text"
+          label={t('profile.last_name')}
+          value={lastName}
+          onChange={setLastName}
+          error={fieldErrors.last_name}
+          autoComplete="family-name"
         />
         <AuthField
           name="email"

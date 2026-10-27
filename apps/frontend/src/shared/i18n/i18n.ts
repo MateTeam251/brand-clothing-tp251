@@ -191,7 +191,8 @@ i18n.use(initReactI18next).init({
         profile: {
           title: "Profile",
           personal_data: "Personal details",
-          name: "Name",
+          first_name: "First name",
+          last_name: "Last name",
           phone: "Phone number",
           instagram: "Instagram",
           email: "Email",
@@ -622,7 +623,8 @@ i18n.use(initReactI18next).init({
         profile: {
           title: "Профіль",
           personal_data: "Особисті дані",
-          name: "Ім'я",
+          first_name: "Ім'я",
+          last_name: "Прізвище",
           phone: "Номер телефону",
           instagram: "Інстаграм",
           email: "Email",

@@ -17,7 +17,9 @@ export interface UserProfile {
   id: number;
   email: string;
   name: string;
-    birth_date: string | null;
+  first_name: string;
+  last_name: string;
+  birth_date: string | null;
   phone_number: string;
   marketing_opt_in: boolean;
   instagram: string;

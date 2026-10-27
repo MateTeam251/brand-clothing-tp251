@@ -16,7 +16,8 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
   const [updateMe, { isLoading }] = useUpdateMeMutation();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  const [name, setName] = useState(profile.name ?? '');
+  const [firstName, setFirstName] = useState(profile.first_name ?? '');
+  const [lastName, setLastName] = useState(profile.last_name ?? '');
   const [phone, setPhone] = useState(profile.phone_number ?? '');
   const [instagram, setInstagram] = useState(profile.instagram ?? '');
   const [marketingOptIn, setMarketingOptIn] = useState(profile.marketing_opt_in);
@@ -49,7 +50,8 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
 
     try {
       await updateMe({
-        name: name.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         phone_number: phone.trim(),
         instagram: trimmedInstagram,
         marketing_opt_in: marketingOptIn,
@@ -65,11 +67,18 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         <div className={styles.form__fields}>
           <AuthField
-            name="profile-name"
-            label={t('profile.name')}
-            value={name}
-            onChange={handleChange(setName)}
-            autoComplete="name"
+            name="profile-first-name"
+            label={t('profile.first_name')}
+            value={firstName}
+            onChange={handleChange(setFirstName)}
+            autoComplete="given-name"
+          />
+          <AuthField
+            name="profile-last-name"
+            label={t('profile.last_name')}
+            value={lastName}
+            onChange={handleChange(setLastName)}
+            autoComplete="family-name"
           />
           <AuthField
             name="profile-phone"
