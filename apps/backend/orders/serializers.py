@@ -52,7 +52,7 @@ class OrderItemSerializer(LanguageMixin, serializers.ModelSerializer):
         )
         read_only_fields = fields
 
-    def get_fabric_composition(self, obj):
+    def get_fabric_composition(self, obj) -> str:
         """Returns the fabric composition in the language resolved by LanguageMixin."""
         return obj.fabric_composition_eng if self._lang() == "eng" else obj.fabric_composition_ua
 
