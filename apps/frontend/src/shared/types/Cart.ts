@@ -11,6 +11,7 @@ export interface CartLine {
   price: string;
   total_price: string;
   is_available: boolean;
+  is_archived: boolean;
 }
 
 export interface Cart {

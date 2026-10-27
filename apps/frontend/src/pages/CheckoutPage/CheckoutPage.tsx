@@ -62,7 +62,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
   const [submitError, setSubmitError] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const hasUnavailable = cart.items.some((item) => !item.is_available);
+  const hasUnavailable = cart.items.some((item) => !item.is_available || item.is_archived);
 
   const handleContactChange = (field: keyof CheckoutContactValues, value: string) => {
     setContact((prev) => ({ ...prev, [field]: value }));
