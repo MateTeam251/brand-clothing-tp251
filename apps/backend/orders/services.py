@@ -60,7 +60,7 @@ def create_order_from_cart(*, cart, checkout_data):
     for cart_item in cart_items:
         product = cart_item.product
 
-        if not product.is_available:
+        if not product.is_available or product.is_archived:
             raise ValidationError(
                 {
                     "cart": f"Product {product.name} is no longer available."
