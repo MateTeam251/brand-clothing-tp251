@@ -13,7 +13,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "amount",
         "provider",
         "status",
-        "transaction_id",
+        "payment_url",
         "payment_data",
         "paid_at",
         "created_at",
@@ -28,7 +28,6 @@ class PaymentAdmin(admin.ModelAdmin):
 
     search_fields = (
         "provider_order_reference",
-        "transaction_id",
         "order__id",
         "order__email",
     )
@@ -39,7 +38,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "currency",
         "amount",
         "provider",
-        "transaction_id",
+        "payment_url",
         "payment_data",
         "paid_at",
         "created_at",
@@ -64,7 +63,7 @@ class PaymentAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "provider",
-                    "transaction_id",
+                    "payment_url",
                     "payment_data",
                     "paid_at",
                 )
