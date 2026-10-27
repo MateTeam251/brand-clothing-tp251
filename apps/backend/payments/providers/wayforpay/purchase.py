@@ -13,6 +13,7 @@ def build_purchase_payload(
         product_names: list[str],
         product_counts: list[str],
         product_prices: list[str],
+        order_timeout: int = 900,
         language: str = "UA"
 ) -> dict:
     """
@@ -55,6 +56,7 @@ def build_purchase_payload(
         "orderDate": order_date,
         "amount": amount,
         "currency": currency,
+        "orderTimeout": order_timeout,
         "productName[]": product_names,
         "productCount[]": product_counts,
         "productPrice[]": product_prices,
@@ -70,6 +72,7 @@ def send_purchase_request(
         product_names: list[str],
         product_counts: list[str],
         product_prices: list[str],
+        order_timeout: int,
         language: str = "UA"
 ) -> str:
     """
@@ -84,6 +87,7 @@ def send_purchase_request(
         product_names=product_names,
         product_counts=product_counts,
         product_prices=product_prices,
+        order_timeout=order_timeout,
         language=language
     )
 
