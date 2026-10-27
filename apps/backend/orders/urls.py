@@ -14,17 +14,17 @@ urlpatterns = [
         name="order-list",
     ),
     path(
-        "<int:pk>/",
-        CustomerOrderDetailView.as_view(),
-        name="order-detail",
-    ),
-    path(
         "checkout/",
         CheckoutView.as_view(),
         name="checkout",
     ),
     path(
-        "<int:pk>/retry-payment/",
+        "<str:order_reference>/",
+        CustomerOrderDetailView.as_view(),
+        name="order-detail",
+    ),
+    path(
+        "<str:order_reference>/retry-payment/",
         RetryPaymentView.as_view(),
         name="retry-payment",
     )
