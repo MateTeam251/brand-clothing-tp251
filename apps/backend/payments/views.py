@@ -1,14 +1,21 @@
 import json
 import logging
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
-from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from django.http import HttpResponseRedirect
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiResponse
+from rest_framework import status, serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from payments.providers.wayforpay.callback import handle_callback
+from core.enums import PaymentStatus, PaymentProvider, OrderStatus
+from core.openapi import DETAIL_RESPONSE
+from payments.models import Payment
+from payments.providers.wayforpay.callback import handle_callback, sync_payment_status
 from payments.serializers import (
     WayForPayCallbackSerializer,
     WayForPayCallbackResponseSerializer,
@@ -31,13 +38,37 @@ class WayForPayCallbackView(APIView):
     parser_classes = []
 
     @extend_schema(
-        request=WayForPayCallbackSerializer,
-        responses={200: WayForPayCallbackResponseSerializer},
-        summary="Handle WayForPay payment callback",
+        tags=["Payments"],
+        summary="WayForPay payment webhook (serviceUrl)",
         description=(
-                "Receives a server-to-server payment callback from WayForPay,"
-                "verifies its signature and processes the payment status."
+            "Server-to-server callback from WayForPay. Not called by the frontend.\n\n"
+            "1. Required fields and `merchantAccount` are checked.\n"
+            "2. `merchantSignature` (HMAC-MD5) is verified. Invalid signature gives **400** "
+            "and nothing changes.\n"
+            "3. The attempt is found by `provider_order_reference` (`ORD-XXXXXXXX-<attempt>`); "
+            "amount and currency must match the attempt.\n"
+            "4. Result is applied idempotently:\n\n"
+            "| transactionStatus | effect |\n"
+            "|---|---|\n"
+            "| `Approved` | attempt `successful`, order `paid`, cart converted, 'paid' email after commit |\n"
+            "| `Approved` for an order that is already paid | attempt `duplicate` + "
+            "`needs_refund` in `payment_data` (manual refund), error is logged |\n"
+            "| `Declined`, `Expired` | attempt `failed` (only if it was `pending`) |\n"
+            "| anything else | logged, nothing changes |\n\n"
+            "The response is the signed `accept` WayForPay expects "
+            "(`orderReference`, `status`, `time`, `signature`). "
+            "Any non-accept response makes WayForPay repeat the webhook, "
+            "which is safe because processing is idempotent."
         ),
+        request=WayForPayCallbackSerializer,
+        responses={
+            200: WayForPayCallbackResponseSerializer,
+            400: OpenApiResponse(
+                DETAIL_RESPONSE,
+                description="Invalid JSON, missing fields, bad signature, unknown payment or amount mismatch.",
+            ),
+            500: OpenApiResponse(DETAIL_RESPONSE, description="Unexpected error."),
+        },
     )
     def post(self, request):
         """
@@ -103,14 +134,104 @@ class WayForPayCallbackView(APIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
-class PaymentSuccessView(APIView):
+@extend_schema(
+    tags=["Payments"],
+    summary="WayForPay browser return (returnUrl)",
+    description=(
+        "Opened by the customer's **browser** after paying on the WayForPay page "
+        "(POST with form data, sometimes GET). Not called by the frontend.\n\n"
+        "Only `orderReference` from the request is used, and only to find the payment "
+        "attempt. It is **not** proof of payment. If the attempt is still `pending` "
+        "(webhook not processed yet), the backend asks WayForPay for the real status "
+        "(Check Status) and applies it. Then it redirects (**303**) to "
+        "`{FRONTEND_URL}/payment/result?status=<status>&order=<order_reference>`.\n\n"
+        "| status | meaning |\n"
+        "|---|---|\n"
+        "| `success` | order is `paid` |\n"
+        "| `failed` | attempt declined/expired, or unknown/missing reference "
+        "(no `order` param in the last two cases) |\n"
+        "| `pending` | bank is still processing; a confirmation email will follow |\n\n"
+        "The frontend must not treat `status` in the URL as confirmation: anyone can type it. "
+        "The real state is `GET /api/orders/<order_reference>/`."
+    ),
+    request=inline_serializer(
+        "WayForPayReturnForm", {"orderReference": serializers.CharField()}
+    ),
+    responses={
+        303: OpenApiResponse(description="Redirect to the frontend payment result page."),
+        429: OpenApiResponse(description="Too many requests (30/min)."),
+    },
+)
+class PaymentReturnView(APIView):
+    """
+    Browser return from WayForPay (returnUrl).
+
+    The request data only identifies the payment attempt and is never trusted
+    as payment confirmation. The status is read from our DB, refreshed through
+    WayForPay Check Status when the attempt is still pending.
+    Races with the serviceUrl webhook are safe: both go through
+    ``_apply_payment_result``, which locks the rows and is idempotent.
+    """
+
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "payment_return"
 
     def get(self, request, *args, **kwargs):
-        return Response(
-            {"message": "Payment successful! Thank you for your order."},
-            status=status.HTTP_200_OK,
-        )
+        return self._handle(request)
+
     def post(self, request, *args, **kwargs):
-        return self.get(request, *args, **kwargs)
+        return self._handle(request)
+
+    def _handle(self, request):
+        reference = (
+            request.data.get("orderReference")
+            or request.query_params.get("orderReference")
+        )
+
+        if not reference:
+            logger.warning("WayForPay return without orderReference")
+            return self._redirect("failed")
+
+        payment = (
+            Payment.objects
+            .filter(
+                provider=PaymentProvider.WAYFORPAY,
+                provider_order_reference=reference,
+            )
+            .first()
+        )
+
+        if payment is None:
+            logger.warning("WayForPay return for unknown reference: %s", reference)
+            return self._redirect("failed")
+
+        if payment.status == PaymentStatus.PENDING:
+            try:
+                payment = sync_payment_status(payment)
+            except Exception:
+                logger.exception("Return sync failed for %s", reference)
+
+        order = payment.order
+
+        return self._redirect(self._resolve_status(order, payment), order.order_reference)
+
+    @staticmethod
+    def _resolve_status(order, payment) -> str:
+        if order.status == OrderStatus.PAID:
+            return "success"
+        if payment.status == PaymentStatus.FAILED:
+            return "failed"
+        return "pending"
+
+    @staticmethod
+    def _redirect(result: str, order_reference: str | None = None):
+        params = {"status": result}
+        if order_reference:
+            params["order"] = order_reference
+
+        return HttpResponseRedirect(
+            f"{settings.FRONTEND_URL}/payment/result?{urlencode(params)}",
+            status=status.HTTP_303_SEE_OTHER,
+        )
