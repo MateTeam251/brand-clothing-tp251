@@ -65,7 +65,7 @@ def send_order_paid_email(order: Order) -> None:
 
 def send_order_status_changed_email(order: Order) -> None:
     """
-
+    Send an email notifying the customer about the order status change.
     """
 
     status_map = {
