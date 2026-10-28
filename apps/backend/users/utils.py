@@ -48,6 +48,7 @@ def send_activation_email(request, user):
     message = render_to_string("users/activation_email.html", {
         "user": user,
         "activation_link": activation_link,
+        "frontend_url": settings.FRONTEND_URL,
     })
     email = EmailMessage(subject, message, to=[user.email])
     email.content_subtype = "html"
@@ -97,6 +98,7 @@ def send_password_reset_link(request, user):
     message = render_to_string("users/password_reset.html", {
         "user": user,
         "reset_link": reset_link,
+        "frontend_url": settings.FRONTEND_URL,
     })
     email = EmailMessage(subject, message, to=[user.email])
     email.content_subtype = "html"
@@ -134,6 +136,7 @@ def send_email_change_confirmation(request, user, new_email, token):
         "user": user,
         "new_email": new_email,
         "confirm_link": confirm_link,
+        "frontend_url": settings.FRONTEND_URL,
     })
     email = EmailMessage(subject, message, to=[new_email])
     email.content_subtype = "html"
@@ -164,6 +167,7 @@ def send_email_change_notification(user, old_email):
     message = render_to_string("users/email_change_notification.html", {
         "user": user,
         "old_email": old_email,
+        "frontend_url": settings.FRONTEND_URL,
     })
     email = EmailMessage(subject, message, to=[old_email])
     email.content_subtype = "html"
