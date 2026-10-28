@@ -93,6 +93,33 @@ class OrderItemInline(admin.TabularInline):
         return False
 
 
+class PaymentInline(admin.TabularInline):
+    """
+    All payment attempts of the order, with a link to each payment.
+    """
+
+    model = Payment
+    extra = 0
+    can_delete = False
+    show_change_link = True
+    ordering = ("-created_at",)
+
+    fields = (
+        "provider_order_reference",
+        "status",
+        "amount",
+        "currency",
+        "created_at",
+    )
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
