@@ -1,5 +1,6 @@
-from drf_spectacular.utils import extend_schema, OpenApiResponse
-from rest_framework import generics, status
+from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
+from rest_framework import generics, status, serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -15,7 +16,7 @@ from orders.serializers import (
     CheckoutSerializer,
     CheckoutResponseSerializer,
 )
-from orders.services import checkout, retry_payment
+from orders.services import checkout, retry_payment, checkout_fop
 
 PROVIDER_UNAVAILABLE = OpenApiResponse(
     DETAIL_RESPONSE,
@@ -267,3 +268,88 @@ class RetryPaymentView(APIView):
             CheckoutResponseSerializer(response_data).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+class CheckoutFopView(CheckoutView):
+    """
+    Create an order to be paid by bank transfer to the FOP account.
+    """
+
+    @extend_schema(
+        tags=["Orders"],
+        summary="Checkout with bank transfer to FOP",
+        description=(
+                "Creates an order with status `PENDING` without any online payment. "
+                "The customer pays by bank transfer and must put `order_reference` "
+                "into the payment purpose. The administrator confirms the payment manually. "
+                "Bank details are shown by the frontend."
+        ),
+        request=CheckoutSerializer,
+        responses={
+            201: inline_serializer("FopCheckoutResponse", {
+                "order_reference": serializers.CharField(),
+            }),
+            400: VALIDATION_ERROR,
+            429: THROTTLED,
+        },
+    )
+    def post(self, request):
+        serializer = CheckoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        cart = self._get_current_cart(request)
+        order = checkout_fop(cart=cart, checkout_data=serializer.validated_data)
+
+        return Response(
+            {"order_reference": order.order_reference},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+@extend_schema(
+    tags=["Orders"],
+    summary="Get order payment status (public)",
+    description=(
+        "Public, for guests too. Returns only the statuses, no personal data. "
+        "`status` is the order status (`pending`, `paid`, ...), `last_payment_status` is "
+        "the status of the latest payment attempt (`pending`, `failed`, `successful`, "
+        "`duplicate`) or null.\n\n"
+        "Use it on the payment result page: while `status` is `pending` poll every few "
+        "seconds (the webhook updates it). Unknown reference gives **404**."
+    ),
+    responses={
+        200: inline_serializer("OrderStatus", {
+            "order_reference": serializers.CharField(),
+            "status": serializers.CharField(),
+            "last_payment_status": serializers.CharField(allow_null=True),
+        }),
+        404: OpenApiResponse(DETAIL_RESPONSE, description="Order not found."),
+        429: THROTTLED,
+    },
+)
+class OrderStatusView(APIView):
+    """
+    Minimal public order status by ``order_reference``.
+    """
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "order_status"
+
+    def get(self, request, order_reference):
+        order = get_object_or_404(
+            Order.objects.only("id", "order_reference", "status"),
+            order_reference=order_reference,
+        )
+        last_payment_status = (
+            order.payments.order_by("-created_at")
+            .values_list("status", flat=True)
+            .first()
+        )
+
+        return Response({
+            "order_reference": order.order_reference,
+            "status": order.status,
+            "last_payment_status": last_payment_status,
+        })
