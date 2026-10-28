@@ -9,7 +9,7 @@ import styles from './BankTransferDetails.module.scss';
 
 interface BankTransferDetailsProps {
   currency: Currency;
-  orderId?: number;
+  orderId?: string;
 }
 
 export function BankTransferDetails({ currency, orderId }: BankTransferDetailsProps) {

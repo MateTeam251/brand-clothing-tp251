@@ -31,7 +31,7 @@ export interface CheckoutRequest {
 }
 
 export interface CheckoutResponse {
-  order_id: number;
+  order_reference: string;
   payment_id: number;
   payment_url: string;
 }
