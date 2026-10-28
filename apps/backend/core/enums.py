@@ -20,8 +20,6 @@ class Size(models.TextChoices):
 
 class DeliveryProvider(models.TextChoices):
     NOVA_POSHTA = "NOVA_POSHTA", "Nova Poshta"
-    UKRPOSHTA = "UKRPOSHTA", "Ukrposhta"
-    DHL = "DHL", "DHL"
 
 class DeliveryType(models.TextChoices):
     BRANCH = "branch", "Відділення"
