@@ -29,8 +29,7 @@
   background: #fff;
   border-radius: 24px 24px 0 0;
   max-height: calc(100dvh - 40px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
   transition: transform 0.2s ease-out;
 
   @include flex(column, 32px);
@@ -58,7 +57,11 @@
   &__wrapper {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 24px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   &__section {
@@ -77,7 +80,7 @@
   &__options {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 
   &__option {
