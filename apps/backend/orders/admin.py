@@ -259,6 +259,16 @@ class OrderAdmin(admin.ModelAdmin):
         return self.always_readonly + self.readonly_after_create
 
     def save_model(self, request, obj: Order, form, change):
+        if not change:
+            obj.subtotal = Decimal("0.00")
+            obj.discount_amount = Decimal("0.00")
+            obj.total_amount = Decimal("0.00")
+            super().save_model(request, obj, form, change)
+            obj.order_reference = build_order_reference(obj.pk)
+            obj.save(update_fields=["order_reference"])
+            form.instance.order_reference = obj.order_reference
+            return
+
         old_status = None
         if change and "status" in form.changed_data:
             old_status = Order.objects.only("status").get(pk=obj.pk).status
