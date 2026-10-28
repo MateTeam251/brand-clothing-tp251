@@ -11,7 +11,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 
 from users.tokens import make_email_change_token
 from users.utils import (send_password_reset_link,
-                         send_email_change_confirmation)
+                         send_email_change_confirmation,
+                         sync_name_fields)
 from carts.services import merge_guest_cart_into_user_cart
 
 
@@ -47,11 +48,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("email", "password", "password_confirm", "name", "instagram",
-                  "agree_to_terms", "marketing_opt_in")
+        fields = ("email", "password", "password_confirm", "first_name", "last_name", "name",
+                  "instagram", "agree_to_terms", "marketing_opt_in")
         extra_kwargs = {
             "email": {"help_text": "Login of the account. Must be unique. An activation link is sent here."},
-            "name": {"help_text": "Display name. Optional."},
+            "first_name": {"help_text": "First name. Optional."},
+            "last_name": {"help_text": "Last name. Optional."},
+            "name": {"help_text": "Deprecated, use `first_name`/`last_name`. Still accepted: split into them."},
             "instagram": {"help_text": "Instagram handle or profile link. Required, cannot be empty."},
         }
 
@@ -71,7 +74,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         if attrs["password"] != attrs["password_confirm"]:
             raise serializers.ValidationError({"password_confirm": "Passwords do not match"})
-        return attrs
+        return sync_name_fields(attrs)
 
     def create(self, validated_data):
         """
@@ -149,12 +152,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "birth_date", "phone_number",
-                  "marketing_opt_in", "instagram",]
+        fields = ["id", "email", "first_name", "last_name", "name", "birth_date",
+                  "phone_number", "marketing_opt_in", "instagram",]
         read_only_fields = ['id', 'email']
         extra_kwargs = {
             "email": {"help_text": "Cannot be changed here; a sent value is ignored. Use `me/email/` to change it."},
-            "name": {"help_text": "Display name. Can be empty."},
+            "first_name": {"help_text": "First name. Can be empty."},
+            "last_name": {"help_text": "Last name. Can be empty."},
+            "name": {"help_text": "Deprecated, use `first_name`/`last_name`. "
+                              "Kept in sync with them (sent alone, it is split into them)."},
             "birth_date": {"help_text": "Date of birth, `YYYY-MM-DD`. Cannot be in the future. Can be null."},
             "phone_number": {"help_text": "Phone number, up to 20 characters. Format is not checked. Can be empty."},
             "marketing_opt_in": {"help_text": "Consent to marketing emails."},
@@ -177,6 +183,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if value and value > timezone.localdate():
             raise serializers.ValidationError("Birth date can't be in the future.")
         return value
+
+    def validate(self, attrs):
+        return sync_name_fields(attrs, self.instance)
 
     def update(self, instance, validated_data):
 
