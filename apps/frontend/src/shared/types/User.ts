@@ -23,4 +23,5 @@ export interface UserProfile {
   phone_number: string;
   marketing_opt_in: boolean;
   instagram: string;
+  telegram: string;
 }

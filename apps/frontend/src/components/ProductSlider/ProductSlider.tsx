@@ -15,6 +15,8 @@ type ProductSliderProps = {
   viewAllTo?: string;
   showViewAll?: boolean;
   excludeProductId?: number;
+  onlyAvailable?: boolean;
+  maxItems?: number;
 };
 
 export const ProductSlider = ({
@@ -23,6 +25,8 @@ export const ProductSlider = ({
   viewAllTo = '/catalog?is_bestseller=true',
   showViewAll = true,
   excludeProductId,
+  onlyAvailable = false,
+  maxItems,
 }: ProductSliderProps) => {
   const titleId = useId();
   const {
@@ -39,9 +43,10 @@ export const ProductSlider = ({
     lang: language,
   });
 
-  const products = (data?.results ?? []).filter(
-    (product) => product.id !== excludeProductId,
-  );
+  const products = (data?.results ?? [])
+    .filter((product) => product.id !== excludeProductId)
+    .filter((product) => !onlyAvailable || product.is_available)
+    .slice(0, maxItems);
 
   if (!isLoading && !isError && products.length === 0) {
     return null;

@@ -222,14 +222,18 @@ export const ProductDetailsPage = () => {
           </div>
         </div>
 
-        <div className={styles.details__recommended}>
-          <ProductSlider
-            title={t('product.slider_title')}
-            queryParams={{ ordering: '?', limit: 9 }}
-            excludeProductId={product.id}
-            showViewAll={false}
-          />
-        </div>
+        {!product.is_available && (
+          <div className={styles.details__recommended}>
+            <ProductSlider
+              title={t('product.alternatives_title')}
+              queryParams={{ type: product.slug, limit: 50 }}
+              excludeProductId={product.id}
+              onlyAvailable
+              maxItems={9}
+              showViewAll={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

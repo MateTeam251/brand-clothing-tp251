@@ -1,3 +1,20 @@
-<p>Hello, {{ user.name|default:old_email }}!</p>
-<p>The email of your account was changed to {{ user.email }}.</p>
-<p>If it was you, ignore this message. If not, contact the moderators.</p>
+{% extends "emails/base.html" %}
+
+{% block title %}Email змінено{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">Email змінено</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">Адресу вашого акаунта The Art. The Artist змінено на <strong style="color:#000000;">{{ user.email }}</strong>.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding:20px 24px;background-color:#F6F2E9;border-radius:12px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;text-align:center;">
+      Це були ви? Нічого робити не потрібно.<br>
+      Якщо ні — напишіть нам в
+      <a href="https://www.instagram.com/theart.theartist.ua/" style="color:#000000;">Instagram Direct</a>
+      або на
+      <a href="mailto:the.art.the.artist.studio@gmail.com" style="color:#000000;">the.art.the.artist.studio@gmail.com</a>.
+    </td>
+  </tr>
+</table>
+{% endblock %}

@@ -23,6 +23,7 @@ def _send_email(*, order: Order, template_name: str, subject: str) -> None:
         "order": order,
         "items": list(order.items.all()),
         "site_url": getattr(settings, "SITE_URL", "http://127.0.0.1:8000"),
+        "frontend_url": settings.FRONTEND_URL,
     }
 
     try:

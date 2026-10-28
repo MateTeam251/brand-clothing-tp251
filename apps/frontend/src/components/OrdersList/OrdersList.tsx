@@ -27,10 +27,10 @@ export const OrdersList = () => {
   const language = useAppSelector((state) => state.settings.language);
   const { data: orders, isLoading, isError, refetch } = useGetOrdersQuery();
   const [retryPayment] = useRetryPaymentMutation();
-  const [payingOrderId, setPayingOrderId] = useState<number | null>(null);
-  const [failedOrderId, setFailedOrderId] = useState<number | null>(null);
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+  const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
 
-  const handlePay = async (orderId: number) => {
+  const handlePay = async (orderId: string) => {
     setFailedOrderId(null);
     setPayingOrderId(orderId);
 
@@ -70,10 +70,12 @@ export const OrdersList = () => {
         const hasDiscount = Number(order.discount_amount) > 0;
 
         return (
-          <li key={order.id} className={styles.orders__item}>
+          <li key={order.order_reference} className={styles.orders__item}>
             <div className={styles.orders__header}>
               <div>
-                <h3 className={styles.orders__number}>{t('orders.number', { id: order.id })}</h3>
+                <h3 className={styles.orders__number}>
+                  {t('orders.number', { id: order.order_reference })}
+                </h3>
                 <p className={styles.orders__meta}>
                   {dateFormatter.format(new Date(order.created_at))} · {t('orders.items_count', { count: itemsCount })}
                 </p>
@@ -125,14 +127,14 @@ export const OrdersList = () => {
                   type="button"
                   className={styles.orders__pay}
                   disabled={payingOrderId !== null}
-                  onClick={() => void handlePay(order.id)}
+                  onClick={() => void handlePay(order.order_reference)}
                 >
-                  {payingOrderId === order.id
+                  {payingOrderId === order.order_reference
                     ? t('orders_pay.paying')
                     : t('orders_pay.pay')}
                 </button>
 
-                {failedOrderId === order.id && (
+                {failedOrderId === order.order_reference && (
                   <p className={styles.orders__payError}>{t('orders_pay.error')}</p>
                 )}
               </div>

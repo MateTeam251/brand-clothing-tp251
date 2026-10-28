@@ -18,7 +18,7 @@ class CustomUserManager(UserManager):
             email (str): The user's email address. Required.
             password (str): The raw password to hash and store.
             **extra_fields: Any additional fields defined on the User
-                model (e.g. name, phone_number, birth_date).
+                model (e.g. first_name, phone_number, birth_date).
 
         Raises:
             ValueError: If ``email`` is not provided.
@@ -90,22 +90,26 @@ class User(AbstractUser):
     Attributes:
         email (EmailField): Unique email address. Used as the login
             identifier instead of username.
+        first_name, last_name (CharField): Inherited from
+            ``AbstractUser`` (max length 150, ``blank=True``). Required
+            on registration and cannot be emptied in the profile; this
+            is enforced by the serializers, not the model.
         birth_date (DateField): User's date of birth. Optional
             (nullable and blank).
         marketing_opt_in (BooleanField): Whether the user has opted in
             to receive marketing communications. Defaults to False.
         instagram (TextField): User's Instagram handle or profile link.
-            NOTE: this field has no ``blank=True``/``null=True``, so it
-            is effectively required by forms/serializers unless a
-            default is supplied — double-check this is intentional.
+            Optional (``blank=True``).
+        telegram (CharField): User's Telegram handle, max length 120.
+            Optional (``blank=True``), defaults to an empty string.
         phone_number (CharField): User's phone number, max length 20.
-            Optional in forms (``blank=True``) but defaults to an
-            empty string at the database level (not nullable).
+            ``blank=True`` at the model level (existing users may have
+            none), but required by the registration and profile
+            serializers. Not nullable; empty value is an empty string.
         is_active (BooleanField): Overrides the default from
             ``AbstractUser``. Defaults to False, meaning newly created
             users are inactive until explicitly activated (e.g. via an
             email confirmation / activation flow).
-        name (TextField): Free-text display name. Optional (blank=True).
 
     Class attributes:
         USERNAME_FIELD (str): Set to "email" — Django will use this
@@ -120,12 +124,11 @@ class User(AbstractUser):
     birth_date = models.DateField(blank=True, null=True)
 
     marketing_opt_in = models.BooleanField(default=False)
-    instagram = models.TextField()
+    instagram = models.TextField(blank=True)
+    telegram = models.CharField(max_length=120, blank=True, default="")
 
     phone_number = models.CharField(max_length=20, blank=True)
     is_active = models.BooleanField(default=False)
-
-    name = models.TextField(blank=True)
 
 
     USERNAME_FIELD = "email"

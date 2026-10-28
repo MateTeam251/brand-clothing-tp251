@@ -1,13 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-</head>
-<body style="font-family: sans-serif; color: #333; line-height: 1.5;">
-    <h2>Payment Confirmed!</h2>
-    <p>Hi {{ order.first_name }},</p>
-    <p>We've received your payment for order <strong>#{{ order.order_reference }}</strong>.</p>
-    <p><strong>Amount Paid:</strong> {{ order.total_amount }} {{ order.currency }}</p>
-    <p>We are preparing your package for shipment now!</p>
-</body>
-</html>
+{% extends "emails/base.html" %}
+
+{% block title %}Дякуємо за замовлення{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">Дякуємо за замовлення!</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">Ми отримали вашу оплату. Замовлення № {{ order.order_reference }} прийнято — кожна річ шиється під замовлення, тож орієнтовний термін виготовлення 5–8 робочих днів.</p>
+
+{% with account_url=frontend_url|add:"/account" %}
+{% include "emails/_button.html" with url=account_url label="Відстежити замовлення" %}
+{% endwith %}
+
+{% include "emails/_order_summary.html" with total_label="Разом сплачено" %}
+{% endblock %}

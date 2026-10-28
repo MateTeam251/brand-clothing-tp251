@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useUpdateMeMutation } from '../../shared/api/userApi';
 import type { UserProfile } from '../../shared/types/User';
 import { AuthField } from '../AuthField';
+import { ChangeEmailModal } from '../ChangeEmailModal';
 import { ChangePasswordModal } from '../ChangePasswordModal';
 import styles from './ProfileForm.module.scss';
 
@@ -15,14 +16,20 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
   const { t } = useTranslation();
   const [updateMe, { isLoading }] = useUpdateMeMutation();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   const [firstName, setFirstName] = useState(profile.first_name ?? '');
   const [lastName, setLastName] = useState(profile.last_name ?? '');
   const [birthDate, setBirthDate] = useState(profile.birth_date ?? '');
   const [phone, setPhone] = useState(profile.phone_number ?? '');
   const [instagram, setInstagram] = useState(profile.instagram ?? '');
+  const [telegram, setTelegram] = useState(profile.telegram ?? '');
   const [marketingOptIn, setMarketingOptIn] = useState(profile.marketing_opt_in);
-  const [instagramError, setInstagramError] = useState<string | undefined>();
+  const [errors, setErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  }>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -39,14 +46,18 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const trimmedInstagram = instagram.trim();
+    const nextErrors = {
+      firstName: firstName.trim() ? undefined : t('profile.errors.first_name_required'),
+      lastName: lastName.trim() ? undefined : t('profile.errors.last_name_required'),
+      phone: phone.trim() ? undefined : t('profile.errors.phone_required'),
+    };
 
-    if (!trimmedInstagram) {
-      setInstagramError(t('profile.errors.instagram_required'));
+    setErrors(nextErrors);
+
+    if (nextErrors.firstName || nextErrors.lastName || nextErrors.phone) {
       return;
     }
 
-    setInstagramError(undefined);
     setFormError(null);
 
     try {
@@ -55,7 +66,8 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
         last_name: lastName.trim(),
         birth_date: birthDate || null,
         phone_number: phone.trim(),
-        instagram: trimmedInstagram,
+        instagram: instagram.trim(),
+        telegram: telegram.trim(),
         marketing_opt_in: marketingOptIn,
       }).unwrap();
       setIsSaved(true);
@@ -74,6 +86,7 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
             value={firstName}
             onChange={handleChange(setFirstName)}
             autoComplete="given-name"
+            error={errors.firstName}
           />
           <AuthField
             name="profile-last-name"
@@ -81,6 +94,7 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
             value={lastName}
             onChange={handleChange(setLastName)}
             autoComplete="family-name"
+            error={errors.lastName}
           />
           <AuthField
             name="profile-birth-date"
@@ -97,13 +111,19 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
             value={phone}
             onChange={handleChange(setPhone)}
             autoComplete="tel"
+            error={errors.phone}
           />
           <AuthField
             name="profile-instagram"
             label={t('profile.instagram')}
             value={instagram}
             onChange={handleChange(setInstagram)}
-            error={instagramError}
+          />
+          <AuthField
+            name="profile-telegram"
+            label={t('profile.telegram')}
+            value={telegram}
+            onChange={handleChange(setTelegram)}
           />
           <AuthField
             name="profile-email"
@@ -113,6 +133,14 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
             disabled
           />
         </div>
+
+        <button
+          type="button"
+          className={styles.form__changePassword}
+          onClick={() => setIsEmailModalOpen(true)}
+        >
+          {t('profile.change_email')}
+        </button>
 
         <button type="button" className={styles.form__changePassword} onClick={handleChangePassword}>
           {t('profile.change_password')}
@@ -148,6 +176,13 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
 
     {isPasswordModalOpen && (
       <ChangePasswordModal onClose={() => setIsPasswordModalOpen(false)} />
+    )}
+      
+    {isEmailModalOpen && (
+      <ChangeEmailModal
+        currentEmail={profile.email}
+        onClose={() => setIsEmailModalOpen(false)}
+      />
     )}
     </>
   );

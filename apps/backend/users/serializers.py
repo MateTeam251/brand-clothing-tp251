@@ -47,18 +47,64 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("email", "password", "password_confirm", "name", "instagram",
+        fields = ("email", "password", "password_confirm",
+                  "first_name", "last_name", "phone_number",
+                  "instagram", "telegram", "birth_date",
                   "agree_to_terms", "marketing_opt_in")
         extra_kwargs = {
-            "email": {"help_text": "Login of the account. Must be unique. An activation link is sent here."},
-            "name": {"help_text": "Display name. Optional."},
-            "instagram": {"help_text": "Instagram handle or profile link. Required, cannot be empty."},
+            # the default UniqueValidator compares case-sensitively; validate_email checks it instead
+            "email": {"validators": [],
+                      "help_text": "Login of the account. Must be unique (case-insensitive). "
+                                   "An activation link is sent here."},
+            "first_name": {"required": True, "allow_blank": False, "help_text": "First name. Required."},
+            "last_name": {"required": True, "allow_blank": False, "help_text": "Last name. Required."},
+            "phone_number": {"required": True, "allow_blank": False, "help_text": "Phone number. Required."},
+            "instagram": {"help_text": "Instagram handle or profile link. Optional."},
+            "telegram": {"help_text": "Telegram handle. Optional."},
+            "birth_date": {"help_text": "Date of birth, `YYYY-MM-DD`. Optional."},
         }
 
+
+    def validate_email(self, value):
+        """
+        Normalize the email and make sure no account uses it yet.
+
+        Normalized the same way as in ``create_user``, so the check runs
+        on the value that will be saved. Compared case-insensitively, as
+        in ``UpdateEmailRequestSerializer``.
+
+        Raises:
+            serializers.ValidationError: If the email belongs to another
+                account (case-insensitive).
+
+        Returns:
+            str: The normalized email.
+        """
+        value = User.objects.normalize_email(value)
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
 
     def validate_agree_to_terms(self, value):
         if not value:
             raise serializers.ValidationError("You must agree to the terms and privacy policy.")
+        return value
+
+    def validate_birth_date(self, value):
+        """
+        Reject a birth date in the future.
+
+        Args:
+            value (date | None): The submitted date of birth.
+
+        Raises:
+            serializers.ValidationError: If ``value`` is later than today.
+
+        Returns:
+            date | None: The validated date, unchanged.
+        """
+        if value and value > timezone.localdate():
+            raise serializers.ValidationError("Birth date can't be in the future.")
         return value
 
 
@@ -149,16 +195,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "name", "birth_date", "phone_number",
-                  "marketing_opt_in", "instagram",]
+        fields = ["id", "email", "first_name", "last_name", "birth_date",
+                  "phone_number", "marketing_opt_in", "instagram", "telegram"]
         read_only_fields = ['id', 'email']
         extra_kwargs = {
             "email": {"help_text": "Cannot be changed here; a sent value is ignored. Use `me/email/` to change it."},
-            "name": {"help_text": "Display name. Can be empty."},
+            "first_name": {"allow_blank": False, "help_text": "First name. Cannot be empty."},
+            "last_name": {"allow_blank": False, "help_text": "Last name. Cannot be empty."},
             "birth_date": {"help_text": "Date of birth, `YYYY-MM-DD`. Cannot be in the future. Can be null."},
-            "phone_number": {"help_text": "Phone number, up to 20 characters. Format is not checked. Can be empty."},
+            "phone_number": {"allow_blank": False,
+                             "help_text": "Phone number, up to 20 characters. Format is not checked. Cannot be empty."},
             "marketing_opt_in": {"help_text": "Consent to marketing emails."},
-            "instagram": {"help_text": "Instagram handle or profile link. Cannot be empty."},
+            "instagram": {"help_text": "Instagram handle or profile link. Optional, can be empty."},
+            "telegram": {"help_text": "Telegram handle. Optional, can be empty."},
         }
 
     def validate_birth_date(self, value):
