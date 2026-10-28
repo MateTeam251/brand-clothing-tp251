@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useUpdateMeMutation } from '../../shared/api/userApi';
 import type { UserProfile } from '../../shared/types/User';
 import { AuthField } from '../AuthField';
+import { ChangeEmailModal } from '../ChangeEmailModal';
 import { ChangePasswordModal } from '../ChangePasswordModal';
 import styles from './ProfileForm.module.scss';
 
@@ -15,6 +16,7 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
   const { t } = useTranslation();
   const [updateMe, { isLoading }] = useUpdateMeMutation();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   const [firstName, setFirstName] = useState(profile.first_name ?? '');
   const [lastName, setLastName] = useState(profile.last_name ?? '');
@@ -132,6 +134,14 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
           />
         </div>
 
+        <button
+          type="button"
+          className={styles.form__changePassword}
+          onClick={() => setIsEmailModalOpen(true)}
+        >
+          {t('profile.change_email')}
+        </button>
+
         <button type="button" className={styles.form__changePassword} onClick={handleChangePassword}>
           {t('profile.change_password')}
         </button>
@@ -166,6 +176,13 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
 
     {isPasswordModalOpen && (
       <ChangePasswordModal onClose={() => setIsPasswordModalOpen(false)} />
+    )}
+      
+    {isEmailModalOpen && (
+      <ChangeEmailModal
+        currentEmail={profile.email}
+        onClose={() => setIsEmailModalOpen(false)}
+      />
     )}
     </>
   );

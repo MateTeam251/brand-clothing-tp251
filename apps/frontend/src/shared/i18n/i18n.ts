@@ -204,6 +204,7 @@ i18n.use(initReactI18next).init({
           saved: "Changes saved",
           logout: "Log out",
           change_password: 'Change password',
+          change_email: 'Change email',
           errors: {
             first_name_required: 'Enter your first name',
             last_name_required: 'Enter your last name',
@@ -400,6 +401,20 @@ i18n.use(initReactI18next).init({
             text: 'The link is invalid or has expired. Please try changing your email again.',
             try_again: 'Try again',
             home: 'Back to home',
+          },
+        },
+        change_email: {
+          title: 'Change email',
+          subtitle: 'Enter your new email and current password. We will send a confirmation link to the new address.',
+          new_email: 'New email',
+          password: 'Current password',
+          submit: 'Send confirmation link',
+          success_title: 'Check your email',
+          success_text: 'We sent a confirmation link to your new address. Your email will change once you open it. The link is valid for 24 hours.',
+          done: 'Done',
+          errors: {
+            invalid_email: 'Enter a valid email address',
+            same_email: 'The new email must differ from the current one',
           },
         },
         sign_up: {
@@ -659,6 +674,7 @@ i18n.use(initReactI18next).init({
           saved: "Зміни збережено",
           logout: "Вийти",
           change_password: 'Змінити пароль',
+          change_email: 'Змінити email',
           errors: {
             first_name_required: "Введіть ім'я",
             last_name_required: 'Введіть прізвище',
@@ -855,6 +871,20 @@ i18n.use(initReactI18next).init({
             text: 'Посилання недійсне або термін його дії минув. Спробуйте змінити email ще раз.',
             try_again: 'Спробувати ще раз',
             home: 'На головну',
+          },
+        },
+        change_email: {
+          title: 'Зміна email',
+          subtitle: 'Введіть нову електронну адресу та поточний пароль. Ми надішлемо посилання для підтвердження на нову адресу.',
+          new_email: 'Нова електронна адреса',
+          password: 'Поточний пароль',
+          submit: 'Надіслати посилання',
+          success_title: 'Перевірте пошту',
+          success_text: 'Ми надіслали посилання для підтвердження на нову адресу. Email зміниться після переходу за ним. Посилання діє 24 години.',
+          done: 'Готово',
+          errors: {
+            invalid_email: 'Введіть коректну електронну адресу',
+            same_email: 'Нова адреса має відрізнятися від поточної',
           },
         },
         sign_up: {

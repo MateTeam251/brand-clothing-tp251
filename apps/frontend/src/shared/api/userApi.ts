@@ -19,6 +19,13 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['User'],
     }),
+    changeEmail: builder.mutation<{ detail: string }, { password: string; new_email: string }>({
+      query: (body) => ({
+        url: 'auth/me/email/',
+        method: 'POST',
+        body,
+      }),
+    }),
     changePassword: builder.mutation<
       { detail: string },
       { old_password: string; new_password: string; new_password_confirm: string }
@@ -32,4 +39,9 @@ export const userApi = createApi({
   }),
 });
 
-export const { useGetMeQuery, useUpdateMeMutation, useChangePasswordMutation } = userApi;
+export const {
+  useGetMeQuery,
+  useUpdateMeMutation,
+  useChangeEmailMutation,
+  useChangePasswordMutation,
+} = userApi;
