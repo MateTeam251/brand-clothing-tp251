@@ -197,6 +197,7 @@ i18n.use(initReactI18next).init({
           birth_date: 'Date of birth',
           phone: "Phone number",
           instagram: "Instagram",
+          telegram: 'Telegram',
           email: "Email",
           marketing: "I want to receive brand news, private sales and personal offers",
           save: "Save changes",
@@ -204,7 +205,9 @@ i18n.use(initReactI18next).init({
           logout: "Log out",
           change_password: 'Change password',
           errors: {
-            instagram_required: "Please enter your Instagram",
+            first_name_required: 'Enter your first name',
+            last_name_required: 'Enter your last name',
+            phone_required: 'Enter your phone number',
             save_failed: "Could not save changes. Please try again."
           }
         },
@@ -631,6 +634,7 @@ i18n.use(initReactI18next).init({
           birth_date: 'Дата народження',
           phone: "Номер телефону",
           instagram: "Інстаграм",
+          telegram: 'Telegram',
           email: "Email",
           marketing: "Хочу отримувати новини бренду, закриті сейли та персональні пропозиції",
           save: "Зберегти зміни",
@@ -638,7 +642,9 @@ i18n.use(initReactI18next).init({
           logout: "Вийти",
           change_password: 'Змінити пароль',
           errors: {
-            instagram_required: "Вкажіть Інстаграм",
+            first_name_required: "Введіть ім'я",
+            last_name_required: 'Введіть прізвище',
+            phone_required: 'Введіть номер телефону',
             save_failed: "Не вдалося зберегти зміни. Спробуйте ще раз."
           }
         },
