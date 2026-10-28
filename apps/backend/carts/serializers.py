@@ -24,10 +24,15 @@ class CartItemSerializer(CurrencyMixin, serializers.ModelSerializer):
         source="product.is_available", read_only=True,
         help_text="false = the product went out of stock after it was added. Such a line can only be "
                   "reduced or deleted, and the order can't be placed until it is removed.")
+    is_archived = serializers.BooleanField(
+        source="product.is_archived", read_only=True,
+        help_text="true = the product became archived after it was added to the cart. Such a line can only "
+                  "be reduced or deleted, and the order can't be placed until it is removed."
+    )
 
     class Meta:
         model = CartItem
-        fields = ("id", "product", "name", "main_image", "size", "quantity", "price", "total_price", "is_available")
+        fields = ("id", "product", "name", "main_image", "size", "quantity", "price", "total_price", "is_available", "is_archived")
         read_only_fields = fields
         extra_kwargs = {
             "id": {"help_text": "Cart line id; use it in `/api/cart/items/{id}/`."},
@@ -77,7 +82,7 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
         fields = ("id", "product", "quantity", "size")
         read_only_fields = ("id",)
         extra_kwargs = {
-            "product": {"help_text": "Product id. Must have `is_available: true`, otherwise 400."},
+            "product": {"help_text": "Product id. Must have `is_available: true` and not be archived, otherwise 400."},
             "size": {"help_text": "Size. The same product in two sizes makes two cart lines."},
         }
 
@@ -95,7 +100,7 @@ class CartItemWriteSerializer(serializers.ModelSerializer):
             or attrs.get("size", self.instance.size) != self.instance.size
             or attrs.get("quantity", 0) > self.instance.quantity
         )
-        if not product.is_available and adding:
+        if (not product.is_available or product.is_archived) and adding:
             raise serializers.ValidationError({"product": "This product is not available."})
         return attrs
 

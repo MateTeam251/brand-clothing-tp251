@@ -19,7 +19,7 @@ export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
       maximumFractionDigits: 2,
     }).format(Number(value));
 
-  const hasUnavailable = cart.items.some((item) => !item.is_available);
+  const hasUnavailable = cart.items.some((item) => !item.is_available || item.is_archived);
 
   return (
     <section className={styles.summary}>
@@ -30,7 +30,7 @@ export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
           <li
             key={item.id}
             className={`${styles.summary__item} ${
-              item.is_available ? '' : styles['summary__item--unavailable']
+              item.is_available && !item.is_archived ? '' : styles['summary__item--unavailable']
             }`}
           >
             <span>
@@ -41,7 +41,7 @@ export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
               {formatPrice(item.total_price)}
             </span>
 
-            {!item.is_available && (
+            {(!item.is_available || item.is_archived) && (
               <p className={styles.summary__warning}>
                 {t('checkout_summary.unavailable')}
               </p>

@@ -30,11 +30,9 @@ const getInitialContact = (profile?: UserProfile): CheckoutContactValues => {
     return { first_name: '', last_name: '', phone: '', email: '' };
   }
 
-  const [firstName = '', ...rest] = (profile.name ?? '').trim().split(/\s+/);
-
   return {
-    first_name: firstName,
-    last_name: rest.join(' '),
+    first_name: profile.first_name ?? '',
+    last_name: profile.last_name ?? '',
     phone: profile.phone_number ?? '',
     email: profile.email,
   };
@@ -62,7 +60,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
   const [submitError, setSubmitError] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const hasUnavailable = cart.items.some((item) => !item.is_available);
+  const hasUnavailable = cart.items.some((item) => !item.is_available || item.is_archived);
 
   const handleContactChange = (field: keyof CheckoutContactValues, value: string) => {
     setContact((prev) => ({ ...prev, [field]: value }));

@@ -101,3 +101,69 @@ def send_password_reset_link(request, user):
     email.content_subtype = "html"
     email.send()
 
+def send_email_change_confirmation(request, user, new_email, token):
+    """
+    Send a confirmation link for an email change to the new address.
+
+    The link points to the "users:email_change_confirm" backend URL,
+    which applies the change and redirects to the frontend.
+
+    Args:
+        request (HttpRequest): The current request, used to build an
+            absolute URL (scheme + host) for the confirmation link.
+        user (User): The user requesting the change. Its ``email`` is
+            still the old one at this point.
+        new_email (str): The address to confirm. The email is sent here,
+            not to ``user.email``.
+        token (str): Signed token from ``make_email_change_token``.
+
+    Returns:
+        None
+
+    Side effects:
+        Sends an HTML email via ``EmailMessage.send()``. Errors raised by
+        the email backend are not caught here and will propagate to the
+        caller.
+    """
+    confirm_path = reverse("users:email_change_confirm", kwargs={"token": token})
+    confirm_link = request.build_absolute_uri(confirm_path)
+
+    subject = "Confirm your new email"
+    message = render_to_string("users/email_change_confirm.html", {
+        "user": user,
+        "new_email": new_email,
+        "confirm_link": confirm_link,
+    })
+    email = EmailMessage(subject, message, to=[new_email])
+    email.content_subtype = "html"
+    email.send()
+
+
+def send_email_change_notification(user, old_email):
+    """
+    Notify the old address that the account email has been changed.
+
+    Sent after the change is confirmed, so the real owner learns about it
+    if someone else changed the email.
+
+    Args:
+        user (User): The user whose email was changed. ``user.email`` is
+            already the new address.
+        old_email (str): The previous address. The email is sent here.
+
+    Returns:
+        None
+
+    Side effects:
+        Sends an HTML email via ``EmailMessage.send()``. Errors raised by
+        the email backend are not caught here and will propagate to the
+        caller.
+    """
+    subject = "Your email was changed"
+    message = render_to_string("users/email_change_notification.html", {
+        "user": user,
+        "old_email": old_email,
+    })
+    email = EmailMessage(subject, message, to=[old_email])
+    email.content_subtype = "html"
+    email.send()

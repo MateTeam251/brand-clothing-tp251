@@ -157,6 +157,7 @@ i18n.use(initReactI18next).init({
           },
         },
         favorites_page: {
+          title: "Favorites",
           empty_title: "Favorites",
           empty_text: "You don't have any favorite products yet",
           to_catalog: "Go to catalog"
@@ -191,7 +192,9 @@ i18n.use(initReactI18next).init({
         profile: {
           title: "Profile",
           personal_data: "Personal details",
-          name: "Name",
+          first_name: "First name",
+          last_name: "Last name",
+          birth_date: 'Date of birth',
           phone: "Phone number",
           instagram: "Instagram",
           email: "Email",
@@ -588,6 +591,7 @@ i18n.use(initReactI18next).init({
           },
         },
         favorites_page: {
+          title: "Обране",
           empty_title: "Обране",
           empty_text: "У вас ще немає обраних товарів",
           to_catalog: "До каталогу"
@@ -622,7 +626,9 @@ i18n.use(initReactI18next).init({
         profile: {
           title: "Профіль",
           personal_data: "Особисті дані",
-          name: "Ім'я",
+          first_name: "Ім'я",
+          last_name: "Прізвище",
+          birth_date: 'Дата народження',
           phone: "Номер телефону",
           instagram: "Інстаграм",
           email: "Email",

@@ -25,6 +25,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
   const { currency } = useAppSelector((state) => state.settings);
   const { t } = useTranslation();
   const [isDropdownOpened, setIsDropdownOpened] = useState(false);
+  const isUnavailable = !item.is_available || item.is_archived;
 
   const formatPrice = (price: number) =>
   new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
@@ -35,8 +36,16 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
   }).format(price);
 
   return (
-    <article className={classNames(styles.card, { [styles['card--unavailable']]: !item.is_available })}>
-      <Link className={styles.card__link} to={`/product/${item.product}`}>
+    <article className={classNames(styles.card, { [styles['card--unavailable']]: isUnavailable })}>
+      <Link
+        className={styles.card__link}
+        to={`/product/${item.product}`}
+        onClick={(e) => {
+          if (item.is_archived) {
+            e.preventDefault();
+          }
+        }}
+      >
         <div className={styles.card__imageWrapper}>
           {item.main_image ? (
             <img className={styles.card__image} src={item.main_image.image} alt={item.name || 'Product'} />
@@ -69,6 +78,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
               type="button"
               className={styles['card__dropdown']} 
               onClick={() => setIsDropdownOpened((prev) => !prev)}
+              disabled={isUnavailable}
             >
               <img 
                 src={arrowBottom} 
@@ -99,7 +109,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
           )}
         </div>
 
-        {!item.is_available && <p className={styles.card__status}>{t('cart.unavailable')}</p>}
+        {isUnavailable && <p className={styles.card__status}>{t('cart.unavailable')}</p>}
 
         <p className={styles.card__delivery}>{t('cart_item_desc')}</p>
 
@@ -113,7 +123,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
               />
             </button>
             <span className={styles.card__counterValue}>{item.quantity}</span>
-            <button className={styles.card__counterBtn} onClick={onIncrement}>
+            <button className={styles.card__counterBtn} onClick={onIncrement} disabled={isUnavailable}>
               <img
                 className={styles.card__btnIcon}
                 src={plusIcon}

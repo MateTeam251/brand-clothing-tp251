@@ -128,6 +128,8 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 12,
     "DEFAULT_THROTTLE_RATES": {
         "change_password": "5/minute",
+        "change_email": "5/minute",
+        "change_email_confirm": "30/hour",
         "activation": "30/hour",
         "password_reset": "10/hour",
         "resend_activation": "10/hour",
@@ -215,6 +217,8 @@ SIMPLE_JWT = {
 }
 
 ACTIVATION_TOKEN_TIMEOUT = 60 * 60 * 24 # 24 hours
+
+EMAIL_CHANGE_TOKEN_TIMEOUT = 60 * 60 * 24 # 24 hours
 
 PASSWORD_RESET_TIMEOUT = 60 * 60 # 1 hour
 

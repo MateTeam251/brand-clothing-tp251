@@ -1,7 +1,10 @@
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core import signing
 from django.utils.http import base36_to_int
 from django.conf import settings
 from django.utils.crypto import constant_time_compare
+
+EMAIL_CHANGE_SALT = "users.email_change"
 
 
 class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
@@ -34,3 +37,52 @@ class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
 
 
 account_activation_token = AccountActivationTokenGenerator()
+
+
+def make_email_change_token(user, new_email):
+    """
+    Build a signed token for confirming an email change.
+
+    The token carries the user's pk, the current (old) email and the
+    requested new email, so nothing has to be stored in the database.
+
+    Args:
+        user (User): The user requesting the change.
+        new_email (str): The validated new email address.
+
+    Returns:
+        str: URL-safe signed token.
+
+    Notes:
+        The token is signed, not encrypted: its payload can be decoded
+        by anyone who has it, but it cannot be forged or modified.
+    """
+    payload = {
+        "user_id": user.pk,
+        "old_email": user.email,
+        "new_email": new_email,
+    }
+    return signing.dumps(payload, salt=EMAIL_CHANGE_SALT)
+
+
+def read_email_change_token(token):
+    """
+    Verify an email change token and return its payload.
+
+    Args:
+        token (str): Token produced by ``make_email_change_token``.
+
+    Raises:
+        signing.BadSignature: If the token is malformed or tampered with.
+        signing.SignatureExpired: If the token is older than
+            ``settings.EMAIL_CHANGE_TOKEN_TIMEOUT`` (subclass of
+            ``BadSignature``, so catching ``BadSignature`` covers both).
+
+    Returns:
+        dict: Payload with ``user_id``, ``old_email`` and ``new_email``.
+    """
+    return signing.loads(
+        token,
+        salt=EMAIL_CHANGE_SALT,
+        max_age=settings.EMAIL_CHANGE_TOKEN_TIMEOUT,
+    )

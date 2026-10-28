@@ -103,7 +103,7 @@ def create_order_from_cart(*, cart, checkout_data):
 
         image_path = main_image_obj.image.name if main_image_obj and main_image_obj.image else ""
 
-        if not product.is_available:
+        if not product.is_available or product.is_archived:
             raise ValidationError(
                 {
                     "cart": f"Product {product.name} is no longer available."

@@ -71,6 +71,7 @@ class NovaPoshtaClient:
                 "AddressGeneral", "getWarehouses",
                 {"Page": str(page), "Limit": str(self.PAGE_LIMIT)},
             )
+            time.sleep(1)
 
             if not batch:
                 break
