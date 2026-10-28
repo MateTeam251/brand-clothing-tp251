@@ -223,7 +223,26 @@ class OrderAdmin(admin.ModelAdmin):
         ),
     )
 
-    inlines = (OrderItemInline,)
+    actions = ("generate_payment_link",)
+
+    @admin.action(description="Generate WayForPay payment link")
+    def generate_payment_link(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Select exactly one order.", level=messages.ERROR)
+            return
+
+        order = queryset.first()
+
+        try:
+            _, _, payment_url = retry_payment(order_id=order.pk)
+        except (DRFValidationError, PaymentProviderUnavailable) as e:
+            error_msg = getattr(e, "detail", str(e))
+            self.message_user(
+                request,
+                f"{order.order_reference}: {error_msg}",
+                level=messages.ERROR,
+            )
+            return
 
     ordering = ("-created_at",)
 
