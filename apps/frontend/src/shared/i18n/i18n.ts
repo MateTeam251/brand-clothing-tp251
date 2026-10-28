@@ -381,6 +381,20 @@ i18n.use(initReactI18next).init({
           text_3: 'We do not sell or share your data with third parties for advertising.',
           text_4: 'You can request to view or delete your data by writing to us.',
         },
+        email_change: {
+          success: {
+            title: 'Email updated',
+            text: 'Your email address has been successfully changed.',
+            to_account: 'Go to profile',
+            to_catalog: 'Continue shopping',
+          },
+          failed: {
+            title: 'Could not change email',
+            text: 'The link is invalid or has expired. Please try changing your email again.',
+            try_again: 'Try again',
+            home: 'Back to home',
+          },
+        },
         sign_up: {
           submit: 'Sign up',
           password_confirm: 'Repeat password',
@@ -814,6 +828,20 @@ i18n.use(initReactI18next).init({
           text_2: 'Дані передаються Wayforpay (оплата) та службам доставки (Нова пошта, Nova Post) — лише в обсязі, потрібному для виконання замовлення.',
           text_3: 'Ми не продаємо й не передаємо дані третім особам для реклами.',
           text_4: 'Ви можете запросити перегляд або видалення своїх даних, написавши нам.',
+        },
+        email_change: {
+          success: {
+            title: 'Email змінено',
+            text: 'Вашу електронну адресу успішно змінено.',
+            to_account: 'До профілю',
+            to_catalog: 'До каталогу',
+          },
+          failed: {
+            title: 'Не вдалося змінити email',
+            text: 'Посилання недійсне або термін його дії минув. Спробуйте змінити email ще раз.',
+            try_again: 'Спробувати ще раз',
+            home: 'На головну',
+          },
         },
         sign_up: {
           submit: 'Зареєструватися',

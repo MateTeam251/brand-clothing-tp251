@@ -26,6 +26,8 @@ import { ActivationFailedPage } from './pages/ActivationFailedPage';
 import { DeliveryPage } from './pages/DeliveryPage';
 import { ReturnsPage } from './pages/ReturnsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { EmailChangeSuccessPage } from './pages/EmailChangeSuccessPage';
+import { EmailChangeFailedPage } from './pages/EmailChangeFailedPage';
 
 
 function App() {
@@ -55,6 +57,8 @@ function App() {
               <Route path='/signup' element={<SignUpPage />} />
               <Route path='/activation/success' element={<ActivationSuccessPage />} />
               <Route path='/activation/failed' element={<ActivationFailedPage />} />
+              <Route path='/email-change/success' element={<EmailChangeSuccessPage />} />
+              <Route path='/email-change/failed' element={<EmailChangeFailedPage />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route path="/account" element={<AccountPage />} />

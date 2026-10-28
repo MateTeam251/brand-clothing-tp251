@@ -1,0 +1,1 @@
+export { EmailChangeSuccessPage } from './EmailChangeSuccessPage';
