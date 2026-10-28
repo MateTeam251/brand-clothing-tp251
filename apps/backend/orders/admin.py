@@ -150,21 +150,22 @@ class OrderAdmin(admin.ModelAdmin):
         "user__email",
     )
 
-    readonly_fields = (
-        "user",
-        "first_name",
-        "last_name",
-        "user_phone",
-        "email",
-        "delivery_address",
-        "created_at",
-        "currency",
+    raw_id_fields = ("user",)
+    ordering = ("-created_at",)
+    inlines = (OrderItemInline, PaymentInline)
+
+    always_readonly = (
+        "order_reference",
         "subtotal",
         "discount_amount",
         "total_amount",
-        "delivery_provider",
-        "delivery_data",
+        "created_at",
         "updated_at",
+    )
+
+    readonly_after_create = (
+        "user",
+        "currency",
     )
 
     fieldsets = (
@@ -203,9 +204,18 @@ class OrderAdmin(admin.ModelAdmin):
             }
         ),
         (
+            "Internal",
+            {
+                "fields": (
+                    "admin_comment",
+                )
+            }
+        ),
+        (
             "System",
             {
                 "fields": (
+                    "order_reference",
                     "created_at",
                     "updated_at",
                 )
