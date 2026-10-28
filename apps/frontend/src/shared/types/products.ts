@@ -44,6 +44,7 @@ export interface ProductDetails {
   id: number;
   name: string;
   type: string;
+  slug: string;
   collection: Collection;
   description: string;
   fabric_composition: string;
