@@ -4,13 +4,21 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import {
   useGetOrderByIdQuery,
+  useGetOrderStatusQuery,
   useRetryPaymentMutation,
 } from '../../shared/api/ordersApi';
-import type { Currency } from '../../shared/types/orders';
+import type { Currency, OrderStatus } from '../../shared/types/orders';
 import styles from './PaymentResultPage.module.scss';
 import { BankTransferDetails } from '../../components/BankTransferDetails';
 
 const ORDERS_PATH = '/account';
+const POLLING_INTERVAL_MS = 3000;
+const PAID_STATUSES: OrderStatus[] = ['PAID', 'AWAITING_SHIPMENT', 'SHIPPED', 'DELIVERED'];
+
+type ResultView = 'success' | 'failed' | 'pending';
+
+const isResultView = (value: string | null): value is ResultView =>
+  value === 'success' || value === 'failed' || value === 'pending';
 
 export const PaymentResultPage = () => {
   const { t, i18n } = useTranslation();
@@ -21,16 +29,45 @@ export const PaymentResultPage = () => {
   const [retryPayment, { isLoading: isRetrying }] = useRetryPaymentMutation();
   const [retryError, setRetryError] = useState('');
 
-  const status = searchParams.get('status');
-  const orderId = Number(searchParams.get('order'));
-  const hasOrderId = Number.isInteger(orderId) && orderId > 0;
-  const isSuccess = status === 'success';
+  const urlStatus = searchParams.get('status');
+  const orderReference = searchParams.get('order');
 
-  const { data: order } = useGetOrderByIdQuery(orderId, {
-    skip: !isSuccess || !isAuthenticated || !hasOrderId,
+  const { data: orderStatus, isError: isStatusError } = useGetOrderStatusQuery(
+    orderReference ?? '',
+    {
+    skip: !orderReference || !isResultView(urlStatus) || urlStatus === 'failed',
+      pollingInterval: POLLING_INTERVAL_MS,
+      skipPollingIfUnfocused: true,
+    },
+  );
+
+  const getView = (): ResultView | null => {
+    if (!isResultView(urlStatus)) {
+      return null;
+    }
+
+    if (urlStatus === 'failed' || !orderReference) {
+      return urlStatus;
+    }
+
+    if (!orderStatus) {
+      return isStatusError ? urlStatus : 'pending';
+    }
+
+    if (PAID_STATUSES.includes(orderStatus.status)) {
+      return 'success';
+    }
+
+    return orderStatus.status === 'CANCELED' ? 'failed' : 'pending';
+  };
+
+  const view = getView();
+
+  const { data: order } = useGetOrderByIdQuery(orderReference ?? '', {
+    skip: view !== 'success' || !isAuthenticated || !orderReference,
   });
 
-  if (status !== 'success' && status !== 'failed') {
+  if (!view) {
     return <Navigate to="/" replace />;
   }
 
@@ -45,21 +82,44 @@ export const PaymentResultPage = () => {
   const handleRetry = async () => {
     setRetryError('');
 
-    if (!isAuthenticated || !hasOrderId) {
+    if (!isAuthenticated || !orderReference) {
       navigate('/checkout');
       return;
     }
 
     try {
-      const response = await retryPayment(orderId).unwrap();
+      const response = await retryPayment(orderReference).unwrap();
 
       window.location.assign(response.payment_url);
-    } catch {
-      setRetryError(t('payment_result.retry_error'));
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+
+      if (status === 429) {
+        setRetryError(t('auth.errors.too_many_requests'));
+      } else if (status === 502) {
+        setRetryError(t('payment_result.retry_unavailable'));
+      } else {
+        setRetryError(t('payment_result.retry_error'));
+      }
     }
   };
 
-  if (isSuccess) {
+  if (view === 'pending') {
+    return (
+      <section className={styles.result}>
+        <div className={styles.result__card}>
+          <h1 className={styles.result__title}>{t('payment_result.pending_title')}</h1>
+          <p className={styles.result__text}>{t('payment_result.pending_text')}</p>
+
+          <Link to="/" className={styles.result__link}>
+            {t('payment_result.back_home')}
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  if (view === 'success') {
     return (
       <section className={styles.result}>
         <div className={styles.result__card}>
@@ -77,8 +137,8 @@ export const PaymentResultPage = () => {
           <h1 className={styles.result__title}>{t('payment_result.success_title')}</h1>
 
           <p className={styles.result__text}>
-            {hasOrderId
-              ? t('payment_result.success_text', { id: orderId })
+            {orderReference
+              ? t('payment_result.success_text', { id: orderReference })
               : t('payment_result.success_text_no_id')}
           </p>
 
@@ -106,7 +166,7 @@ export const PaymentResultPage = () => {
             </div>
           )}
 
-          {isAuthenticated && hasOrderId && (
+          {isAuthenticated && orderReference && (
             <Link to={ORDERS_PATH} className={styles.result__button}>
               {t('payment_result.view_order')}
             </Link>
@@ -150,7 +210,7 @@ export const PaymentResultPage = () => {
 
         <BankTransferDetails
           currency={selectedCurrency.toUpperCase() as Currency}
-          orderId={hasOrderId ? orderId : undefined}
+          orderId={orderReference ?? undefined}
         />
 
         <Link to="/cart" className={styles.result__link}>

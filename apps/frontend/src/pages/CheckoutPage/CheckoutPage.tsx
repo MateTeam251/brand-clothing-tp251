@@ -152,8 +152,16 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
 
       setIsRedirecting(true);
       window.location.assign(response.payment_url);
-    } catch {
-      setSubmitError(t('checkout_form.submit_error'));
+      } catch (error) {
+      const status = (error as { status?: number }).status;
+
+      if (status === 429) {
+        setSubmitError(t('auth.errors.too_many_requests'));
+      } else if (status === 502) {
+        setSubmitError(t('checkout_form.payment_unavailable'));
+      } else {
+        setSubmitError(t('checkout_form.submit_error'));
+      }
     }
   };
 

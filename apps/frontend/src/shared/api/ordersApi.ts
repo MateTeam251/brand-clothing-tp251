@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './api';
 import type { PaginatedResponse } from '../types/common';
-import type { Order } from '../types/orders';
+import type { Order, OrderStatusResponse } from '../types/orders';
 import type { CheckoutRequest, CheckoutResponse } from '../types/checkout';
 
 export const ordersApi = createApi({
@@ -13,12 +13,15 @@ export const ordersApi = createApi({
       transformResponse: (response: Order[] | PaginatedResponse<Order>) =>
         Array.isArray(response) ? response : response.results,
     }),
-    getOrderById: builder.query<Order, number>({
-      query: (id) => `orders/${id}/`,
+    getOrderById: builder.query<Order, string>({
+      query: (orderReference) => `orders/${orderReference}/`,
     }),
-    retryPayment: builder.mutation<CheckoutResponse, number>({
-      query: (orderId) => ({
-        url: `orders/${orderId}/retry-payment/`,
+    getOrderStatus: builder.query<OrderStatusResponse, string>({
+      query: (orderReference) => `orders/${orderReference}/status/`,
+    }),
+    retryPayment: builder.mutation<CheckoutResponse, string>({
+      query: (orderReference) => ({
+        url: `orders/${orderReference}/retry-payment/`,
         method: 'POST',
       }),
     }),
@@ -35,6 +38,7 @@ export const ordersApi = createApi({
 export const {
   useGetOrdersQuery,
   useGetOrderByIdQuery,
+  useGetOrderStatusQuery,
   useCheckoutMutation,
   useRetryPaymentMutation,
 } = ordersApi;

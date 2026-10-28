@@ -25,7 +25,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: number;
+  order_reference: string;
   user_name: string;
   user_phone: string;
   email: string;
@@ -39,4 +39,8 @@ export interface Order {
   delivery_provider: DeliveryProvider;
   delivery_data: Record<string, unknown>;
   items: OrderItem[];
+}
+
+export interface OrderStatusResponse {
+  status: OrderStatus;
 }
