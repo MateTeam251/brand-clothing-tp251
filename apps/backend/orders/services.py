@@ -69,7 +69,7 @@ def _create_payment_record(order):
 
 
 @transaction.atomic
-def create_order_from_cart(*, cart, checkout_data):
+def create_order_from_cart(*, cart, checkout_data, with_payment=True):
     """
     Create an order and its initial payment from the current cart.
 
@@ -170,7 +170,7 @@ def create_order_from_cart(*, cart, checkout_data):
 
     OrderItem.objects.bulk_create(order_items)
 
-    payment = _create_payment_record(order)
+    payment = _create_payment_record(order) if with_payment else None
 
     transaction.on_commit(lambda: send_order_created_email(order), robust=True)
 
@@ -291,3 +291,23 @@ def retry_payment(*, order_id):
     )
 
     return order, payment, payment_url
+
+
+@transaction.atomic
+def checkout_fop(*, cart, checkout_data):
+    """
+    Creates a PENDING order for payment by bank transfer to the FOP account.
+
+    No Payment record and no WayForPay call. The administrator checks the transfer
+    and sets the order status to PAID (or CANCELED) manually in the admin panel.
+    """
+
+    order, _ = create_order_from_cart(
+        cart=cart,
+        checkout_data=checkout_data,
+        with_payment=False,
+    )
+
+    cart.mark_converted()
+
+    return order
