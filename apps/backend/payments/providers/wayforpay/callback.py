@@ -87,6 +87,31 @@ def _apply_payment_result(data: dict) -> None:
         if payment.status == PaymentStatus.DUPLICATE:
             return
 
+        if payment.status != PaymentStatus.SUCCESSFUL and order.status == OrderStatus.CANCELED:
+            payment.status = PaymentStatus.DUPLICATE
+            payment.paid_at = timezone.now()
+            payment.payment_data = {
+                **payment_data,
+                "needs_refund": True,
+                "refund_reason": "order_canceled",
+            }
+
+            payment.save(
+                update_fields=[
+                    "status",
+                    "paid_at",
+                    "payment_data",
+                    "updated_at",
+                ]
+            )
+
+            logger.error(
+                "Payment for canceled order, refund required: order=%s payment=%s",
+                order.order_reference,
+                payment.provider_order_reference,
+            )
+            return
+
         if payment.status != PaymentStatus.SUCCESSFUL:
             already_paid = (
                 Payment.objects

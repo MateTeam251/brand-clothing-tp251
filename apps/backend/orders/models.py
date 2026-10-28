@@ -103,6 +103,11 @@ class Order(models.Model):
         help_text="Public order number shown to customers and support.",
     )
 
+    admin_comment = models.TextField(
+        blank=True,
+        help_text="Internal staff note. Never shown to customers.",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
@@ -153,7 +158,9 @@ class OrderItem(models.Model):
         related_name="order_items",
     )
 
-    product_name = models.TextField()
+    product_name = models.CharField(
+        max_length=255,
+    )
 
     product_main_image = models.CharField(
         max_length=500,

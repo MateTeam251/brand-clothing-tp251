@@ -69,7 +69,7 @@ def _create_payment_record(order):
 
 
 @transaction.atomic
-def create_order_from_cart(*, cart, checkout_data):
+def create_order_from_cart(*, cart, checkout_data, with_payment=True):
     """
     Create an order and its initial payment from the current cart.
 
@@ -170,7 +170,7 @@ def create_order_from_cart(*, cart, checkout_data):
 
     OrderItem.objects.bulk_create(order_items)
 
-    payment = _create_payment_record(order)
+    payment = _create_payment_record(order) if with_payment else None
 
     transaction.on_commit(lambda: send_order_created_email(order), robust=True)
 
@@ -291,3 +291,72 @@ def retry_payment(*, order_id):
     )
 
     return order, payment, payment_url
+
+
+@transaction.atomic
+def checkout_fop(*, cart, checkout_data):
+    """
+    Creates a PENDING order for payment by bank transfer to the FOP account.
+
+    No Payment record and no WayForPay call. The administrator checks the transfer
+    and sets the order status to PAID (or CANCELED) manually in the admin panel.
+    """
+
+    order, _ = create_order_from_cart(
+        cart=cart,
+        checkout_data=checkout_data,
+        with_payment=False,
+    )
+
+    cart.mark_converted()
+
+    return order
+
+
+@transaction.atomic
+def recalculate_order_totals(order_id: int) -> Order:
+    order = Order.objects.select_for_update().get(pk=order_id)
+
+    cent = Decimal("0.01")
+    subtotal = Decimal("0.00")
+    total = Decimal("0.00")
+
+    for item in order.items.all():
+        subtotal += item.price_at_purchase * item.quantity
+        total += (Decimal(str(item.unit_price_after_discount)) * item.quantity).quantize(cent)
+
+    order.subtotal = subtotal
+    order.total_amount = total
+    order.discount_amount = subtotal - total
+    order.save(update_fields=["subtotal", "total_amount", "discount_amount", "updated_at"])
+    return order
+
+
+def fill_order_item_snapshot(item, currency):
+    """
+    Fills empty snapshot fields of an OrderItem from its product.
+
+    Price and discount are taken from the product only when the price was left
+    empty. If the admin typed a price, the typed price and discount are kept.
+    """
+
+    product = item.product
+
+    if not item.product_name:
+        item.product_name = product.name
+
+    if not item.product_main_image:
+        main_image = product.images.filter(order=0).first()
+        item.product_main_image = main_image.image.name if main_image and main_image.image else ""
+
+    if not item.fabric_composition_ua:
+        item.fabric_composition_ua = product.fabric_composition_ua
+
+    if not item.fabric_composition_eng:
+        item.fabric_composition_eng = product.fabric_composition_eng
+
+    if item.price_at_purchase is None:
+        item.price_at_purchase = Decimal(str(get_product_price(product, currency)))
+        item.discount_percent_at_purchase = int(product.discount_percent or 0)
+
+    return item
