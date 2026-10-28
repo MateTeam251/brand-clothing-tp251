@@ -244,7 +244,19 @@ class OrderAdmin(admin.ModelAdmin):
             )
             return
 
-    ordering = ("-created_at",)
+        self.message_user(
+            request,
+            format_html(
+                '{}: <a href="{}" target="_blank">payment link</a> (valid about 15 minutes)',
+                order.order_reference,
+                payment_url
+            )
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return self.always_readonly
+        return self.always_readonly + self.readonly_after_create
 
     def save_model(self, request, obj: Order, form, change):
         old_status = None
