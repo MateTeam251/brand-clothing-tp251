@@ -1,4 +1,20 @@
-<p>Hello, {{ user.first_name|default:user.email }}!</p>
-<p>Use a link below to confirm {{ new_email }} as the new email of your account:</p>
-<p><a href="{{ confirm_link }}">Confirm email</a></p>
-<p>If you didn't request this, ignore this message. Your email will not be changed.</p>
+{% extends "emails/base.html" %}
+
+{% block title %}Підтвердіть нову електронну адресу{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">Підтвердіть нову адресу</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">Ви запросили зміну email для акаунта The Art. The Artist. Підтвердіть <strong style="color:#000000;">{{ new_email }}</strong> як нову адресу, натиснувши кнопку нижче.</p>
+
+{% include "emails/_button.html" with url=confirm_link label="Підтвердити email" %}
+
+<p style="margin:16px 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:12px;line-height:18px;color:#6B6B6B;text-align:center;">Посилання дійсне 24 години і спрацьовує один раз.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding:20px 24px;background-color:#F6F2E9;border-radius:12px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;text-align:center;">
+      Не надсилали запит? Просто проігноруйте цей лист — ваша адреса не зміниться.
+    </td>
+  </tr>
+</table>
+{% endblock %}

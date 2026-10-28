@@ -1,3 +1,21 @@
-<p>Hello, {{ user.first_name|default:user.email }}!</p>
-<p>Use a link below to activate your account:</p>
-<p><a href="{{ activation_link }}">Activate account</a></p>
+{% extends "emails/base.html" %}
+
+{% block title %}Підтвердіть акаунт{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">{% if user.first_name %}Ласкаво просимо, {{ user.first_name }}{% else %}Ласкаво просимо{% endif %}</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">Дякуємо за реєстрацію в The Art. The Artist. Підтвердіть email, щоб активувати акаунт — і ви зможете зберігати обране, відстежувати замовлення та оформлювати покупки зручніше.</p>
+
+{% include "emails/_button.html" with url=activation_link label="Підтвердити акаунт" %}
+
+<p style="margin:16px 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:12px;line-height:18px;color:#6B6B6B;text-align:center;">Посилання дійсне 24 години. Після цього його можна запросити повторно.</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding:20px 24px;background-color:#F6F2E9;border-radius:12px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;text-align:center;">
+      Кнопка не працює? Скопіюйте це посилання у браузер:<br>
+      <a href="{{ activation_link }}" style="color:#000000;word-break:break-all;">{{ activation_link }}</a>
+    </td>
+  </tr>
+</table>
+{% endblock %}

@@ -1,0 +1,36 @@
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:32px;">
+  {% for item in items %}
+  <tr>
+    <td style="padding:16px 0;border-top:1px solid #C9C9C9;text-align:left;">
+      <div style="font-family:Cambria,Georgia,'Times New Roman',serif;font-size:18px;line-height:26px;color:#000000;">{{ item.product_name }}</div>
+      <div style="font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;">Розмір {{ item.size }} &nbsp;·&nbsp; {{ item.quantity }} шт</div>
+    </td>
+    <td align="right" valign="top" style="padding:16px 0;border-top:1px solid #C9C9C9;white-space:nowrap;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;">
+      {% include "emails/_money.html" with value=item.line_total currency=order.currency %}
+    </td>
+  </tr>
+  {% endfor %}
+
+  <tr>
+    <td style="padding:16px 0 4px;border-top:1px solid #C9C9C9;text-align:left;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:15px;line-height:24px;color:#000000;">Товари ({{ items|length }})</td>
+    <td align="right" style="padding:16px 0 4px;border-top:1px solid #C9C9C9;white-space:nowrap;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:15px;line-height:24px;color:#000000;">
+      {% include "emails/_money.html" with value=order.subtotal currency=order.currency %}
+    </td>
+  </tr>
+  {% if order.discount_amount > 0 %}
+  <tr>
+    <td style="padding:4px 0;text-align:left;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:15px;line-height:24px;color:#000000;">Знижка</td>
+    <td align="right" style="padding:4px 0;white-space:nowrap;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:15px;line-height:24px;color:#000000;">−{% include "emails/_money.html" with value=order.discount_amount currency=order.currency %}</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td style="padding:4px 0;text-align:left;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:15px;line-height:24px;color:#000000;">Доставка: {{ order.delivery_address }}</td>
+    <td align="right" valign="top" style="padding:4px 0;white-space:nowrap;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:13px;line-height:24px;color:#6B6B6B;">за тарифами перевізника</td>
+  </tr>
+  <tr>
+    <td style="padding:12px 0 0;text-align:left;font-weight:bold;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:15px;line-height:24px;color:#000000;">{{ total_label }}</td>
+    <td align="right" style="padding:12px 0 0;white-space:nowrap;font-weight:bold;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:15px;line-height:24px;color:#000000;">
+      {% include "emails/_money.html" with value=order.total_amount currency=order.currency %}
+    </td>
+  </tr>
+</table>
