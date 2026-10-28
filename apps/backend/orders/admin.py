@@ -277,3 +277,23 @@ class OrderAdmin(admin.ModelAdmin):
 
         if old_status is not None and old_status != obj.status:
             send_order_status_changed_email(obj)
+
+    def save_formset(self, request, form, formset, change):
+        if not change and formset.model is OrderItem:
+            order = form.instance
+            items = formset.save(commit=False)
+            for item in items:
+                fill_order_item_snapshot(item, order.currency)
+                item.save()
+
+            formset.save_m2m()
+            for deleted_obj in formset.deleted_objects:
+                deleted_obj.delete()
+
+            updated_order = recalculate_order_totals(order.pk)
+            form.instance.subtotal = updated_order.subtotal
+            form.instance.discount_amount = updated_order.discount_amount
+            form.instance.total_amount = updated_order.total_amount
+            return
+
+        super().save_formset(request, form, formset, change)
