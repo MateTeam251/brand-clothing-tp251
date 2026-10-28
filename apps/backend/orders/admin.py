@@ -34,7 +34,9 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "user_name",
+        "order_reference",
+        "first_name",
+        "last_name",
         "email",
         "status",
         "currency",
@@ -50,15 +52,18 @@ class OrderAdmin(admin.ModelAdmin):
 
     search_fields = (
         "id",
+        "order_reference",
         "email",
-        "user_name",
+        "first_name",
+        "last_name",
         "user_phone",
         "user__email",
     )
 
     readonly_fields = (
         "user",
-        "user_name",
+        "first_name",
+        "last_name",
         "user_phone",
         "email",
         "delivery_address",
@@ -78,7 +83,8 @@ class OrderAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "user",
-                    "user_name",
+                    "first_name",
+                    "last_name",
                     "user_phone",
                     "email",
                     "delivery_address",

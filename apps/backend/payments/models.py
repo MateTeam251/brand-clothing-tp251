@@ -1,22 +1,10 @@
-import uuid
 from decimal import Decimal
 
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from core.enums import Currency
+from core.enums import Currency, PaymentProvider, PaymentStatus
 from orders.models import Order
-
-
-class PaymentStatus(models.TextChoices):
-    PENDING = "PENDING", "Pending"
-    SUCCESSFUL = "SUCCESSFUL", "Successful"
-    FAILED = "FAILED", "Failed"
-    REFUNDED = "REFUNDED", "Refunded"
-
-
-class PaymentProvider(models.TextChoices):
-    WAYFORPAY = "WAYFORPAY", "Wayforpay"
 
 
 class Payment(models.Model):
@@ -48,8 +36,8 @@ class Payment(models.Model):
         default=PaymentStatus.PENDING,
     )
 
-    transaction_id = models.CharField(
-        max_length=100,
+    payment_url = models.URLField(
+        max_length=500,
         blank=True,
     )
 
@@ -59,10 +47,13 @@ class Payment(models.Model):
         help_text="Provider specific non-sensitive payment metadata.",
     )
 
-    provider_order_reference = models.UUIDField(
-        default=uuid.uuid4,
-        editable=False,
+    attempt = models.PositiveSmallIntegerField(default=1)
+
+    provider_order_reference = models.CharField(
+        max_length=64,
         unique=True,
+        editable=False,
+        help_text="Unique reference sent to the payment provider: <order_reference>-<attempt>.",
     )
 
     paid_at = models.DateTimeField(
@@ -92,6 +83,10 @@ class Payment(models.Model):
                 fields=["order"],
                 condition=models.Q(status=PaymentStatus.SUCCESSFUL),
                 name="unique_successful_payment_per_order",
+            ),
+            models.UniqueConstraint(
+                fields=["order", "attempt"],
+                name="unique_payment_attempt_per_order",
             )
         ]
 

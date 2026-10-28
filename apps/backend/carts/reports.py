@@ -21,8 +21,9 @@ from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from storages.backends.s3 import S3Storage
 
+from core.enums import OrderStatus
 from carts.models import AbandonedCartSnapshot, AbandonedCartSnapshotItem, Cart
-from orders.models import Order, OrderStatus
+from orders.models import Order
 
 PAID_ORDER_STATUSES = [
     OrderStatus.PAID,

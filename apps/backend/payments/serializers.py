@@ -13,7 +13,6 @@ class PaymentSerializer(serializers.ModelSerializer):
             "amount",
             "provider",
             "status",
-            "transaction_id",
             "paid_at",
             "created_at",
             "updated_at",
