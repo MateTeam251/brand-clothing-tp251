@@ -134,6 +134,9 @@ REST_FRAMEWORK = {
         "password_reset": "10/hour",
         "resend_activation": "10/hour",
         "availability_request": "20/hour",
+        "checkout": "20/hour",
+        "retry_payment": "10/min",
+        "payment_return": "30/min",
     },
     # Prod chain: browser -> CloudFront -> nginx -> Django. Throttles take the client IP
     # from the 2nd-to-last X-Forwarded-For entry (added by CloudFront), so it can't be spoofed.

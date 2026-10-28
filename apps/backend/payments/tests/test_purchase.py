@@ -181,6 +181,7 @@ def test_send_purchase_request(monkeypatch, wayforpay_settings):
         product_names=["Product A"],
         product_counts=["1"],
         product_prices=["100.00"],
+        order_timeout=900,
     )
 
     assert result == "https://wayforpay.com"
@@ -196,6 +197,7 @@ def test_send_purchase_request(monkeypatch, wayforpay_settings):
     assert ("productName[]", "Product A") in called["data"]
     assert ("productCount[]", "1") in called["data"]
     assert ("productPrice[]", "100.00") in called["data"]
+    assert ("orderTimeout", "900") in called["data"]
 
 
 def test_send_purchase_request_raises_on_http_error(
@@ -221,4 +223,5 @@ def test_send_purchase_request_raises_on_http_error(
             product_names=["Product A"],
             product_counts=["1"],
             product_prices=["100.00"],
+            order_timeout=900,
         )

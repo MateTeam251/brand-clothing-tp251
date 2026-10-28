@@ -5,8 +5,8 @@
 </head>
 <body style="font-family: sans-serif; color: #333; line-height: 1.5;">
     <h2>Your Order is on Its Way!</h2>
-    <p>Hi {{ order.user_name }},</p>
-    <p>Great news! Your order <strong>#{{ order.id }}</strong> has been shipped via {{ order.delivery_provider }}.</p>
+    <p>Hi {{ order.first_name }},</p>
+    <p>Great news! Your order <strong>#{{ order.order_reference }}</strong> has been shipped via {{ order.delivery_provider }}.</p>
     <p><strong>Delivery Address:</strong> {{ order.delivery_address }}</p>
 </body>
 </html>

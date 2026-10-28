@@ -33,7 +33,10 @@ def check_payment_status(order_reference: str) -> dict:
 
     response.raise_for_status()
 
-    response_data = response.json()
+    try:
+        response_data = response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        raise ValueError("Invalid JSON in WayForPay Check Status response") from e
 
     required_fields = (
         "merchantAccount",
