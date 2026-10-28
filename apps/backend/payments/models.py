@@ -91,4 +91,4 @@ class Payment(models.Model):
         ]
 
     def __str__(self):
-        return f"Payment #{self.pk} for Order #{self.order_id}"
+        return self.provider_order_reference
