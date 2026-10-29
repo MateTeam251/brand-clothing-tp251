@@ -29,7 +29,7 @@
   }
 
   &__title {
-    font-family: 'Bodoni', serif;
+    font-family: $font-heading;
     font-weight: 500;
     font-size: 16px;
     line-height: 24px;
@@ -87,7 +87,7 @@
     border: 1px solid $light-gray;
     border-radius: 100px;
     padding: 12px 24px;
-    font-family: 'Bodoni', serif;
+    font-family: $font-heading;
     font-weight: 500;
     font-size: 16px;
     line-height: 24px;
