@@ -57,7 +57,7 @@ locals {
     WAYFORPAY_MERCHANT_ACCOUNT = "test_merch_n1"
     WAYFORPAY_MERCHANT_DOMAIN  = local.site_host
     WAYFORPAY_SERVICE_URL      = "https://${local.site_host}/api/payments/wayforpay/callback/"
-    WAYFORPAY_RETURN_URL       = "https://${local.site_host}/api/payments/success/"
+    WAYFORPAY_RETURN_URL       = "https://${local.site_host}/api/payments/wayforpay/return/"
 
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "staging"
