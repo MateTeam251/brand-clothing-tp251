@@ -14,7 +14,11 @@ def build_purchase_payload(
         product_counts: list[str],
         product_prices: list[str],
         order_timeout: int = 900,
-        language: str = "UA"
+        language: str = "UA",
+        client_first_name: str = "",
+        client_last_name: str = "",
+        client_email: str = "",
+        client_phone: str = "",
 ) -> dict:
     """
     Creating a payload for a Purchase request in WayForPay.
@@ -42,7 +46,7 @@ def build_purchase_payload(
         secret_key=config.secret_key,
     )
 
-    return {
+    payload = {
         "merchantAccount": config.merchant_account,
         "merchantDomainName": config.merchant_domain,
         "merchantTransactionType": "AUTO",
@@ -62,6 +66,16 @@ def build_purchase_payload(
         "productPrice[]": product_prices,
     }
 
+    optional_fields = {
+        "clientFirstName": client_first_name,
+        "clientLastName": client_last_name,
+        "clientEmail": client_email,
+        "clientPhone": client_phone,
+    }
+    payload.update({key: value for key, value in optional_fields.items() if value})
+
+    return payload
+
 
 def send_purchase_request(
         *,
@@ -73,7 +87,11 @@ def send_purchase_request(
         product_counts: list[str],
         product_prices: list[str],
         order_timeout: int,
-        language: str = "UA"
+        language: str = "UA",
+        client_first_name: str = "",
+        client_last_name: str = "",
+        client_email: str = "",
+        client_phone: str = "",
 ) -> str:
     """
     Creates and sends a signed purchase Request to WayForPay and returns its response.
@@ -88,7 +106,11 @@ def send_purchase_request(
         product_counts=product_counts,
         product_prices=product_prices,
         order_timeout=order_timeout,
-        language=language
+        language=language,
+        client_first_name=client_first_name,
+        client_last_name=client_last_name,
+        client_email=client_email,
+        client_phone=client_phone,
     )
 
     config = get_wayforpay_config()
