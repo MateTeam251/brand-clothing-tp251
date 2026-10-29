@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FiltersValue } from "../Filters/Filters";
 import type { SortValue } from "../Sort/Sort";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ProductListItem } from "../../shared/types/products";
 import { useGetProductsQuery } from "../../shared/api/productsApi";
 import { Loader } from "../Loader";
@@ -23,6 +23,7 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   const { t } = useTranslation();
   const [pages, setPages] = useState<ProductListItem[][]>([]);
   const [offset, setOffset] = useState(0);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { data, currentData, isLoading, isFetching, error, refetch } = useGetProductsQuery({
     limit: PRODUCTS_LIMIT,
@@ -49,6 +50,29 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
     setOffset((prev) => prev + PRODUCTS_LIMIT);
   };
 
+  const hasMore = Boolean(data?.next);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+
+    if (!node || isFetching || !hasMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: '300px' },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [isFetching, hasMore, handleLoadMore]);
+
   if (isLoading && offset === 0) {
     return <Loader />;
   }
@@ -69,19 +93,12 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
         ))}
       </div>
 
+      {isFetching && offset > 0 && <Loader />}
+
       {error ? (
         <ErrorState onRetry={refetch} />
       ) : (
-        data?.next && (
-          <button
-            type="button"
-            className={styles.catalog__loadMore}
-            onClick={handleLoadMore}
-            disabled={isFetching}
-          >
-            {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
-          </button>
-        )
+        hasMore && <div ref={sentinelRef} className={styles.catalog__sentinel} />
       )}
     </>
   );
