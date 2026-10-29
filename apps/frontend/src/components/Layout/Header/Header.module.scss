@@ -65,6 +65,7 @@
 
   &__link {
     color: inherit;
+    font-family: $font-heading;
     font-size: 20px;
     line-height: 24px;
     text-decoration: none;
@@ -294,7 +295,7 @@
     display: block;
     padding-bottom: 17px;
     border-bottom: 1px solid #c6c6c6;
-    font-family: 'Bodoni', 'Cambria', serif;
+    font-family: $font-heading;
     font-size: 24px;
     line-height: 32px;
     color: #171717;

@@ -3,12 +3,12 @@
 
 .footer {
   background-color: $dominant;
-  color: #171717;
+  color: #000;
 
   &__divider {
     margin: 0;
     border: 0;
-    border-bottom: 1px solid rgba(198, 198, 198, 1);
+    border-bottom: 1px solid $light-gray;
 
     @include mixins.on-desktop {
       display: none;
@@ -17,7 +17,7 @@
 
   &__content {
     display: grid;
-    grid-template-columns: auto 1fr 1fr; 
+    grid-template-columns: auto 1fr 1fr;
     align-items: start;
     gap: 16px 24px;
     padding-top: 24px;
@@ -76,7 +76,8 @@
   }
 
   &__link {
-    color: #171717;
+    color: #000;
+    font-family: $font-heading;
     font-size: 14px;
     line-height: 20px;
     text-decoration: none;
@@ -147,7 +148,7 @@
       margin: 0;
       font-size: 16px;
       line-height: 24px;
-      color: rgba(126, 124, 124, 1);
+      color: $color-inactive;
       text-align: center;
     }
 

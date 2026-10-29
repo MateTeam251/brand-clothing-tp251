@@ -7,35 +7,39 @@
 }
 
 @font-face {
-    font-family: 'Bodoni';
-    src: url('../../shared/assets/fonts/Bodoni/BodoniflfRoman.ttf') format('truetype');
+    font-family: 'Sporting Grotesque';
+    src: url('../../shared/assets/fonts/SportingGrotesqueUA/SportingGrotesqueUA-Regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
+    ascent-override: 95%;
+    descent-override: 25%;
+    line-gap-override: 0%;
+    size-adjust: 90%;
 }
 
 @font-face {
-    font-family: 'Bodoni';
-    src: url('../../shared/assets/fonts/Bodoni/BodoniflfItalic.ttf') format('truetype');
-    font-weight: 400;
-    font-style: italic;
+    font-family: 'Sporting Grotesque';
+    src: url('../../shared/assets/fonts/SportingGrotesqueUA/SportingGrotesqueUA-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
     font-display: swap;
+    ascent-override: 95%;
+    descent-override: 25%;
+    line-gap-override: 0%;
+    size-adjust: 90%;
 }
 
 @font-face {
-    font-family: 'Bodoni';
-    src: url('../../shared/assets/fonts/Bodoni/BodoniflfBold.ttf') format('truetype');
+    font-family: 'Sporting Grotesque';
+    src: url('../../shared/assets/fonts/SportingGrotesqueUA/SportingGrotesqueUA-Bold.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
-}
-
-@font-face {
-    font-family: 'Bodoni';
-    src: url('../../shared/assets/fonts/Bodoni/BodoniflfBolditalic.ttf') format('truetype');
-    font-weight: 700;
-    font-style: italic;
-    font-display: swap;
+    ascent-override: 95%;
+    descent-override: 25%;
+    line-gap-override: 0%;
+    size-adjust: 90%;
 }
 
 @font-face {
@@ -116,9 +120,15 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Bodoni', 'Cambria', serif;
+  font-family: $font-heading;
+  font-weight: 400;
   color: #000;
   letter-spacing: 0;
+}
+
+
+button {
+  font-family: $font-heading;
 }
 
 h1 {
