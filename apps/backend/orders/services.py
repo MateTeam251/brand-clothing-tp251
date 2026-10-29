@@ -198,6 +198,10 @@ def start_payment(*, order, payment):
             product_counts=product_counts,
             product_prices=product_prices,
             order_timeout=900,
+            client_first_name=order.first_name,
+            client_last_name=order.last_name,
+            client_email=order.email,
+            client_phone=order.user_phone,
         )
     except (requests.RequestException, ValueError):
         logger.exception(
