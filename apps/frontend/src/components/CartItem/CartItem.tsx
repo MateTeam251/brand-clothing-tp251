@@ -26,6 +26,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
   const { t } = useTranslation();
   const [isDropdownOpened, setIsDropdownOpened] = useState(false);
   const isUnavailable = !item.is_available || item.is_archived;
+  const hasDiscount = Number(item.total_full_price) > Number(item.total_price);
 
   const formatPrice = (price: number) =>
   new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
@@ -132,9 +133,16 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
             </button>
           </div>
 
-          <span className={styles.card__price}>
-            {formatPrice(Number(item.total_price))}
-          </span>
+          <div className={styles.card__prices}>
+            {hasDiscount && (
+              <span className={styles.card__oldPrice}>
+                {formatPrice(Number(item.total_full_price))}
+              </span>
+            )}
+            <span className={styles.card__price}>
+              {formatPrice(Number(item.total_price))}
+            </span>
+          </div>
         </div>
       </div>
     </article>

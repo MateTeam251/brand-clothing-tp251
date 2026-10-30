@@ -9,6 +9,7 @@ export interface CartLine {
   size: string | Size;
   quantity: number;
   price: string;
+  total_full_price: string;
   total_price: string;
   is_available: boolean;
   is_archived: boolean;

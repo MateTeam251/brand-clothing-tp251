@@ -51,8 +51,17 @@
   }
 
   &__price {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
     font-weight: 600;
     white-space: nowrap;
+  }
+
+  &__oldPrice {
+    font-weight: 400;
+    color: $color-inactive;
+    text-decoration: line-through;
   }
 
   &__warning {
