@@ -23,7 +23,7 @@ export const CartPage = () => {
   const [removeItem] = useRemoveCartItemMutation();
   const [changeSize] = useChangeCartItemSizeMutation();
 
-  const cartItems = cart?.items ?? [];
+  const cartItems = [...(cart?.items ?? [])].sort((a, b) => a.id - b.id);
   const totalCount = cart?.items_count ?? 0;
   const totalPrice = Number(cart?.items_total ?? 0);
 
