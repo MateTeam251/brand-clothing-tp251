@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FiltersValue } from "../Filters/Filters";
 import type { SortValue } from "../Sort/Sort";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ProductListItem } from "../../shared/types/products";
 import { useGetProductsQuery } from "../../shared/api/productsApi";
 import { Loader } from "../Loader";
@@ -37,18 +37,22 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   });
 
   const currentPageIndex = offset / PRODUCTS_LIMIT;
-  const allPages = currentData && pages[currentPageIndex] !== currentData.results
-    ? [...pages.slice(0, currentPageIndex), currentData.results]
-    : pages;
+  const allPages = useMemo(
+    () =>
+      currentData && pages[currentPageIndex] !== currentData.results
+        ? [...pages.slice(0, currentPageIndex), currentData.results]
+        : pages,
+    [currentData, pages, currentPageIndex],
+  );
 
   const products = allPages.flat();
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (currentData) {
       setPages(allPages);
     }
     setOffset((prev) => prev + PRODUCTS_LIMIT);
-  };
+  }, [currentData, allPages]);
 
   const hasMore = Boolean(data?.next);
 
