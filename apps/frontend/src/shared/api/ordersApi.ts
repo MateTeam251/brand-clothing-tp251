@@ -32,6 +32,13 @@ export const ordersApi = createApi({
         body,
       }),
     }),
+    checkoutFop: builder.mutation<{ order_reference: string }, CheckoutRequest>({
+      query: (body) => ({
+        url: 'orders/checkout-fop/',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -40,5 +47,6 @@ export const {
   useGetOrderByIdQuery,
   useGetOrderStatusQuery,
   useCheckoutMutation,
+  useCheckoutFopMutation,
   useRetryPaymentMutation,
 } = ordersApi;

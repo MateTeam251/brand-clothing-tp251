@@ -4,12 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { useCart } from '../../shared/hooks/useCart';
 import { useGetMeQuery } from '../../shared/api/userApi';
-import { useCheckoutMutation } from '../../shared/api/ordersApi';
+import { useCheckoutFopMutation, useCheckoutMutation } from '../../shared/api/ordersApi';
 import { Loader } from '../../components/Loader';
 import { ErrorState } from '../../components/ErrorState';
 import { CheckoutContactForm } from '../../components/CheckoutContactForm';
 import { CheckoutDeliveryForm } from '../../components/CheckoutDeliveryForm';
 import { CheckoutSummary } from '../../components/CheckoutSummary';
+import { FopOrderModal } from '../../components/FopOrderModal';
+import { BANK_TRANSFER_DETAILS } from '../../shared/config/bankTransferDetails';
+import type { Currency } from '../../shared/types/orders';
 import { CHECKOUT_DELIVERY_PROVIDER } from '../../shared/types/delivery';
 import type { Cart } from '../../shared/types/Cart';
 import type { UserProfile } from '../../shared/types/User';
@@ -46,7 +49,13 @@ interface CheckoutContentProps {
 const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
   const { t } = useTranslation();
   const currency = useAppSelector((state) => state.settings.currency);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [checkout, { isLoading: isSubmitting }] = useCheckoutMutation();
+  const [checkoutFop, { isLoading: isSubmittingFop }] = useCheckoutFopMutation();
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'fop'>('card');
+  const [fopOrderReference, setFopOrderReference] = useState<string | null>(null);
+  const isFopAvailable = Boolean(BANK_TRANSFER_DETAILS[currency.toUpperCase() as Currency]);
+  const activeMethod = isFopAvailable ? paymentMethod : 'card';
 
   const [contact, setContact] = useState<CheckoutContactValues>(() =>
     getInitialContact(profile),
@@ -148,11 +157,18 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     };
 
     try {
+      if (activeMethod === 'fop') {
+        const fopResponse = await checkoutFop(payload).unwrap();
+
+        setFopOrderReference(fopResponse.order_reference);
+        return;
+      }
+
       const response = await checkout(payload).unwrap();
 
       setIsRedirecting(true);
       window.location.assign(response.payment_url);
-      } catch (error) {
+    } catch (error) {
       const status = (error as { status?: number }).status;
 
       if (status === 429) {
@@ -165,7 +181,13 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     }
   };
 
-  const isBusy = isSubmitting || isRedirecting;
+  const isBusy = isSubmitting || isSubmittingFop || isRedirecting;
+  const submitLabel =
+    activeMethod === 'fop' ? t('checkout_form.submit_fop') : t('checkout_form.submit');
+
+  const handleFopClose = () => {
+    window.location.assign(isAuthenticated ? '/account' : '/');
+  };
 
   return (
     <section className={styles.checkout}>
@@ -191,6 +213,38 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
         <div className={styles.checkout__order}>
           <CheckoutSummary cart={cart} currency={currency} />
 
+          {isFopAvailable && (
+            <div
+              className={styles.checkout__payment}
+              role="radiogroup"
+              aria-labelledby="payment-method-title"
+            >
+              <h2 id="payment-method-title" className={styles.checkout__paymentTitle}>
+                {t('checkout_form.payment_method')}
+              </h2>
+
+              <label className={styles.checkout__paymentOption}>
+                <input
+                  type="radio"
+                  name="payment-method"
+                  checked={activeMethod === 'card'}
+                  onChange={() => setPaymentMethod('card')}
+                />
+                <span>{t('checkout_form.payment_card')}</span>
+              </label>
+
+              <label className={styles.checkout__paymentOption}>
+                <input
+                  type="radio"
+                  name="payment-method"
+                  checked={activeMethod === 'fop'}
+                  onChange={() => setPaymentMethod('fop')}
+                />
+                <span>{t('checkout_form.payment_fop')}</span>
+              </label>
+            </div>
+          )}
+
           <div className={styles.checkout__actions}>
             {submitError && <p className={styles.checkout__error}>{submitError}</p>}
 
@@ -200,7 +254,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
               disabled={isBusy || hasUnavailable}
               onClick={() => void handleSubmit()}
             >
-              {isBusy ? t('checkout_form.submitting') : t('checkout_form.submit')}
+              {isBusy ? t('checkout_form.submitting') : submitLabel}
             </button>
 
             <Link to="/catalog" className={styles.checkout__continue}>
@@ -209,6 +263,14 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
           </div>
         </div>
       </div>
+
+      {fopOrderReference && (
+        <FopOrderModal
+          orderReference={fopOrderReference}
+          currency={currency.toUpperCase() as Currency}
+          onClose={handleFopClose}
+        />
+      )}
     </section>
   );
 };

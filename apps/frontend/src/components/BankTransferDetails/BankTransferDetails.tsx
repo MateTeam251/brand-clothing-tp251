@@ -10,9 +10,14 @@ import styles from './BankTransferDetails.module.scss';
 interface BankTransferDetailsProps {
   currency: Currency;
   orderId?: string;
+  defaultOpen?: boolean;
 }
 
-export function BankTransferDetails({ currency, orderId }: BankTransferDetailsProps) {
+export function BankTransferDetails({
+  currency,
+  orderId,
+  defaultOpen,
+}: BankTransferDetailsProps) {
   const { t } = useTranslation();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -50,7 +55,7 @@ export function BankTransferDetails({ currency, orderId }: BankTransferDetailsPr
   };
 
   return (
-    <details className={styles.details}>
+    <details className={styles.details} open={defaultOpen}>
       <summary className={styles.details__summary}>{t('bank_transfer.title')}</summary>
 
       <p className={styles.details__hint}>{t('bank_transfer.hint')}</p>
