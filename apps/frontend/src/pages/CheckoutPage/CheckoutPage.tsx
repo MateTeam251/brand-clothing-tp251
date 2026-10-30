@@ -11,6 +11,7 @@ import { CheckoutContactForm } from '../../components/CheckoutContactForm';
 import { CheckoutDeliveryForm } from '../../components/CheckoutDeliveryForm';
 import { CheckoutSummary } from '../../components/CheckoutSummary';
 import { FopOrderModal } from '../../components/FopOrderModal';
+import { BankTransferDetails } from '../../components/BankTransferDetails';
 import { BANK_TRANSFER_DETAILS } from '../../shared/config/bankTransferDetails';
 import type { Currency } from '../../shared/types/orders';
 import { CHECKOUT_DELIVERY_PROVIDER } from '../../shared/types/delivery';
@@ -243,6 +244,13 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
                 <span>{t('checkout_form.payment_fop')}</span>
               </label>
             </div>
+          )}
+
+          {isFopAvailable && activeMethod === 'fop' && (
+            <BankTransferDetails
+              currency={currency.toUpperCase() as Currency}
+              defaultOpen
+            />
           )}
 
           <div className={styles.checkout__actions}>
