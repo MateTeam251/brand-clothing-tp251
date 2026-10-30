@@ -73,7 +73,7 @@
   }
 
   &__options {
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
     display: flex;
     flex-direction: column;
     gap: 16px;
