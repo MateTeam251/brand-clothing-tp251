@@ -38,6 +38,11 @@ export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
               {item.quantity > 1 && ` × ${item.quantity}`}
             </span>
             <span className={styles.summary__price}>
+              {Number(item.total_full_price) > Number(item.total_price) && (
+                <span className={styles.summary__oldPrice}>
+                  {formatPrice(item.total_full_price)}
+                </span>
+              )}
               {formatPrice(item.total_price)}
             </span>
 

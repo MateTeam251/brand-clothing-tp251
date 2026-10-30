@@ -193,6 +193,21 @@
     text-align: center;
   }
 
+  &__prices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 4px 8px;
+  }
+
+  &__oldPrice {
+    font-family: $font-body;
+    font-size: 14px;
+    color: $color-inactive;
+    text-decoration: line-through;
+  }
+
   &__price {
     font-family: 'Cambria', serif;
     font-weight: bold;
