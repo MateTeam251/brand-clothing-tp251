@@ -21,6 +21,7 @@ const FIELD_KEYS = [
   'email',
   'password',
   'password_confirm',
+  'phone_number',
   'instagram',
   'agree_to_terms',
 ] as const;
@@ -54,6 +55,7 @@ export const SignUpPage = () => {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -137,8 +139,23 @@ export const SignUpPage = () => {
     event.preventDefault();
 
     const trimmedEmail = email.trim();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const trimmedPhone = phone.trim();
     const trimmedInstagram = instagram.trim();
     const errors: FieldErrors = {};
+
+    if (!trimmedFirstName) {
+      errors.first_name = t('auth.errors.required');
+    }
+
+    if (!trimmedLastName) {
+      errors.last_name = t('auth.errors.required');
+    }
+
+    if (!trimmedPhone) {
+      errors.phone_number = t('auth.errors.required');
+    }
 
     if (!trimmedEmail) {
       errors.email = t('auth.errors.required');
@@ -154,10 +171,6 @@ export const SignUpPage = () => {
       errors.password_confirm = t('auth.errors.required');
     } else if (password !== passwordConfirm) {
       errors.password_confirm = t('sign_up.errors.password_mismatch');
-    }
-
-    if (!trimmedInstagram) {
-      errors.instagram = t('auth.errors.required');
     }
 
     if (!agree) {
@@ -178,6 +191,7 @@ export const SignUpPage = () => {
         password_confirm: passwordConfirm,
         first_name: firstName.trim() || undefined,
         last_name: lastName.trim() || undefined,
+        phone_number: trimmedPhone,
         instagram: trimmedInstagram,
         agree_to_terms: agree,
         marketing_opt_in: marketing,
@@ -220,6 +234,7 @@ export const SignUpPage = () => {
           error={fieldErrors.first_name}
           autoComplete="given-name"
         />
+
         <AuthField
           name="last_name"
           type="text"
@@ -229,6 +244,17 @@ export const SignUpPage = () => {
           error={fieldErrors.last_name}
           autoComplete="family-name"
         />
+
+        <AuthField
+          name="phone_number"
+          type="tel"
+          label={t('profile.phone')}
+          value={phone}
+          onChange={setPhone}
+          error={fieldErrors.phone_number}
+          autoComplete="tel"
+        />
+
         <AuthField
           name="email"
           type="email"
@@ -238,6 +264,7 @@ export const SignUpPage = () => {
           error={fieldErrors.email}
           autoComplete="email"
         />
+
         <AuthField
           name="instagram"
           type="text"
@@ -246,6 +273,7 @@ export const SignUpPage = () => {
           onChange={setInstagram}
           error={fieldErrors.instagram}
         />
+
         <AuthField
           name="password"
           type="password"
@@ -255,6 +283,7 @@ export const SignUpPage = () => {
           error={fieldErrors.password}
           autoComplete="new-password"
         />
+
         <AuthField
           name="password_confirm"
           type="password"
@@ -264,6 +293,7 @@ export const SignUpPage = () => {
           error={fieldErrors.password_confirm}
           autoComplete="new-password"
         />
+
         <AuthCheckbox
           name="agree_to_terms"
           checked={agree}
@@ -271,6 +301,7 @@ export const SignUpPage = () => {
           label={t('sign_up.agree')}
           error={fieldErrors.agree_to_terms}
         />
+        
         <AuthCheckbox
           name="marketing_opt_in"
           checked={marketing}

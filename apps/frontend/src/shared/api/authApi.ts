@@ -18,6 +18,7 @@ export interface RegisterRequest {
   password_confirm: string;
   first_name?: string;
   last_name?: string;
+  phone_number: string;
   instagram: string;
   agree_to_terms: boolean;
   marketing_opt_in: boolean;
