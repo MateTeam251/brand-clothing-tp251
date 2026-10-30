@@ -17,9 +17,9 @@
 
   &__content {
     display: grid;
-    grid-template-columns: auto 1fr 1fr;
+    grid-template-columns: auto 1fr auto;
     align-items: start;
-    gap: 16px 24px;
+    gap: 16px;
     padding-top: 24px;
     padding-bottom: 16px;
   }
@@ -78,7 +78,7 @@
   &__link {
     color: #000;
     font-family: $font-heading;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 20px;
     text-decoration: none;
     transition: opacity 0.2s ease;
@@ -92,9 +92,6 @@
   &__link--privacy {
     display: block;
     max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__icons {
