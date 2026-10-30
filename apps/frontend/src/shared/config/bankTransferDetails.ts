@@ -8,10 +8,14 @@ export interface BankTransferDetailsData {
   swift?: string;
 }
 
-// TODO: заповнити реквізитами від замовниці.
-// Поки null: блок «Оплатити за реквізитами» на сайті не показується.
+// Реквізити по валютах. null: для цієї валюти оплата за реквізитами недоступна.
 export const BANK_TRANSFER_DETAILS: Record<Currency, BankTransferDetailsData | null> = {
-  UAH: null,
+  UAH: {
+    recipient: "ФОП Кириченко Дар'я Володимирівна",
+    iban: 'UA58 305299 00000 26004026230637',
+    bank: 'АТ КБ "ПРИВАТБАНК"',
+    taxId: '3477605484',
+  },
   USD: null,
 };
 

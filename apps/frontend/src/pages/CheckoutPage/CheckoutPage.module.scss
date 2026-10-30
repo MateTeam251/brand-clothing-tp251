@@ -65,6 +65,38 @@
     }
   }
 
+  &__payment {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__paymentTitle {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  &__paymentOption {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: $font-body;
+    font-size: 14px;
+    cursor: pointer;
+
+    input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: $accent;
+    }
+
+    @include on-desktop {
+      font-size: 16px;
+    }
+  }
+
   &__actions {
     display: flex;
     flex-direction: column;

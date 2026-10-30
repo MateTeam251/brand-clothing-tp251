@@ -262,6 +262,10 @@ i18n.use(initReactI18next).init({
           unavailable_hint: 'Remove unavailable items from the cart to continue',
         },
         checkout_form: {
+          payment_method: 'Payment method',
+          payment_card: 'Pay online by card',
+          payment_fop: 'Bank transfer (pay by details)',
+          submit_fop: 'Place order',
           required: 'This field is required',
           invalid_phone: 'Enter a valid phone number',
           invalid_email: 'Enter a valid email',
@@ -292,6 +296,9 @@ i18n.use(initReactI18next).init({
           back_to_cart: 'Back to cart',
         },
         bank_transfer: {
+          order_created_title: 'Order placed',
+          order_created_text: 'Pay by bank transfer using the details below and put the order number in the payment purpose. We will confirm your order as soon as the payment arrives.',
+          order_created_done: 'Done',
           title: 'Pay by bank transfer',
           hint: 'Specify the order number in the payment purpose.',
           recipient: 'Recipient',
@@ -732,6 +739,10 @@ i18n.use(initReactI18next).init({
           unavailable_hint: 'Приберіть недоступні товари з кошика, щоб продовжити',
         },
         checkout_form: {
+          payment_method: 'Спосіб оплати',
+          payment_card: 'Оплата карткою онлайн',
+          payment_fop: 'Переказ за реквізитами',
+          submit_fop: 'Оформити замовлення',
           required: "Обов'язкове поле",
           invalid_phone: 'Введіть коректний номер телефону',
           invalid_email: 'Введіть коректний email',
@@ -762,6 +773,9 @@ i18n.use(initReactI18next).init({
           back_to_cart: 'Повернутися в кошик',
         },
         bank_transfer: {
+          order_created_title: 'Замовлення оформлено',
+          order_created_text: 'Сплатіть переказом за реквізитами нижче й вкажіть номер замовлення в призначенні платежу. Ми підтвердимо замовлення, щойно оплата надійде.',
+          order_created_done: 'Готово',
           title: 'Оплатити за реквізитами',
           hint: 'Вкажіть номер замовлення в призначенні платежу.',
           recipient: 'Отримувач',
