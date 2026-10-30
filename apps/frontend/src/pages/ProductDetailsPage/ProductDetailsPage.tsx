@@ -109,10 +109,10 @@ export const ProductDetailsPage = () => {
                 />
 
                 <div className={styles.details__prices}>
-                  <span className={styles.details__price}>{formatPrice(displayedPrice)}</span>
                   {hasDiscount && (
                     <span className={styles.details__oldPrice}>{formatPrice(product.price)}</span>
                   )}
+                  <span className={styles.details__price}>{formatPrice(displayedPrice)}</span>
                 </div>
 
                 <p className={styles.details__shortDesc}>{product.description.split('\n')[0]}</p>
