@@ -20,6 +20,9 @@ class CartItemSerializer(CurrencyMixin, serializers.ModelSerializer):
         help_text="Price of ONE item after discount, in the `?currency=` currency, e.g. \"900.00\".")
     total_price = serializers.SerializerMethodField(  # price * quantity - price for THIS item considering quantity of items in cart. NOT the total price for cart
         help_text="`price` × `quantity` for this line (not the whole cart).")
+    total_full_price = serializers.SerializerMethodField(  # same as total_price but without discount if applicable
+        help_text="`total_price` before discount: base price × `quantity`, in the `?currency=` currency. "
+                  "Equals `total_price` if the product has no discount.")
     is_available = serializers.BooleanField(
         source="product.is_available", read_only=True,
         help_text="false = the product went out of stock after it was added. Such a line can only be "
@@ -32,7 +35,7 @@ class CartItemSerializer(CurrencyMixin, serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ("id", "product", "name", "main_image", "size", "quantity", "price", "total_price", "is_available", "is_archived")
+        fields = ("id", "product", "name", "main_image", "size", "quantity", "price", "total_price", "total_full_price", "is_available", "is_archived")
         read_only_fields = fields
         extra_kwargs = {
             "id": {"help_text": "Cart line id; use it in `/api/cart/items/{id}/`."},
@@ -48,22 +51,26 @@ class CartItemSerializer(CurrencyMixin, serializers.ModelSerializer):
             return ProductImageSerializer(first_image, context=self.context).data
         return None
 
-    def _unit_price(self, obj) -> str:
+    def _unit_full_price(self, obj) -> str:
         currency = self._currency()
         product = obj.product
-        if product.discount_percent:
-            return calc_discounted(
-                product.price_usd if currency == "usd" else product.price_uah,
-                product.discount_percent,
-            )
         base = product.price_usd if currency == "usd" else product.price_uah
         return str(base)
+
+    def _unit_price(self, obj) -> str:
+        product = obj.product
+        if product.discount_percent:
+            return calc_discounted(Decimal(self._unit_full_price(obj)), product.discount_percent)
+        return self._unit_full_price(obj)
 
     def get_price(self, obj) -> str:
         return self._unit_price(obj)
 
     def get_total_price(self, obj) -> str:
         return str(Decimal(self._unit_price(obj)) * obj.quantity)
+
+    def get_total_full_price(self, obj):
+        return str(Decimal(self._unit_full_price(obj)) * obj.quantity)
 
 
 class CartItemWriteSerializer(serializers.ModelSerializer):
