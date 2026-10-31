@@ -11,6 +11,7 @@ from carts.models import CartStatusEnum
 from carts.views import get_or_create_active_cart
 from core.openapi import DETAIL_RESPONSE, UNAUTHORIZED, VALIDATION_ERROR, THROTTLED
 from orders.models import Order
+from orders.pagination import CustomerOrderPagination
 from orders.serializers import (
     OrderSerializer,
     CheckoutSerializer,
@@ -46,6 +47,7 @@ class CustomerOrderListView(generics.ListAPIView):
 
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomerOrderPagination
 
     def get_queryset(self):
         """
@@ -140,10 +142,7 @@ class CheckoutView(APIView):
         request=CheckoutSerializer,
         responses={
             201: CheckoutResponseSerializer,
-            400: OpenApiResponse(
-                VALIDATION_ERROR,
-                description="Invalid fields, empty/inactive cart, or a product is no longer available.",
-            ),
+            400: VALIDATION_ERROR,
             429: THROTTLED,
             502: PROVIDER_UNAVAILABLE,
         },
@@ -225,10 +224,7 @@ class RetryPaymentView(APIView):
         request=None,
         responses={
             201: CheckoutResponseSerializer,
-            400: OpenApiResponse(
-                VALIDATION_ERROR,
-                description="Order is not `pending` (already paid or canceled).",
-            ),
+            400: VALIDATION_ERROR,
             401: UNAUTHORIZED,
             404: OpenApiResponse(
                 DETAIL_RESPONSE,
