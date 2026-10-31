@@ -16,7 +16,8 @@
 
   &__wrapper {
     position: relative;
-    background-image: url('../../shared/assets/images/home_bg-phone.png');
+    background-color: $secondary;
+    background-image: url('../../shared/assets/images/home_bg-phone.webp');
     min-height: 504px;
     background-repeat: no-repeat;
     background-size: cover;
@@ -30,7 +31,7 @@
     align-items: center;
 
     @include on-desktop {
-      background-image: url('../../shared/assets/images/home_bg-desktop.png');
+      background-image: url('../../shared/assets/images/home_bg-desktop.webp');
       width: calc(100% + 80px);
       margin-inline: -40px;
     }
