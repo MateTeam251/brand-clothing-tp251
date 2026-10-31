@@ -142,10 +142,7 @@ class CheckoutView(APIView):
         request=CheckoutSerializer,
         responses={
             201: CheckoutResponseSerializer,
-            400: OpenApiResponse(
-                VALIDATION_ERROR,
-                description="Invalid fields, empty/inactive cart, or a product is no longer available.",
-            ),
+            400: VALIDATION_ERROR,
             429: THROTTLED,
             502: PROVIDER_UNAVAILABLE,
         },
@@ -227,10 +224,7 @@ class RetryPaymentView(APIView):
         request=None,
         responses={
             201: CheckoutResponseSerializer,
-            400: OpenApiResponse(
-                VALIDATION_ERROR,
-                description="Order is not `pending` (already paid or canceled).",
-            ),
+            400: VALIDATION_ERROR,
             401: UNAUTHORIZED,
             404: OpenApiResponse(
                 DETAIL_RESPONSE,
