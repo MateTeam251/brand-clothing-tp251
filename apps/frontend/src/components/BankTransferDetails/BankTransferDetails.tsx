@@ -6,6 +6,8 @@ import {
 } from '../../shared/config/bankTransferDetails';
 import type { Currency } from '../../shared/types/orders';
 import styles from './BankTransferDetails.module.scss';
+import copyIcon from '../../shared/assets/icons/copy.svg';
+import checkIcon from '../../shared/assets/icons/check.svg';
 
 interface BankTransferDetailsProps {
   currency: Currency;
@@ -70,10 +72,23 @@ export function BankTransferDetails({
                 type="button"
                 className={styles.details__copy}
                 onClick={() => void handleCopy(row.key, row.value)}
+                aria-label={
+                  copiedKey === row.key
+                    ? t('bank_transfer.copied')
+                    : t('bank_transfer.copy')
+                }
+                title={
+                  copiedKey === row.key
+                    ? t('bank_transfer.copied')
+                    : t('bank_transfer.copy')
+                }
               >
-                {copiedKey === row.key
-                  ? t('bank_transfer.copied')
-                  : t('bank_transfer.copy')}
+                <img
+                  src={copiedKey === row.key ? checkIcon : copyIcon}
+                  alt=""
+                  width={18}
+                  height={18}
+                />
               </button>
             </dd>
           </div>
