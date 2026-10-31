@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductByIdQuery } from '../../shared/api/productsApi';
 import { useAddFavoriteMutation, useRemoveFavoriteByProductIdMutation } from '../../shared/api/favoritesApi';
@@ -201,9 +201,17 @@ export const ProductDetailsPage = () => {
               { key: 'description_title', content: product.description },
               {
                 key: 'material_care_title',
-                content: [product.fabric_composition, t('product.care_text')]
-                  .filter(Boolean)
-                  .join('\n\n'),
+                content: (
+                  <>
+                    {[product.fabric_composition, t('product.care_text')]
+                      .filter(Boolean)
+                      .join('\n\n')}
+                    {'\n\n'}
+                    <Link to="/garment-care" className={styles.details__careLink}>
+                      {t('product.care_link')}
+                    </Link>
+                  </>
+                ),
               },
               { key: 'returns_title', content: <ReturnsPolicy /> },
               { key: 'delivery_title', content: t('product.delivery_text') },
