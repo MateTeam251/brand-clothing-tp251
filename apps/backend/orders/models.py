@@ -235,7 +235,8 @@ class OrderItem(models.Model):
         Final total amount after discount for this order item.
         """
 
-        return self.unit_price_after_discount * self.quantity
+        # unit_price_after_discount is a str ("900.00"): str * int would repeat it.
+        return Decimal(self.unit_price_after_discount) * self.quantity
 
     def __str__(self):
         return f"{self.product_name} - {self.size} x {self.quantity}"
