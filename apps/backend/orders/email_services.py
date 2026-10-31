@@ -70,6 +70,7 @@ def send_order_status_changed_email(order: Order) -> None:
     """
 
     status_map = {
+        OrderStatus.PAID: ("emails/order_paid.html", "Your order has been paid"),
         OrderStatus.SHIPPED: ("emails/order_shipped.html", "Your order has been sent."),
         OrderStatus.DELIVERED: ("emails/order_delivered.html", "Your order has been delivered."),
         OrderStatus.CANCELED: ("emails/order_canceled.html", "Your order has been canceled"),
