@@ -11,6 +11,7 @@ from carts.models import CartStatusEnum
 from carts.views import get_or_create_active_cart
 from core.openapi import DETAIL_RESPONSE, UNAUTHORIZED, VALIDATION_ERROR, THROTTLED
 from orders.models import Order
+from orders.pagination import CustomerOrderPagination
 from orders.serializers import (
     OrderSerializer,
     CheckoutSerializer,
@@ -46,6 +47,7 @@ class CustomerOrderListView(generics.ListAPIView):
 
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomerOrderPagination
 
     def get_queryset(self):
         """
