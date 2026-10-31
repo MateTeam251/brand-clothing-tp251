@@ -17,6 +17,38 @@
     }
   }
 
+    &__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+
+    @include on-desktop {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__groupPrimary {
+    @include on-desktop {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+
+  &__groupSecondary {
+    @include on-desktop {
+      grid-column: 2;
+      grid-row: 1;
+    }
+  }
+
   &__changePassword {
     width: 100%;
     min-height: 48px;
@@ -26,10 +58,6 @@
     color: inherit;
     font-size: 18px;
     cursor: pointer;
-
-    @include on-desktop {
-      width: calc(50% - 8px);
-    }
   }
 
   &__checkbox {
@@ -71,10 +99,6 @@
     color: inherit;
     font-size: 18px;
     cursor: pointer;
-
-    @include on-desktop {
-      width: calc(50% - 8px);
-    }
 
     &:disabled {
       opacity: 0.6;

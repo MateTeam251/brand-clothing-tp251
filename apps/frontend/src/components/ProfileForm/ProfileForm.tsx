@@ -10,9 +10,10 @@ import styles from './ProfileForm.module.scss';
 
 interface ProfileFormProps {
   profile: UserProfile;
+  onLogout: () => void;
 }
 
-export const ProfileForm = ({ profile }: ProfileFormProps) => {
+export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
   const { t } = useTranslation();
   const [updateMe, { isLoading }] = useUpdateMeMutation();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -134,18 +135,6 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
           />
         </div>
 
-        <button
-          type="button"
-          className={styles.form__changePassword}
-          onClick={() => setIsEmailModalOpen(true)}
-        >
-          {t('profile.change_email')}
-        </button>
-
-        <button type="button" className={styles.form__changePassword} onClick={handleChangePassword}>
-          {t('profile.change_password')}
-        </button>
-
         <label className={styles.form__checkbox}>
           <input
             type="checkbox"
@@ -169,9 +158,33 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
           </p>
         )}
 
-        <button type="submit" className={styles.form__submit} disabled={isLoading}>
-          {t('profile.save')}
-        </button>
+        <div className={styles.form__actions}>
+          <div className={`${styles.form__group} ${styles.form__groupSecondary}`}>
+            <button
+              type="button"
+              className={styles.form__changePassword}
+              onClick={() => setIsEmailModalOpen(true)}
+            >
+              {t('profile.change_email')}
+            </button>
+            <button
+              type="button"
+              className={styles.form__changePassword}
+              onClick={handleChangePassword}
+            >
+              {t('profile.change_password')}
+            </button>
+          </div>
+
+          <div className={`${styles.form__group} ${styles.form__groupPrimary}`}>
+            <button type="submit" className={styles.form__submit} disabled={isLoading}>
+              {t('profile.save')}
+            </button>
+            <button type="button" className={styles.form__changePassword} onClick={onLogout}>
+              {t('profile.logout')}
+            </button>
+          </div>
+        </div>
       </form>
 
     {isPasswordModalOpen && (
