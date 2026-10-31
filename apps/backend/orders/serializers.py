@@ -37,7 +37,6 @@ class OrderItemSerializer(LanguageMixin, serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = (
-            "id",
             "product",
             "product_name",
             "product_main_image",
