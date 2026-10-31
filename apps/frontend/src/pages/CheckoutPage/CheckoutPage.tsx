@@ -144,9 +144,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       email: contact.email.trim(),
       currency: currency.toUpperCase() as CheckoutRequest['currency'],
       delivery_provider: CHECKOUT_DELIVERY_PROVIDER,
-      delivery_address: [city.name, branch.name, branch.address]
-        .filter(Boolean)
-        .join(', '),
+      delivery_address: [city.name, branch.name].filter(Boolean).join(', '),
       delivery_data: {
         delivery_type: 'branch',
         city_id: city.id,
