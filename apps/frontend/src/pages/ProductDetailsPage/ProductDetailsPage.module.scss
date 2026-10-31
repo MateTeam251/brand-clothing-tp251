@@ -241,6 +241,11 @@
     transition-delay: 0s;
   }
 
+  &__careLink {
+    color: inherit;
+    text-decoration: underline;
+  }
+
   &__accordion {
     display: flex;
     flex-direction: column;
