@@ -33,7 +33,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
     style: 'currency',
     currency: currency.toUpperCase(),
     currencyDisplay: 'narrowSymbol',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(price);
 
   return (
