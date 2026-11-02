@@ -80,6 +80,7 @@
     display: flex;
     justify-content: flex-end;
     width: fit-content;
+    touch-action: manipulation;
 
     @include on-desktop {
       display: none;
