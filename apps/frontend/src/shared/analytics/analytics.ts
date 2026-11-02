@@ -51,3 +51,30 @@ export const trackEvent = (name: AnalyticsEventName, params?: AnalyticsParams) =
 
   window.gtag('event', name, params);
 };
+
+export interface AnalyticsItem {
+  item_id: string;
+  item_name: string;
+  price: number;
+  item_variant?: string;
+  item_list_name?: string;
+  index?: number;
+  quantity?: number;
+}
+
+interface AnalyticsProduct {
+  id: number;
+  name: string;
+  price: string;
+  discounted_price: string | null;
+}
+
+export const toAnalyticsItem = (
+  product: AnalyticsProduct,
+  extra?: Partial<AnalyticsItem>,
+): AnalyticsItem => ({
+  item_id: String(product.id),
+  item_name: product.name,
+  price: Number(product.discounted_price ?? product.price),
+  ...extra,
+});
