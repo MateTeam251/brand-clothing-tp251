@@ -4,10 +4,13 @@ import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { ProductListItem } from '../../shared/types/products';
 import styles from './ProductCard.module.scss';
 import closeIcon from '../../shared/assets/icons/close.svg';
+import { toAnalyticsItem, trackEvent } from '../../shared/analytics';
 
 interface ProductCardProps {
   product: ProductListItem;
   onRemove?: () => void;
+  listName?: string;
+  position?: number;
 }
 
 const formatPrice = (value: string, currency: 'uah' | 'usd') => {
@@ -17,13 +20,20 @@ const formatPrice = (value: string, currency: 'uah' | 'usd') => {
   return `${formatted} ${symbol}`;
 };
 
-export const ProductCard = ({ product, onRemove }: ProductCardProps) => {
+export const ProductCard = ({ product, onRemove, listName, position }: ProductCardProps) => {
   const { t } = useTranslation();
   const currency = useAppSelector((state) => state.settings.currency);
 
+  const handleSelect = () => {
+    trackEvent('select_item', {
+      item_list_name: listName,
+      items: [toAnalyticsItem(product, { item_list_name: listName, index: position })],
+    });
+  };
+
   return (
     <div className={styles.wrapper}>
-      <Link to={`/product/${product.id}`} className={styles.card}>
+      <Link to={`/product/${product.id}`} className={styles.card} onClick={handleSelect}>
         <div className={styles.card__imageWrapper}>
           {product.main_image ? (
             <img

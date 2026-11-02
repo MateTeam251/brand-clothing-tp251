@@ -17,6 +17,7 @@ type ProductSliderProps = {
   excludeProductId?: number;
   onlyAvailable?: boolean;
   maxItems?: number;
+  listName?: string;
 };
 
 export const ProductSlider = ({
@@ -27,6 +28,7 @@ export const ProductSlider = ({
   excludeProductId,
   onlyAvailable = false,
   maxItems,
+  listName = 'slider',
 }: ProductSliderProps) => {
   const titleId = useId();
   const {
@@ -74,9 +76,9 @@ export const ProductSlider = ({
         onPointerCancel={handlePointerUp}
         onClickCapture={handleClickCapture}
       >
-        {products.map((product) => (
+        {products.map((product, index) => (
           <div className={styles.slider__item} data-slider-item='true' key={product.id}>
-            <ProductCard product={product} />
+            <ProductCard product={product} listName={listName} position={index} />
           </div>
         ))}
       </div>

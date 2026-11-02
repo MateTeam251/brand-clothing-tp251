@@ -1,1 +1,7 @@
-export { initAnalytics, trackEvent, type AnalyticsEventName } from './analytics';
+export {
+  initAnalytics,
+  trackEvent,
+  toAnalyticsItem,
+  type AnalyticsEventName,
+  type AnalyticsItem,
+} from './analytics';

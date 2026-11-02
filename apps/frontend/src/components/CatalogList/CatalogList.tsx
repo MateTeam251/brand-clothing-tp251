@@ -9,6 +9,7 @@ import { ErrorState } from "../ErrorState";
 import { EmptyState } from "../EmptyState";
 import styles from './CatalogList.module.scss';
 import { ProductCard } from "../ProductCard";
+import { toAnalyticsItem, trackEvent } from "../../shared/analytics";
 
 const PRODUCTS_LIMIT = 12;
 
@@ -77,6 +78,19 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
     return () => observer.disconnect();
   }, [isFetching, hasMore, handleLoadMore]);
 
+  useEffect(() => {
+    if (!currentData) {
+      return;
+    }
+
+    trackEvent('view_item_list', {
+      item_list_name: 'catalog',
+      items: currentData.results.map((product, index) =>
+        toAnalyticsItem(product, { item_list_name: 'catalog', index: offset + index }),
+      ),
+    });
+  }, [currentData, offset]);
+
   if (isLoading && offset === 0) {
     return <Loader />;
   }
@@ -92,8 +106,8 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   return (
     <>
       <div className={styles.catalog__grid}>
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        {products.map((product, index) => (
+          <ProductCard key={product.id} product={product} listName="catalog" position={index} />
         ))}
       </div>
 
