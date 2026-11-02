@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetOrdersQuery, useRetryPaymentMutation } from '../../shared/api/ordersApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
@@ -29,6 +29,18 @@ export const OrdersList = () => {
   const [retryPayment] = useRetryPaymentMutation();
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setPayingOrderId(null);
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   const handlePay = async (orderId: string) => {
     setFailedOrderId(null);
