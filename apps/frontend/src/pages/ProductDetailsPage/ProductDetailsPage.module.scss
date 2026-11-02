@@ -101,6 +101,7 @@
   }
 
   &__sizeSelect {
+    width: fit-content;
     border: 1px solid $light-gray;
     border-radius: 8px;
     height: 42px;
