@@ -56,7 +56,7 @@ export const ProductDetailsPage = () => {
       style: 'currency',
       currency: currency.toUpperCase(),
       currencyDisplay: 'narrowSymbol',
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(Number(price));
 
   const displayedPrice = product.discounted_price ?? product.price;
