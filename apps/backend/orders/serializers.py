@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from core.delivery import get_delivery_data_error
 from core.mixins import LanguageMixin
 from orders.models import OrderItem, Order
 from core.enums import Currency, DeliveryProvider
@@ -137,6 +138,18 @@ class CheckoutSerializer(serializers.ModelSerializer):
             "delivery_address",
             "delivery_data",
         )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        error = get_delivery_data_error(
+            attrs["delivery_provider"],
+            attrs.get("delivery_data"),
+        )
+        if error:
+            raise serializers.ValidationError({"delivery_data": error})
+
+        return attrs
 
 
 class CheckoutResponseSerializer(serializers.Serializer):

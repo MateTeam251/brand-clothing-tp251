@@ -7,6 +7,7 @@ from django.forms import BaseInlineFormSet
 from django.utils.html import format_html
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
+from core.delivery import get_delivery_data_error
 from orders.email_services import send_order_status_changed_email
 from orders.exceptions import PaymentProviderUnavailable
 from orders.models import OrderItem, Order
@@ -75,7 +76,7 @@ class OrderItemInline(admin.TabularInline):
         "discount_percent_at_purchase",
     )
     view_fields = create_fields + (
-        "unit_price_after_discount", "line_subtotal", "line_total",
+        "unit_price_after_discount", "line_subtotal", "line_total"
     )
 
     autocomplete_fields = ("product",)
@@ -120,6 +121,36 @@ class PaymentInline(admin.TabularInline):
         return False
 
 
+class OrderAdminForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = (
+            "user",
+            "first_name",
+            "last_name",
+            "user_phone",
+            "email",
+            "delivery_address",
+            "currency",
+            "status",
+            "delivery_provider",
+            "delivery_data",
+            "admin_comment",
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+
+        error = get_delivery_data_error(
+            cleaned.get("delivery_provider"),
+            cleaned.get("delivery_data"),
+        )
+        if error:
+            self.add_error("delivery_data", error)
+
+        return cleaned
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
@@ -153,6 +184,7 @@ class OrderAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
     ordering = ("-created_at",)
     inlines = (OrderItemInline, PaymentInline)
+    form = OrderAdminForm
 
     always_readonly = (
         "order_reference",
