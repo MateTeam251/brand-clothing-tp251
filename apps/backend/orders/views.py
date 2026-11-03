@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from carts.models import CartStatusEnum
 from carts.views import get_or_create_active_cart
+from core.delivery import NOVA_POST_COUNTRIES
 from core.openapi import DETAIL_RESPONSE, UNAUTHORIZED, VALIDATION_ERROR, THROTTLED
 from orders.models import Order
 from orders.pagination import CustomerOrderPagination
@@ -349,3 +350,23 @@ class OrderStatusView(APIView):
             "status": order.status,
             "last_payment_status": last_payment_status,
         })
+
+
+@extend_schema(
+    tags=["Orders"],
+    summary="Countries available for Nova Post international delivery",
+    responses={200: inline_serializer("NovaPostCountry", {
+        "code": serializers.CharField(),
+        "name_ua": serializers.CharField(),
+        "name_en": serializers.CharField(),
+    }, many=True)},
+)
+class NovaPostCountriesView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return Response([
+            {"code": code, "name_ua": names["ua"], "name_en": names["en"]}
+            for code, names in NOVA_POST_COUNTRIES.items()
+        ])
