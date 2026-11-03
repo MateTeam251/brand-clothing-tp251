@@ -86,10 +86,43 @@
     cursor: pointer;
 
     input {
+      appearance: none;
+      -webkit-appearance: none;
+      position: relative;
+      flex-shrink: 0;
       width: 20px;
       height: 20px;
       margin: 0;
-      accent-color: $accent;
+      border: 1px solid $color-inactive;
+      border-radius: 50%;
+      cursor: pointer;
+
+      @include on-desktop {
+        width: 26px;
+        height: 26px;
+      }
+
+      &:checked {
+        background: $accent;
+        border-color: $accent;
+      }
+
+      &:checked::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #000;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #000;
+        outline-offset: 2px;
+      }
     }
 
     @include on-desktop {

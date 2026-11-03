@@ -100,6 +100,7 @@ export const HomePage = () => {
       <div className={styles.home__container}>
 
         <ProductSlider
+          listName='bestsellers'
           title={t('bestsellers')}
           queryParams={{ is_bestseller: true, limit: 4 }}
         />
@@ -107,6 +108,7 @@ export const HomePage = () => {
         <CollectionSlider title={t('new-collections')} />
 
         <ProductSlider
+          listName='home_catalog'
           title={t('catalog')}
           queryParams={{ ordering: '?', limit: 4 }}
           viewAllTo='/catalog'

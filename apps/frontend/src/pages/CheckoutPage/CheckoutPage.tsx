@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
@@ -69,6 +69,18 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
   const [deliveryErrors, setDeliveryErrors] = useState<CheckoutDeliveryErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsRedirecting(false);
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   const hasUnavailable = cart.items.some((item) => !item.is_available || item.is_archived);
 
@@ -144,9 +156,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       email: contact.email.trim(),
       currency: currency.toUpperCase() as CheckoutRequest['currency'],
       delivery_provider: CHECKOUT_DELIVERY_PROVIDER,
-      delivery_address: [city.name, branch.name, branch.address]
-        .filter(Boolean)
-        .join(', '),
+      delivery_address: [city.name, branch.name].filter(Boolean).join(', '),
       delivery_data: {
         delivery_type: 'branch',
         city_id: city.id,

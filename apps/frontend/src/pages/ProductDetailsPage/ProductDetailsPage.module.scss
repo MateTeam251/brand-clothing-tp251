@@ -101,6 +101,7 @@
   }
 
   &__sizeSelect {
+    width: fit-content;
     border: 1px solid $light-gray;
     border-radius: 8px;
     height: 42px;
@@ -239,6 +240,11 @@
   &__availability--open &__availabilityInner {
     visibility: visible;
     transition-delay: 0s;
+  }
+
+  &__careLink {
+    color: inherit;
+    text-decoration: underline;
   }
 
   &__accordion {

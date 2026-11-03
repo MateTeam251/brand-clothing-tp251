@@ -16,7 +16,8 @@
 
   &__wrapper {
     position: relative;
-    background-image: url('../../shared/assets/images/home_bg-phone.png');
+    background-color: $secondary;
+    background-image: url('../../shared/assets/images/home_bg-phone.webp');
     min-height: 504px;
     background-repeat: no-repeat;
     background-size: cover;
@@ -30,7 +31,7 @@
     align-items: center;
 
     @include on-desktop {
-      background-image: url('../../shared/assets/images/home_bg-desktop.png');
+      background-image: url('../../shared/assets/images/home_bg-desktop.webp');
       width: calc(100% + 80px);
       margin-inline: -40px;
     }
@@ -79,6 +80,7 @@
     display: flex;
     justify-content: flex-end;
     width: fit-content;
+    touch-action: manipulation;
 
     @include on-desktop {
       display: none;
@@ -121,7 +123,7 @@
     border: none;
     background: transparent;
     outline: none;
-    font-size: 14px;
+    font-size: 16px;
     color: #000;
 
     &::placeholder {
@@ -176,7 +178,7 @@
     }
 
     &-left p {
-      color: #7E7C7C;
+      color: $gray90;
       font-size: 16px;
       line-height: 24px;
       font-weight: 400;
@@ -200,9 +202,10 @@
       padding: 10px 0;
       background: inherit;
       outline: none;
+      font-size: 16px;
 
       @include on-desktop {
-        border: 1px solid #C6C6C6;
+        border: 1px solid $light-gray;
         padding: 0;
         border-right: none;
         border-radius: 8px;
@@ -230,7 +233,7 @@
       margin-left: auto;
 
       @include on-desktop {
-        border: 1px solid #C6C6C6;
+        border: 1px solid $light-gray;
         border-left: none;
         padding-right: 15px;
         border-radius: 8px;
@@ -267,5 +270,4 @@
       gap: 120px;
     }
   }
-
 }

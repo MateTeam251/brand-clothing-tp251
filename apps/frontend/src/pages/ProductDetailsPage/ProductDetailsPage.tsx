@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductByIdQuery } from '../../shared/api/productsApi';
 import { useAddFavoriteMutation, useRemoveFavoriteByProductIdMutation } from '../../shared/api/favoritesApi';
@@ -17,6 +17,7 @@ import { ProductGallery } from '../../components/ProductGallery';
 import { FavoriteButton } from '../../components/FavoriteButton';
 import { EmptyState } from '../../components/EmptyState';
 import { ReturnsPolicy } from '../../components/ReturnsPolicy';
+import { toAnalyticsItem, trackEvent } from '../../shared/analytics';
 
 export const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +40,18 @@ export const ProductDetailsPage = () => {
   const [addFavorite] = useAddFavoriteMutation();
   const [removeFavorite] = useRemoveFavoriteByProductIdMutation();
 
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+
+    trackEvent('view_item', {
+      currency: currency.toUpperCase(),
+      value: Number(product.discounted_price ?? product.price),
+      items: [toAnalyticsItem(product)],
+    });
+  }, [product, currency]);
+
   if (isLoading) {
     return <Loader />;
   }
@@ -56,8 +69,18 @@ export const ProductDetailsPage = () => {
       style: 'currency',
       currency: currency.toUpperCase(),
       currencyDisplay: 'narrowSymbol',
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(Number(price));
+  
+  const handleSizeChange = (size: string) => {
+    setSelectedSize(size);
+
+    if (size) {
+      trackEvent('select_size', {
+        items: [toAnalyticsItem(product, { item_variant: size })],
+      });
+    }
+  };
 
   const displayedPrice = product.discounted_price ?? product.price;
   const hasDiscount = Boolean(product.discounted_price);
@@ -121,7 +144,7 @@ export const ProductDetailsPage = () => {
               <div className={styles.details__sizeSelect}>
                 <select
                   value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
+                  onChange={(e) => handleSizeChange(e.target.value)}
                   className={styles.details__selector}
                 >
                   <option value="">{t('product.select_size')}</option>
@@ -201,9 +224,17 @@ export const ProductDetailsPage = () => {
               { key: 'description_title', content: product.description },
               {
                 key: 'material_care_title',
-                content: [product.fabric_composition, t('product.care_text')]
-                  .filter(Boolean)
-                  .join('\n\n'),
+                content: (
+                  <>
+                    {[product.fabric_composition, t('product.care_text')]
+                      .filter(Boolean)
+                      .join('\n\n')}
+                    {'\n\n'}
+                    <Link to="/garment-care" className={styles.details__careLink}>
+                      {t('product.care_link')}
+                    </Link>
+                  </>
+                ),
               },
               { key: 'returns_title', content: <ReturnsPolicy /> },
               { key: 'delivery_title', content: t('product.delivery_text') },
