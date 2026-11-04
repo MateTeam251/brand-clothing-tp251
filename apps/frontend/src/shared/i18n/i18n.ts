@@ -259,6 +259,8 @@ i18n.use(initReactI18next).init({
           load_error: 'Failed to load. Please try again',
         },
         checkout_summary: {
+          delivery_method: 'Delivery method',
+          delivery_address: 'Address',
           title: 'Order',
           size_inline: 'size',
           delivery: 'Delivery',
@@ -745,6 +747,8 @@ i18n.use(initReactI18next).init({
           load_error: 'Не вдалося завантажити. Спробуйте ще раз',
         },
         checkout_summary: {
+          delivery_method: 'Спосіб доставки',
+          delivery_address: 'Адреса',
           title: 'Замовлення',
           size_inline: 'розмір',
           delivery: 'Доставка',

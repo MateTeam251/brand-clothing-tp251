@@ -1,15 +1,27 @@
 import { useTranslation } from 'react-i18next';
 import type { Cart } from '../../shared/types/Cart';
+import type { DeliveryMode } from '../../shared/types/checkout';
 import styles from './CheckoutSummary.module.scss';
 
 interface CheckoutSummaryProps {
   cart: Cart;
   currency: string;
+  deliveryMode?: DeliveryMode;
+  deliveryAddress?: string;
 }
 
-export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
+export function CheckoutSummary({
+  cart,
+  currency,
+  deliveryMode = 'ukraine',
+  deliveryAddress,
+}: CheckoutSummaryProps) {
   const { t } = useTranslation();
   const currencyCode = currency.toUpperCase();
+  const deliveryMethod =
+    deliveryMode === 'international'
+      ? t('checkout_delivery.mode_international')
+      : t('checkout_delivery.mode_ukraine');
 
   const formatPrice = (value: string | number) =>
     new Intl.NumberFormat(currencyCode === 'UAH' ? 'uk-UA' : 'en-US', {
@@ -53,6 +65,18 @@ export function CheckoutSummary({ cart, currency }: CheckoutSummaryProps) {
             )}
           </li>
         ))}
+
+        <li className={styles.summary__item}>
+          <span>{t('checkout_summary.delivery_method')}</span>
+          <span className={styles.summary__value}>{deliveryMethod}</span>
+        </li>
+
+        {deliveryAddress && (
+          <li className={styles.summary__item}>
+            <span>{t('checkout_summary.delivery_address')}</span>
+            <span className={styles.summary__value}>{deliveryAddress}</span>
+          </li>
+        )}
 
         <li className={styles.summary__item}>
           <span>{t('checkout_summary.delivery')}</span>
