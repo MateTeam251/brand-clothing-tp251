@@ -94,3 +94,11 @@ export const cartLineToAnalyticsItem = (line: AnalyticsCartLine): AnalyticsItem 
   item_variant: line.size,
   quantity: line.quantity,
 });
+
+export const setAnalyticsUserId = (userId: number | string | null) => {
+  if (!MEASUREMENT_ID || !window.gtag) {
+    return;
+  }
+
+  window.gtag('set', { user_id: userId === null ? null : String(userId) });
+};

@@ -29,11 +29,19 @@ import { PrivacyPage } from './pages/PrivacyPage';
 import { EmailChangeSuccessPage } from './pages/EmailChangeSuccessPage';
 import { EmailChangeFailedPage } from './pages/EmailChangeFailedPage';
 import { PaymentResultPage } from './pages/PaymentResultPage';
+import { useAnalyticsUser } from './shared/hooks/useAnalyticsUser';
 
+
+const AnalyticsUser = () => {
+  useAnalyticsUser();
+
+  return null;
+};
 
 function App() {
   return (
     <Provider store={store}>
+      <AnalyticsUser />
       <BrowserRouter>
         <div className="app-shell">
           <Header />

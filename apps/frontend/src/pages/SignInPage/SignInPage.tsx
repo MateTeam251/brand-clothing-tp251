@@ -11,6 +11,7 @@ import styles from './SignInPage.module.scss';
 import { productsApi } from '../../shared/api/productsApi';
 import { AuthSheet } from '../../components/AuthSheet';
 import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
+import { trackEvent } from '../../shared/analytics';
 
 type FieldErrors = {
   email?: string;
@@ -73,6 +74,7 @@ export const SignInPage = () => {
     try {
       const tokens = await login({ email: trimmedEmail, password }).unwrap();
       dispatch(setCredentials(tokens));
+      trackEvent('login', { method: 'email' });
       dispatch(productsApi.util.invalidateTags(['Products']));
     } catch (error) {
       const status = (error as { status?: number }).status;
