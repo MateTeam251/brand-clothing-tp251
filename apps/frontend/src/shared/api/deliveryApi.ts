@@ -1,7 +1,12 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './api';
 import type { PaginatedResponse } from '../types/common';
-import type { DeliveryBranch, DeliveryCity, DeliveryProvider } from '../types/delivery';
+import type {
+  DeliveryBranch,
+  DeliveryCity,
+  DeliveryProvider,
+  NovaPostCountry,
+} from '../types/delivery';
 
 export const deliveryApi = createApi({
   reducerPath: 'deliveryApi',
@@ -25,7 +30,14 @@ export const deliveryApi = createApi({
         params: { city, search: search || undefined, limit: 50 },
       }),
     }),
+    getNovaPostCountries: builder.query<NovaPostCountry[], void>({
+      query: () => 'orders/delivery/nova-post/countries/',
+    }),
   }),
 });
 
-export const { useGetDeliveryCitiesQuery, useGetDeliveryBranchesQuery } = deliveryApi;
+export const {
+  useGetDeliveryCitiesQuery,
+  useGetDeliveryBranchesQuery,
+  useGetNovaPostCountriesQuery,
+} = deliveryApi;

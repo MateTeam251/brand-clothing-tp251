@@ -239,6 +239,13 @@ i18n.use(initReactI18next).init({
           password_reset: 'Forgot password?',
         },
         checkout_delivery: {
+          mode_ukraine: 'Ukraine (Nova Poshta)',
+          mode_international: 'International (Nova Post)',
+          method_international: 'Nova Post',
+          country: 'Country',
+          address: 'Street, building, apartment',
+          postal_code: 'Postal code',
+          address_too_long: 'The address is too long',
           title: 'Delivery address',
           method: 'Delivery method: Nova Poshta',
           city: 'City',
@@ -263,6 +270,7 @@ i18n.use(initReactI18next).init({
           unavailable_hint: 'Remove unavailable items from the cart to continue',
         },
         checkout_form: {
+          select_country: 'Select a country',
           payment_method: 'Payment method',
           payment_card: 'Pay online by card',
           payment_fop: 'Bank transfer (pay by details)',
@@ -717,6 +725,13 @@ i18n.use(initReactI18next).init({
           password_reset: 'Забули пароль?',
         },
         checkout_delivery: {
+          mode_ukraine: 'По Україні (Нова пошта)',
+          mode_international: 'За кордон (Nova Post)',
+          method_international: 'Nova Post',
+          country: 'Країна',
+          address: 'Вулиця, будинок, квартира',
+          postal_code: 'Поштовий індекс',
+          address_too_long: 'Адреса надто довга',
           title: 'Адреса доставки',
           method: 'Спосіб доставки: Нова пошта',
           city: 'Місто',
@@ -741,6 +756,7 @@ i18n.use(initReactI18next).init({
           unavailable_hint: 'Приберіть недоступні товари з кошика, щоб продовжити',
         },
         checkout_form: {
+          select_country: 'Оберіть країну',
           payment_method: 'Спосіб оплати',
           payment_card: 'Оплата карткою онлайн',
           payment_fop: 'Переказ за реквізитами',

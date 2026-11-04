@@ -15,7 +15,10 @@ import { BankTransferDetails } from '../../components/BankTransferDetails';
 import { BANK_TRANSFER_DETAILS } from '../../shared/config/bankTransferDetails';
 import { cartLineToAnalyticsItem, trackEvent } from '../../shared/analytics';
 import type { Currency } from '../../shared/types/orders';
-import { CHECKOUT_DELIVERY_PROVIDER } from '../../shared/types/delivery';
+import {
+  CHECKOUT_DELIVERY_PROVIDER,
+  INTERNATIONAL_DELIVERY_PROVIDER,
+} from '../../shared/types/delivery';
 import type { Cart } from '../../shared/types/Cart';
 import type { UserProfile } from '../../shared/types/User';
 import type {
@@ -24,11 +27,21 @@ import type {
   CheckoutDeliveryErrors,
   CheckoutDeliveryValues,
   CheckoutRequest,
+  InternationalDeliveryValues,
 } from '../../shared/types/checkout';
 import styles from './CheckoutPage.module.scss';
 
 const PHONE_REGEX = /^\+?[\d\s()-]{10,18}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_ADDRESS_LENGTH = 255;
+
+const getInternationalAddress = ({
+  address,
+  city,
+  postalCode,
+  countryName,
+}: InternationalDeliveryValues) =>
+  [address.trim(), city.trim(), postalCode.trim(), countryName].filter(Boolean).join(', ');
 
 const getInitialContact = (profile?: UserProfile): CheckoutContactValues => {
   if (!profile) {
@@ -63,8 +76,10 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     getInitialContact(profile),
   );
   const [delivery, setDelivery] = useState<CheckoutDeliveryValues>({
+    mode: 'ukraine',
     city: null,
     branch: null,
+    international: { country: '', countryName: '', city: '', address: '', postalCode: '' },
   });
   const [contactErrors, setContactErrors] = useState<CheckoutContactErrors>({});
   const [deliveryErrors, setDeliveryErrors] = useState<CheckoutDeliveryErrors>({});
@@ -140,10 +155,32 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       nextContactErrors.email = t('checkout_form.invalid_email');
     }
 
-    if (!delivery.city) {
-      nextDeliveryErrors.city = t('checkout_form.select_city');
-    } else if (!delivery.branch) {
-      nextDeliveryErrors.branch = t('checkout_form.select_branch');
+    if (delivery.mode === 'ukraine') {
+      if (!delivery.city) {
+        nextDeliveryErrors.city = t('checkout_form.select_city');
+      } else if (!delivery.branch) {
+        nextDeliveryErrors.branch = t('checkout_form.select_branch');
+      }
+    } else {
+      const { country, city, address, postalCode } = delivery.international;
+
+      if (!country) {
+        nextDeliveryErrors.country = t('checkout_form.select_country');
+      }
+
+      if (!city.trim()) {
+        nextDeliveryErrors.internationalCity = required;
+      }
+
+      if (!address.trim()) {
+        nextDeliveryErrors.address = required;
+      } else if (getInternationalAddress(delivery.international).length > MAX_ADDRESS_LENGTH) {
+        nextDeliveryErrors.address = t('checkout_delivery.address_too_long');
+      }
+
+      if (!postalCode.trim()) {
+        nextDeliveryErrors.postalCode = required;
+      }
     }
 
     setContactErrors(nextContactErrors);
@@ -162,10 +199,56 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       return;
     }
 
-    const { city, branch } = delivery;
+    let deliveryPayload: Pick<
+      CheckoutRequest,
+      'delivery_provider' | 'delivery_address' | 'delivery_data'
+    >;
+    let shippingAnalytics: Record<string, unknown>;
 
-    if (!city || !branch) {
-      return;
+    if (delivery.mode === 'international') {
+      const { country, city, address, postalCode } = delivery.international;
+
+      deliveryPayload = {
+        delivery_provider: INTERNATIONAL_DELIVERY_PROVIDER,
+        delivery_address: getInternationalAddress(delivery.international),
+        delivery_data: {
+          country,
+          city: city.trim(),
+          address: address.trim(),
+          postal_code: postalCode.trim(),
+        },
+      };
+      shippingAnalytics = {
+        shipping_tier: 'international',
+        provider: INTERNATIONAL_DELIVERY_PROVIDER,
+        country,
+        city: city.trim(),
+      };
+    } else {
+      const { city, branch } = delivery;
+
+      if (!city || !branch) {
+        return;
+      }
+
+      deliveryPayload = {
+        delivery_provider: CHECKOUT_DELIVERY_PROVIDER,
+        delivery_address: [city.name, branch.name].filter(Boolean).join(', '),
+        delivery_data: {
+          delivery_type: 'branch',
+          city_id: city.id,
+          city_name: city.name,
+          branch_id: branch.id,
+          branch_name: branch.name,
+          postal_code: branch.postal_code,
+        },
+      };
+      shippingAnalytics = {
+        shipping_tier: 'branch',
+        provider: CHECKOUT_DELIVERY_PROVIDER,
+        country: 'UA',
+        city: city.name,
+      };
     }
 
     const analyticsBase = {
@@ -175,13 +258,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       items: cart.items.map(cartLineToAnalyticsItem),
     };
 
-    trackEvent('add_shipping_info', {
-      ...analyticsBase,
-      shipping_tier: 'branch',
-      provider: CHECKOUT_DELIVERY_PROVIDER,
-      country: 'UA',
-      city: city.name,
-    });
+    trackEvent('add_shipping_info', { ...analyticsBase, ...shippingAnalytics });
 
     trackEvent('add_payment_info', {
       ...analyticsBase,
@@ -194,16 +271,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       phone: contact.phone.trim(),
       email: contact.email.trim(),
       currency: currency.toUpperCase() as CheckoutRequest['currency'],
-      delivery_provider: CHECKOUT_DELIVERY_PROVIDER,
-      delivery_address: [city.name, branch.name].filter(Boolean).join(', '),
-      delivery_data: {
-        delivery_type: 'branch',
-        city_id: city.id,
-        city_name: city.name,
-        branch_id: branch.id,
-        branch_name: branch.name,
-        postal_code: branch.postal_code,
-      },
+      ...deliveryPayload,
     };
 
     try {
