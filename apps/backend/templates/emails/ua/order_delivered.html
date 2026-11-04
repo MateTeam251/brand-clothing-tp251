@@ -1,0 +1,16 @@
+{% extends "emails/ua/base.html" %}
+
+{% block title %}Замовлення доставлено{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">Замовлення доставлено</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;text-align:center;">Замовлення № {{ order.order_reference }}</p>
+
+{% include "emails/ua/_progress.html" with step=4 %}
+
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">Сподіваємось, речі вам сподобаються. Якщо розмір не підійшов — обмін можливий протягом 14 днів з моменту отримання.</p>
+
+{% with returns_url=frontend_url|add:"/returns" %}
+{% include "emails/ua/_button.html" with url=returns_url label="Умови повернення та обміну" %}
+{% endwith %}
+{% endblock %}
