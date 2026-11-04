@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
@@ -12,6 +13,8 @@ import { Loader } from '../../components/Loader';
 import { ErrorState } from '../../components/ErrorState';
 import { CartItem } from '../../components/CartItem/CartItem';
 import cartIcon from '../../shared/assets/icons/cart.svg';
+import type { CartLine } from '../../shared/types/Cart';
+import { cartLineToAnalyticsItem, trackEvent } from '../../shared/analytics';
 
 export const CartPage = () => {
   const { t } = useTranslation();
@@ -26,6 +29,37 @@ export const CartPage = () => {
   const cartItems = [...(cart?.items ?? [])].sort((a, b) => a.id - b.id);
   const totalCount = cart?.items_count ?? 0;
   const totalPrice = Number(cart?.items_total ?? 0);
+  const hasTrackedCartView = useRef(false);
+
+  useEffect(() => {
+    if (!cart || cart.items.length === 0 || hasTrackedCartView.current) {
+      return;
+    }
+
+    hasTrackedCartView.current = true;
+
+    trackEvent('view_cart', {
+      cart_id: cart.id,
+      currency: currency.toUpperCase(),
+      value: Number(cart.items_total),
+      items: cart.items.map(cartLineToAnalyticsItem),
+    });
+  }, [cart, currency]);
+
+  const handleRemove = async (item: CartLine) => {
+    try {
+      await removeItem(item.id).unwrap();
+
+      trackEvent('remove_from_cart', {
+        cart_id: cart?.id,
+        currency: currency.toUpperCase(),
+        value: Number(item.total_price),
+        items: [cartLineToAnalyticsItem(item)],
+      });
+    } catch {
+      // видалення не вдалося: подію не відправляємо
+    }
+  };
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
@@ -77,9 +111,7 @@ export const CartPage = () => {
                 onDecrement={() => {
                   updateQuantity({ id: item.id, quantity: item.quantity - 1 });
                 }}
-                onRemove={() => {
-                  removeItem(item.id);
-                }}
+                onRemove={() => void handleRemove(item)}
                 onSizeChange={(newSize) => {
                   changeSize({
                     id: item.id,

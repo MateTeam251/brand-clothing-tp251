@@ -109,6 +109,12 @@ export const ProductDetailsPage = () => {
         size: selectedSize,
         quantity: 1,
       }).unwrap();
+
+      trackEvent('add_to_cart', {
+        currency: currency.toUpperCase(),
+        value: Number(product.discounted_price ?? product.price),
+        items: [toAnalyticsItem(product, { item_variant: selectedSize, quantity: 1 })],
+      });
     } catch {
       // TODO: show an error message when adding to cart fails
     }
