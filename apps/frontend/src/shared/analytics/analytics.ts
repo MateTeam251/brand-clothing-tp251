@@ -78,3 +78,19 @@ export const toAnalyticsItem = (
   price: Number(product.discounted_price ?? product.price),
   ...extra,
 });
+
+interface AnalyticsCartLine {
+  product: number;
+  name: string;
+  size: string;
+  quantity: number;
+  price: string;
+}
+
+export const cartLineToAnalyticsItem = (line: AnalyticsCartLine): AnalyticsItem => ({
+  item_id: String(line.product),
+  item_name: line.name,
+  price: Number(line.price),
+  item_variant: line.size,
+  quantity: line.quantity,
+});
