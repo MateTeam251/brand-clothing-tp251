@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
@@ -13,6 +13,7 @@ import { CheckoutSummary } from '../../components/CheckoutSummary';
 import { FopOrderModal } from '../../components/FopOrderModal';
 import { BankTransferDetails } from '../../components/BankTransferDetails';
 import { BANK_TRANSFER_DETAILS } from '../../shared/config/bankTransferDetails';
+import { cartLineToAnalyticsItem, trackEvent } from '../../shared/analytics';
 import type { Currency } from '../../shared/types/orders';
 import { CHECKOUT_DELIVERY_PROVIDER } from '../../shared/types/delivery';
 import type { Cart } from '../../shared/types/Cart';
@@ -82,6 +83,24 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
+  const hasTrackedBeginCheckout = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedBeginCheckout.current) {
+      return;
+    }
+
+    hasTrackedBeginCheckout.current = true;
+
+    trackEvent('begin_checkout', {
+      cart_id: cart.id,
+      currency: currency.toUpperCase(),
+      value: Number(cart.items_total),
+      items_count: cart.items_count,
+      items: cart.items.map(cartLineToAnalyticsItem),
+    });
+  }, [cart, currency]);
+
   const hasUnavailable = cart.items.some((item) => !item.is_available || item.is_archived);
 
   const handleContactChange = (field: keyof CheckoutContactValues, value: string) => {
@@ -148,6 +167,26 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     if (!city || !branch) {
       return;
     }
+
+    const analyticsBase = {
+      cart_id: cart.id,
+      currency: currency.toUpperCase(),
+      value: Number(cart.items_total),
+      items: cart.items.map(cartLineToAnalyticsItem),
+    };
+
+    trackEvent('add_shipping_info', {
+      ...analyticsBase,
+      shipping_tier: 'branch',
+      provider: CHECKOUT_DELIVERY_PROVIDER,
+      country: 'UA',
+      city: city.name,
+    });
+
+    trackEvent('add_payment_info', {
+      ...analyticsBase,
+      payment_type: activeMethod === 'fop' ? 'bank_transfer' : 'card',
+    });
 
     const payload: CheckoutRequest = {
       first_name: contact.first_name.trim(),
