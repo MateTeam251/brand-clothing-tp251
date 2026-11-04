@@ -11,6 +11,7 @@ import { AuthMessageCard } from '../../components/AuthMessageCard';
 import { AuthSheet } from '../../components/AuthSheet';
 import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
 import styles from './SignUpPage.module.scss';
+import { trackEvent } from '../../shared/analytics';
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -197,6 +198,7 @@ export const SignUpPage = () => {
         marketing_opt_in: marketing,
       }).unwrap();
 
+      trackEvent('sign_up', { method: 'email' });
       setRegisteredEmail(trimmedEmail);
     } catch (error) {
       const { status, data } = error as { status?: number; data?: unknown };
