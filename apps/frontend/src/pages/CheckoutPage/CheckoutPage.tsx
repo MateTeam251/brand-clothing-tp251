@@ -325,6 +325,11 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     }
   };
 
+  const deliveryAddress =
+    delivery.mode === 'international'
+      ? getInternationalAddress(delivery.international)
+      : [delivery.city?.name, delivery.branch?.name].filter(Boolean).join(', ');
+
   const isBusy = isSubmitting || isSubmittingFop || isRedirecting;
   const submitLabel =
     activeMethod === 'fop' ? t('checkout_form.submit_fop') : t('checkout_form.submit');
@@ -355,7 +360,12 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
         </div>
 
         <div className={styles.checkout__order}>
-          <CheckoutSummary cart={cart} currency={currency} />
+          <CheckoutSummary
+            cart={cart}
+            currency={currency}
+            deliveryMode={delivery.mode}
+            deliveryAddress={deliveryAddress}
+          />
 
           {isFopAvailable && (
             <div
