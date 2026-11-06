@@ -276,6 +276,14 @@ export function CheckoutDeliveryForm({
             />
 
             <AuthField
+              name="delivery-region"
+              label={t('checkout_delivery.region')}
+              value={value.international.region}
+              onChange={(region) => updateInternational({ region })}
+              autoComplete="address-level1"
+            />
+
+            <AuthField
               name="delivery-city"
               label={t('checkout_delivery.city')}
               value={value.international.city}
@@ -290,7 +298,23 @@ export function CheckoutDeliveryForm({
               value={value.international.address}
               onChange={(address) => updateInternational({ address })}
               error={errors?.address}
-              autoComplete="street-address"
+              autoComplete="address-line1"
+            />
+
+            <AuthField
+              name="delivery-house-number"
+              label={t('checkout_delivery.house_number')}
+              value={value.international.houseNumber}
+              onChange={(houseNumber) => updateInternational({ houseNumber })}
+              error={errors?.houseNumber}
+            />
+
+            <AuthField
+              name="delivery-apartment"
+              label={t('checkout_delivery.apartment')}
+              value={value.international.apartment}
+              onChange={(apartment) => updateInternational({ apartment })}
+              autoComplete="address-line2"
             />
 
             <AuthField

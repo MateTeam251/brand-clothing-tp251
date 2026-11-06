@@ -239,6 +239,9 @@ i18n.use(initReactI18next).init({
           password_reset: 'Forgot password?',
         },
         checkout_delivery: {
+          region: 'Region / State (optional)',
+          house_number: 'House number',
+          apartment: 'Apartment (optional)',
           mode_ukraine: 'Ukraine (Nova Poshta)',
           mode_international: 'International (Nova Post)',
           method_international: 'Nova Post',
@@ -725,6 +728,9 @@ i18n.use(initReactI18next).init({
           password_reset: 'Забули пароль?',
         },
         checkout_delivery: {
+          region: 'Область / штат (необов’язково)',
+          house_number: 'Номер будинку',
+          apartment: 'Квартира (необов’язково)',
           mode_ukraine: 'По Україні (Нова пошта)',
           mode_international: 'За кордон (Nova Post)',
           method_international: 'Nova Post',
