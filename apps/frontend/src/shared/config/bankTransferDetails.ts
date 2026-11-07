@@ -6,6 +6,8 @@ export interface BankTransferDetailsData {
   bank: string;
   taxId: string;
   swift?: string;
+  // Якщо задано, призначення платежу береться звідси (для валютних переказів: англійською).
+  purpose?: { default: string; withId: string };
 }
 
 // Реквізити по валютах. null: для цієї валюти оплата за реквізитами недоступна.
@@ -16,7 +18,17 @@ export const BANK_TRANSFER_DETAILS: Record<Currency, BankTransferDetailsData | n
     bank: 'АТ КБ "ПРИВАТБАНК"',
     taxId: '3477605484',
   },
-  USD: null,
+  USD: {
+    recipient: 'FOP Kyrychenko Daria Volodymyrivna',
+    iban: 'UA81 3052 9900 0002 6008 0162 5538 3',
+    bank: 'JSC CB "PRIVATBANK", 1D HRUSHEVSKOHO STR., KYIV, 01001, UKRAINE',
+    swift: 'PBANUA2X',
+    taxId: '3477605484',
+    purpose: {
+      default: 'Payment for goods',
+      withId: 'Payment for goods, order No. {{id}}',
+    },
+  },
 };
 
 // Показується тільки в режимі розробки (npm run dev), щоб бачити вигляд блока.
