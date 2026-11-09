@@ -103,7 +103,6 @@ export const Header: React.FC = () => {
               <li><Link className={styles['header__link']} to="/catalog">{t('catalog')}</Link></li>
               <li><Link className={styles['header__link']} to="/about">{t('about')}</Link></li>
               <li><Link className={styles['header__link']} to="/catalog?is_bestseller=true">{t('bestsellers')}</Link></li>
-              {/* <li><Link className={styles['header__link']} to="/collections">{t('collections')}</Link></li> */}
             </ul>
           </nav>
           <nav className={`${styles['header__nav']} ${styles['header__nav--mobile']}`} aria-label="Mobile navigation">
@@ -248,7 +247,6 @@ export const Header: React.FC = () => {
           <ul className={styles.menu__list}>
             <li><Link className={styles.menu__link} to="/catalog" onClick={() => setIsMenuOpen(false)}>{t('catalog', { defaultValue: 'Каталог' })}</Link></li>
             <li><Link className={styles.menu__link} to="/catalog?is_bestseller=true" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
-            <li><Link className={styles.menu__link} to="/collections" onClick={() => setIsMenuOpen(false)}>{t('collections', { defaultValue: 'Колекції' })}</Link></li>
             <li><Link className={styles.menu__link} to="/about" onClick={() => setIsMenuOpen(false)}>{t('about', { defaultValue: 'Про нас' })}</Link></li>
           </ul>
         </div>
