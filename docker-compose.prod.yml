@@ -80,7 +80,7 @@ services:
   # DNS-01 via Route 53. certonly --keep-until-expiring also renews (< 30 days
   # left), so one loop does both. The hook lets nginx workers read the key.
   certbot:
-    image: certbot/dns-route53:v5.8.0
+    image: certbot/dns-route53:v5.9.0
     container_name: brand_clothing_certbot
     restart: always
     environment:
@@ -148,7 +148,7 @@ services:
   # Outbound HTTPS only, no ports. Values come from SSM via .env
   # (app-config.tf; the token from secrets/GRAFANA_CLOUD_TOKEN).
   alloy:
-    image: grafana/alloy:v1.20.1
+    image: grafana/alloy:v1.21.3
     container_name: brand_clothing_alloy
     restart: always
     command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
