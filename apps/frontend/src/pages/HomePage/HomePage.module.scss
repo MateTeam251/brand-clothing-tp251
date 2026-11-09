@@ -120,6 +120,7 @@
 
   &__searchInput {
     flex: 1;
+    min-width: 0;
     border: none;
     background: transparent;
     outline: none;
@@ -133,6 +134,7 @@
 
   &__searchSubmit {
     display: inline-flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 40px;
