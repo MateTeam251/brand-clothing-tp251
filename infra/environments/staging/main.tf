@@ -54,7 +54,7 @@ module "compute" {
   instance_count = 1
 
   # Same AMI in both environments; bump by PR (see modules/compute/variables.tf).
-  ami_id = "ami-00d8347091147021d"
+  ami_id = "ami-06b7ee0f9373abd11"
 
   acme = {
     zone_id     = data.aws_route53_zone.main.zone_id
