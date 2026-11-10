@@ -84,6 +84,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
           <AuthField
             name="profile-first-name"
             label={t('profile.first_name')}
+            visibleLabel
             value={firstName}
             onChange={handleChange(setFirstName)}
             autoComplete="given-name"
@@ -92,6 +93,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
           <AuthField
             name="profile-last-name"
             label={t('profile.last_name')}
+            visibleLabel
             value={lastName}
             onChange={handleChange(setLastName)}
             autoComplete="family-name"
@@ -101,6 +103,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
             name="profile-birth-date"
             type="date"
             label={t('profile.birth_date')}
+            visibleLabel
             value={birthDate}
             onChange={handleChange(setBirthDate)}
             autoComplete="bday"
@@ -109,6 +112,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
             name="profile-phone"
             type="tel"
             label={t('profile.phone')}
+            visibleLabel
             value={phone}
             onChange={handleChange(setPhone)}
             autoComplete="tel"
@@ -117,12 +121,14 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
           <AuthField
             name="profile-instagram"
             label={t('profile.instagram')}
+            visibleLabel
             value={instagram}
             onChange={handleChange(setInstagram)}
           />
           <AuthField
             name="profile-telegram"
             label={t('profile.telegram')}
+            visibleLabel
             value={telegram}
             onChange={handleChange(setTelegram)}
           />
@@ -130,6 +136,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
             name="profile-email"
             type="email"
             label={t('profile.email')}
+            visibleLabel
             value={profile.email}
             disabled
           />

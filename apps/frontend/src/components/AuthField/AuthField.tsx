@@ -9,6 +9,7 @@ interface AuthFieldProps {
   type?: string;
   error?: string;
   autoComplete?: string;
+  visibleLabel?: boolean;
 }
 
 export const AuthField = ({
@@ -20,6 +21,7 @@ export const AuthField = ({
   type = 'text',
   error,
   autoComplete,
+  visibleLabel,
 }: AuthFieldProps) => {
   const errorId = `${name}-error`;
   const inputClassName = error
@@ -28,12 +30,17 @@ export const AuthField = ({
 
   return (
     <div className={styles.field}>
+      {visibleLabel && (
+        <label htmlFor={name} className={styles.field__label}>
+          {label}
+        </label>
+      )}
       <input
         id={name}
         name={name}
         type={type}
         value={value}
-        placeholder={label}
+        placeholder={visibleLabel ? undefined : label}
         aria-label={label}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
