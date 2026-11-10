@@ -20,6 +20,7 @@ export interface RegisterRequest {
   last_name?: string;
   phone_number: string;
   instagram: string;
+  telegram: string;
   agree_to_terms: boolean;
   marketing_opt_in: boolean;
 }
