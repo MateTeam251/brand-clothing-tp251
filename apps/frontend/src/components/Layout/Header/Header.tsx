@@ -18,6 +18,7 @@ import { useGetFavoritesQuery } from '../../../shared/api/favoritesApi';
 import FavouriteActiveIcon from '../../../shared/assets/icons/favourite-hovered.svg';
 import UserActiveIcon from '../../../shared/assets/icons/user-active.svg';
 import { useCart } from '../../../shared/hooks/useCart';
+import { useScrollTopOnHome } from '../../../shared/hooks/useScrollTopOnHome';
 
 export const Header: React.FC = () => {
   const { data: cart } = useCart();
@@ -29,6 +30,7 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const handleLogoClick = useScrollTopOnHome();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState(location.pathname);
@@ -151,7 +153,7 @@ export const Header: React.FC = () => {
               </button>
             </form>
           ) : (
-            <Link className={styles['header__logo-link']} to="/" aria-label="Home">
+            <Link className={styles['header__logo-link']} to="/" aria-label="Home" onClick={handleLogoClick}>
               <img className={styles['header__logo']} src={Logo} alt="Logotype" />
             </Link>
           )}
@@ -230,7 +232,15 @@ export const Header: React.FC = () => {
             <img src={FavouriteIcon} alt="" aria-hidden="true" />
           </Link>
 
-          <Link className={styles.menu__logoLink} to="/" onClick={() => setIsMenuOpen(false)} aria-label="Home">
+          <Link
+            className={styles.menu__logoLink}
+            to="/"
+            onClick={() => {
+              setIsMenuOpen(false);
+              handleLogoClick();
+            }}
+            aria-label="Home"
+          >
             <img className={styles.menu__logo} src={Logo} alt="Logotype" />
           </Link>
 
