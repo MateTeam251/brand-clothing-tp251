@@ -24,6 +24,7 @@ const FIELD_KEYS = [
   'password_confirm',
   'phone_number',
   'instagram',
+  'telegram',
   'agree_to_terms',
 ] as const;
 
@@ -61,6 +62,7 @@ export const SignUpPage = () => {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [telegram, setTelegram] = useState('');
   const [agree, setAgree] = useState(false);
   const [marketing, setMarketing] = useState(false);
 
@@ -144,6 +146,7 @@ export const SignUpPage = () => {
     const trimmedLastName = lastName.trim();
     const trimmedPhone = phone.trim();
     const trimmedInstagram = instagram.trim();
+    const trimmedTelegram = telegram.trim();
     const errors: FieldErrors = {};
 
     if (!trimmedFirstName) {
@@ -194,6 +197,7 @@ export const SignUpPage = () => {
         last_name: lastName.trim() || undefined,
         phone_number: trimmedPhone,
         instagram: trimmedInstagram,
+        telegram: trimmedTelegram,
         agree_to_terms: agree,
         marketing_opt_in: marketing,
       }).unwrap();
@@ -274,6 +278,15 @@ export const SignUpPage = () => {
           value={instagram}
           onChange={setInstagram}
           error={fieldErrors.instagram}
+        />
+
+        <AuthField
+          name="telegram"
+          type="text"
+          label={t('profile.telegram')}
+          value={telegram}
+          onChange={setTelegram}
+          error={fieldErrors.telegram}
         />
 
         <AuthField
