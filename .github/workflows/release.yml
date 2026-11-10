@@ -335,6 +335,10 @@ jobs:
 
       - name: Build
         if: steps.config.outputs.skip != 'true'
+        env:
+          # Google Analytics, per GitHub environment (staging / production).
+          # Public value (ends up in the JS bundle); empty = analytics off.
+          VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID }}
         run: |
           npm ci
           npm run build
