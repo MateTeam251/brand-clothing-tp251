@@ -153,7 +153,7 @@ export const ProductDetailsPage = () => {
                   onChange={(e) => handleSizeChange(e.target.value)}
                   className={styles.details__selector}
                 >
-                  <option value="">{t('product.select_size')}</option>
+                  <option value="" disabled>{t('product.select_size')}</option>
                   {SIZES.map((size) => (
                     <option key={size} value={size}>{size}</option>
                   ))}
