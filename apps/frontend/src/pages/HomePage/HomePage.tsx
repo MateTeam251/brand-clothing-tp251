@@ -5,6 +5,8 @@ import styles from './HomePage.module.scss';
 
 import searchIcon from '../../shared/assets/icons/search.svg';
 import arrowRight from '../../shared/assets/icons/arrow-right.svg';
+import heroPhone from '../../shared/assets/images/home_bg-phone.webp';
+import heroDesktop from '../../shared/assets/images/home_bg-desktop.webp';
 
 import { ProductSlider } from '../../components/ProductSlider/ProductSlider';
 import { CollectionSlider } from '../../components/CollectionSlider/CollectionSlider';
@@ -56,6 +58,16 @@ export const HomePage = () => {
   return (
     <div className={styles.home}>
       <div className={styles['home__wrapper']}>
+        <picture>
+          <source media='(min-width: 1024px)' srcSet={heroDesktop} />
+          <img
+            className={styles['home__heroImage']}
+            src={heroPhone}
+            alt=''
+            fetchPriority='high'
+          />
+        </picture>
+
         <div className={styles['home__wrapperContainer']}>
           <button type='button' className={styles['home__btn']} onClick={handleCollectionClick}>
             {t('autumn-collection')}
