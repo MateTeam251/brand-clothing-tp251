@@ -6,10 +6,12 @@ import { useRegisterMutation, useResendActivationMutation } from '../../shared/a
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { AuthCard } from '../../components/AuthCard';
 import { AuthField } from '../../components/AuthField';
+import { PhoneField } from '../../components/PhoneField';
 import { AuthCheckbox } from '../../components/AuthCheckbox';
 import { AuthMessageCard } from '../../components/AuthMessageCard';
 import { AuthSheet } from '../../components/AuthSheet';
 import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
+import { isValidPhone } from '../../shared/utils/phone';
 import styles from './SignUpPage.module.scss';
 import { trackEvent } from '../../shared/analytics';
 
@@ -159,6 +161,8 @@ export const SignUpPage = () => {
 
     if (!trimmedPhone) {
       errors.phone_number = t('auth.errors.required');
+    } else if (!isValidPhone(trimmedPhone)) {
+      errors.phone_number = t('checkout_form.invalid_phone');
     }
 
     if (!trimmedEmail) {
@@ -251,14 +255,12 @@ export const SignUpPage = () => {
           autoComplete="family-name"
         />
 
-        <AuthField
+        <PhoneField
           name="phone_number"
-          type="tel"
           label={t('profile.phone')}
           value={phone}
           onChange={setPhone}
           error={fieldErrors.phone_number}
-          autoComplete="tel"
         />
 
         <AuthField

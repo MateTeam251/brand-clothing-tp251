@@ -13,6 +13,7 @@ import { CheckoutSummary } from '../../components/CheckoutSummary';
 import { FopOrderModal } from '../../components/FopOrderModal';
 import { BankTransferDetails } from '../../components/BankTransferDetails';
 import { BANK_TRANSFER_DETAILS } from '../../shared/config/bankTransferDetails';
+import { isValidPhone, normalizePhone } from '../../shared/utils/phone';
 import { cartLineToAnalyticsItem, trackEvent } from '../../shared/analytics';
 import type { Currency } from '../../shared/types/orders';
 import {
@@ -31,7 +32,6 @@ import type {
 } from '../../shared/types/checkout';
 import styles from './CheckoutPage.module.scss';
 
-const PHONE_REGEX = /^\+?[\d\s()-]{10,18}$/;
 const EMAIL_REGEX =
   /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
 const MAX_ADDRESS_LENGTH = 255;
@@ -61,7 +61,7 @@ const getInitialContact = (profile?: UserProfile): CheckoutContactValues => {
   return {
     first_name: profile.first_name ?? '',
     last_name: profile.last_name ?? '',
-    phone: profile.phone_number ?? '',
+    phone: normalizePhone(profile.phone_number ?? ''),
     email: profile.email,
   };
 };
@@ -163,7 +163,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     const phone = contact.phone.trim();
     if (!phone) {
       nextContactErrors.phone = required;
-    } else if (!PHONE_REGEX.test(phone)) {
+    } else if (!isValidPhone(phone)) {
       nextContactErrors.phone = t('checkout_form.invalid_phone');
     }
 

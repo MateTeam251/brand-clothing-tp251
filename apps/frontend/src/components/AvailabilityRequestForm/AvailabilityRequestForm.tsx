@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSubmitAvailabilityRequestMutation } from '../../shared/api/productsApi';
+import { isValidPhone } from '../../shared/utils/phone';
+import { PhoneField } from '../PhoneField';
 import styles from './AvailabilityRequestForm.module.scss';
 
 interface AvailabilityRequestFormProps {
@@ -30,7 +32,7 @@ export const AvailabilityRequestForm = ({ productId }: AvailabilityRequestFormPr
 
   const handleSubmitRequest = async () => {
     const nameValid = requestName.trim().length > 0;
-    const phoneValid = /^\+?\d{9,13}$/.test(requestPhone.replace(/[\s()-]/g, ''));
+    const phoneValid = isValidPhone(requestPhone);
 
     setNameError(!nameValid);
     setPhoneError(!phoneValid);
@@ -79,14 +81,13 @@ export const AvailabilityRequestForm = ({ productId }: AvailabilityRequestFormPr
               </div>
 
               <div className={styles.form__field}>
-                <input
-                  type="tel"
-                  placeholder={t('product.phone_number')}
+                <PhoneField
+                  name="availability-phone"
+                  label={t('product.phone_number')}
                   value={requestPhone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  className={`${styles.form__input} ${phoneError ? styles.form__inputError : ''}`}
+                  onChange={handlePhoneChange}
+                  error={phoneError ? t('product.invalid_phone') : undefined}
                 />
-                {phoneError && <p className={styles.form__errorText}>{t('product.invalid_phone')}</p>}
               </div>
             </div>
 
