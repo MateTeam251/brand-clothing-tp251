@@ -32,7 +32,8 @@ import type {
 import styles from './CheckoutPage.module.scss';
 
 const PHONE_REGEX = /^\+?[\d\s()-]{10,18}$/;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX =
+  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
 const MAX_ADDRESS_LENGTH = 255;
 
 const getInternationalAddress = ({
@@ -313,7 +314,24 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       setIsRedirecting(true);
       window.location.assign(response.payment_url);
     } catch (error) {
-      const status = (error as { status?: number }).status;
+      const { status, data } = error as { status?: number; data?: Record<string, unknown> };
+
+      if (status === 400 && data) {
+        const fieldErrors: CheckoutContactErrors = {};
+
+        if (data.email) {
+          fieldErrors.email = t('checkout_form.invalid_email');
+        }
+
+        if (data.phone) {
+          fieldErrors.phone = t('checkout_form.invalid_phone');
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+          setContactErrors((prev) => ({ ...prev, ...fieldErrors }));
+          return;
+        }
+      }
 
       if (status === 429) {
         setSubmitError(t('auth.errors.too_many_requests'));
