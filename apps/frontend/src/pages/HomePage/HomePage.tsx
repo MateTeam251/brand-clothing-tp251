@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import styles from './HomePage.module.scss';
 
 import searchIcon from '../../shared/assets/icons/search.svg';
-import arrowRight from '../../shared/assets/icons/arrow-right.svg';
 import heroPhone from '../../shared/assets/images/home_bg-phone.webp';
 import heroDesktop from '../../shared/assets/images/home_bg-desktop.webp';
 
@@ -18,7 +17,6 @@ export const HomePage = () => {
   const searchWrapperRef = useRef<HTMLDivElement | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  const [email, setEmail] = useState('');
 
   useEffect(() => {
     if (!isSearchOpen) return;
@@ -125,32 +123,6 @@ export const HomePage = () => {
           queryParams={{ ordering: '?', limit: 4 }}
           viewAllTo='/catalog'
         />
-
-        <article className={styles['home__subscribe']}>
-          <div className="container">
-            <div className={styles['home__subscribe-wrapper']}>
-              <div className={styles['home__subscribe-left']}>
-                <h2>{t('subscribe-title')}</h2>
-                <p>{t('subscribe-subtitle')}</p>
-              </div>
-              <form onSubmit={(event) => {event.preventDefault(); setEmail('')}} className={styles['home__subscribe-right']}>
-                <input 
-                  placeholder='Email' 
-                  id='email-input'
-                  type='email'
-                  value={email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                  required 
-                  className={styles['home__subscribe-input']}
-                  />
-                
-                <label htmlFor='email-input'>
-                  <button type='submit' aria-label='Subscribe'><img src={arrowRight} alt='' /></button>
-                  </label>
-              </form>
-            </div>
-          </div>
-        </article>
       </div>
 
     </div>
