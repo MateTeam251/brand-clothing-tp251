@@ -28,5 +28,13 @@
         font-size: 16px;
       }
     }
+
+    :global(.react-international-phone-input-container) {
+      @include on-desktop {
+        --react-international-phone-height: 56px;
+        --react-international-phone-font-size: 16px;
+        --react-international-phone-dial-code-preview-font-size: 16px;
+      }
+    }
   }
 }
