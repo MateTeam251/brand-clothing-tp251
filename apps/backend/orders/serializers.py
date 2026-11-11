@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from core.delivery import get_delivery_data_error
 from core.mixins import LanguageMixin
+from core.validators import normalize_phone
 from orders.models import OrderItem, Order
 from core.enums import Currency, DeliveryProvider
 
@@ -57,7 +58,6 @@ class OrderItemSerializer(LanguageMixin, serializers.ModelSerializer):
         return obj.fabric_composition_eng if self._lang() == "eng" else obj.fabric_composition_ua
 
 
-
 class OrderSerializer(serializers.ModelSerializer):
     """
     Customer facing order serializer.
@@ -104,7 +104,7 @@ class CheckoutSerializer(serializers.ModelSerializer):
 
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
-    phone = serializers.CharField(max_length=50)
+    phone = serializers.CharField(max_length=20)
     email = serializers.EmailField()
 
     currency = serializers.ChoiceField(
@@ -139,7 +139,19 @@ class CheckoutSerializer(serializers.ModelSerializer):
             "delivery_data",
         )
 
+    def validate_email(self, value):
+        """Normalizes the email: trims spaces and lowercases it."""
+        return value.strip().lower()
+
+    def validate_phone(self, value):
+        """Checks the phone and stores it in E.164 format (+380501234567)."""
+        return normalize_phone(value)
+
     def validate(self, attrs):
+        """
+        Cross-field check: for INTERNATIONAL delivery, delivery_data must contain
+        a valid, non-blocked country code.
+        """
         attrs = super().validate(attrs)
 
         error = get_delivery_data_error(

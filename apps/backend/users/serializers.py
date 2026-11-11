@@ -9,11 +9,11 @@ from django.utils.encoding import force_str
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 
+from core.validators import normalize_phone
 from users.tokens import make_email_change_token
 from users.utils import (send_password_reset_link,
                          send_email_change_confirmation)
 from carts.services import merge_guest_cart_into_user_cart
-
 
 
 User = get_user_model()
@@ -44,7 +44,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     marketing_opt_in = serializers.BooleanField(
         required=False, default=False, help_text="Consent to marketing emails. Default `false`.")
 
-
     class Meta:
         model = User
         fields = ("email", "password", "password_confirm",
@@ -63,7 +62,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             "telegram": {"help_text": "Telegram handle. Optional."},
             "birth_date": {"help_text": "Date of birth, `YYYY-MM-DD`. Optional."},
         }
-
 
     def validate_email(self, value):
         """
@@ -84,6 +82,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("This email is already in use.")
         return value
+
+    def validate_phone_number(self, value):
+        """Checks the phone and stores it in E.164 format (+380501234567)."""
+        return normalize_phone(value)
 
     def validate_agree_to_terms(self, value):
         if not value:
@@ -106,7 +108,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         if value and value > timezone.localdate():
             raise serializers.ValidationError("Birth date can't be in the future.")
         return value
-
 
     def validate(self, attrs):
         """
@@ -204,11 +205,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "last_name": {"allow_blank": False, "help_text": "Last name. Cannot be empty."},
             "birth_date": {"help_text": "Date of birth, `YYYY-MM-DD`. Cannot be in the future. Can be null."},
             "phone_number": {"allow_blank": False,
-                             "help_text": "Phone number, up to 20 characters. Format is not checked. Cannot be empty."},
+                             "help_text": "Phone number in international format, e.g. +380501234567. Cannot be empty."},
             "marketing_opt_in": {"help_text": "Consent to marketing emails."},
             "instagram": {"help_text": "Instagram handle or profile link. Optional, can be empty."},
             "telegram": {"help_text": "Telegram handle. Optional, can be empty."},
         }
+
+    def validate_phone_number(self, value):
+        """Checks the phone and stores it in E.164 format (+380501234567)."""
+        return normalize_phone(value)
 
     def validate_birth_date(self, value):
         """
@@ -240,7 +245,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class LogoutSerializer(serializers.Serializer):
     """Request body of POST /api/auth/logout/ (used for the API schema)."""
     refresh = serializers.CharField(help_text="Refresh token from login/refresh. It is blacklisted and stops working.")
-
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -280,8 +284,6 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             return
 
         send_password_reset_link(request, user)
-
-
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
@@ -414,7 +416,6 @@ class UpdatePasswordInProfileSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save(update_fields=["password"])
         return user
-
 
 
 class UpdateEmailRequestSerializer(serializers.Serializer):

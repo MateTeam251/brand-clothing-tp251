@@ -7,7 +7,7 @@ from orders.views import (
     RetryPaymentView,
     OrderStatusView,
     CheckoutFopView,
-    NovaPostCountriesView,
+    DeliveryCountriesView,
 )
 
 urlpatterns = [
@@ -27,9 +27,9 @@ urlpatterns = [
         name="checkout-fop",
     ),
     path(
-        "delivery/nova-post/countries/",
-        NovaPostCountriesView.as_view(),
-        name="nova-post-countries",
+        "delivery/countries/",
+        DeliveryCountriesView.as_view(),
+        name="delivery-countries",
     ),
     path(
         "<str:order_reference>/",
