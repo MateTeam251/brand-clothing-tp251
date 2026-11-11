@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { AuthField } from '../AuthField';
+import { PhoneField } from '../PhoneField';
 import type {
   CheckoutContactErrors,
   CheckoutContactValues,
@@ -40,14 +41,12 @@ export const CheckoutContactForm = ({
           error={errors.last_name}
           autoComplete="family-name"
         />
-        <AuthField
+        <PhoneField
           name="checkout-phone"
-          type="tel"
           label={t('checkout.phone')}
           value={values.phone}
           onChange={(value) => onChange('phone', value)}
           error={errors.phone}
-          autoComplete="tel"
         />
         <AuthField
           name="checkout-email"
