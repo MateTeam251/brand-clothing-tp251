@@ -4,8 +4,8 @@ import { normalizePhone } from '../../shared/utils/phone';
 import styles from './PhoneField.module.scss';
 
 const EXCLUDED_COUNTRIES = [
-  'ru', 'by', 'kp', 'ir', 'er', 'so',
-  've', 'cu', 'ml', 'bf', 'ne', 'cf', 'sy',
+  'ru', 'by', 'af', 'cu', 'ir', 'kp', 'ly', 'ps', 'sd', 'ss',
+  'so', 'sy', 'ye', 'cf', 'sh', 'nu', 'nr', 'ki', 'tv',
 ];
 
 const countries = defaultCountries.filter(

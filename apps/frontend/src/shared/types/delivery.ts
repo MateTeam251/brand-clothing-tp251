@@ -1,4 +1,4 @@
-export type DeliveryProvider = 'NOVA_POSHTA' | 'NOVA_POST';
+export type DeliveryProvider = 'NOVA_POSHTA' | 'INTERNATIONAL';
 
 export interface NovaPostCountry {
   code: string;
@@ -23,4 +23,4 @@ export interface DeliveryBranch {
 }
 
 export const CHECKOUT_DELIVERY_PROVIDER: DeliveryProvider = 'NOVA_POSHTA';
-export const INTERNATIONAL_DELIVERY_PROVIDER: DeliveryProvider = 'NOVA_POST';
+export const INTERNATIONAL_DELIVERY_PROVIDER: DeliveryProvider = 'INTERNATIONAL';
