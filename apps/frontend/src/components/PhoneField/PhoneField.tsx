@@ -1,7 +1,16 @@
-import { PhoneInput } from 'react-international-phone';
+import { PhoneInput, defaultCountries, parseCountry } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { normalizePhone } from '../../shared/utils/phone';
 import styles from './PhoneField.module.scss';
+
+const EXCLUDED_COUNTRIES = [
+  'ru', 'by', 'kp', 'ir', 'er', 'so',
+  've', 'cu', 'ml', 'bf', 'ne', 'cf', 'sy',
+];
+
+const countries = defaultCountries.filter(
+  (country) => !EXCLUDED_COUNTRIES.includes(parseCountry(country).iso2),
+);
 
 interface PhoneFieldProps {
   name: string;
@@ -34,6 +43,7 @@ export const PhoneField = ({
       )}
       <PhoneInput
         defaultCountry="ua"
+        countries={countries}
         value={normalizePhone(value)}
         onChange={(phone, { country }) => {
           const trunkPrefix = `+${country.dialCode}0`;

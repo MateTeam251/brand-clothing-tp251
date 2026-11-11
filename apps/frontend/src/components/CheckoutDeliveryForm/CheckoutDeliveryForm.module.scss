@@ -17,6 +17,10 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+
+    @include on-desktop {
+      gap: 4px;
+    }
   }
 
   &__mode {
