@@ -6,11 +6,14 @@ import { useRegisterMutation, useResendActivationMutation } from '../../shared/a
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { AuthCard } from '../../components/AuthCard';
 import { AuthField } from '../../components/AuthField';
+import { PhoneField } from '../../components/PhoneField';
 import { AuthCheckbox } from '../../components/AuthCheckbox';
 import { AuthMessageCard } from '../../components/AuthMessageCard';
 import { AuthSheet } from '../../components/AuthSheet';
 import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
+import { isValidPhone } from '../../shared/utils/phone';
 import styles from './SignUpPage.module.scss';
+import { trackEvent } from '../../shared/analytics';
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -23,6 +26,7 @@ const FIELD_KEYS = [
   'password_confirm',
   'phone_number',
   'instagram',
+  'telegram',
   'agree_to_terms',
 ] as const;
 
@@ -60,6 +64,7 @@ export const SignUpPage = () => {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [telegram, setTelegram] = useState('');
   const [agree, setAgree] = useState(false);
   const [marketing, setMarketing] = useState(false);
 
@@ -143,6 +148,7 @@ export const SignUpPage = () => {
     const trimmedLastName = lastName.trim();
     const trimmedPhone = phone.trim();
     const trimmedInstagram = instagram.trim();
+    const trimmedTelegram = telegram.trim();
     const errors: FieldErrors = {};
 
     if (!trimmedFirstName) {
@@ -155,6 +161,8 @@ export const SignUpPage = () => {
 
     if (!trimmedPhone) {
       errors.phone_number = t('auth.errors.required');
+    } else if (!isValidPhone(trimmedPhone)) {
+      errors.phone_number = t('checkout_form.invalid_phone');
     }
 
     if (!trimmedEmail) {
@@ -193,10 +201,12 @@ export const SignUpPage = () => {
         last_name: lastName.trim() || undefined,
         phone_number: trimmedPhone,
         instagram: trimmedInstagram,
+        telegram: trimmedTelegram,
         agree_to_terms: agree,
         marketing_opt_in: marketing,
       }).unwrap();
 
+      trackEvent('sign_up', { method: 'email' });
       setRegisteredEmail(trimmedEmail);
     } catch (error) {
       const { status, data } = error as { status?: number; data?: unknown };
@@ -245,14 +255,12 @@ export const SignUpPage = () => {
           autoComplete="family-name"
         />
 
-        <AuthField
+        <PhoneField
           name="phone_number"
-          type="tel"
           label={t('profile.phone')}
           value={phone}
           onChange={setPhone}
           error={fieldErrors.phone_number}
-          autoComplete="tel"
         />
 
         <AuthField
@@ -272,6 +280,15 @@ export const SignUpPage = () => {
           value={instagram}
           onChange={setInstagram}
           error={fieldErrors.instagram}
+        />
+
+        <AuthField
+          name="telegram"
+          type="text"
+          label={t('profile.telegram')}
+          value={telegram}
+          onChange={setTelegram}
+          error={fieldErrors.telegram}
         />
 
         <AuthField

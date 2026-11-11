@@ -29,11 +29,27 @@ import { PrivacyPage } from './pages/PrivacyPage';
 import { EmailChangeSuccessPage } from './pages/EmailChangeSuccessPage';
 import { EmailChangeFailedPage } from './pages/EmailChangeFailedPage';
 import { PaymentResultPage } from './pages/PaymentResultPage';
+import { useAnalyticsUser } from './shared/hooks/useAnalyticsUser';
+import { useDocumentLanguage } from './shared/hooks/useDocumentLanguage';
 
+
+const AnalyticsUser = () => {
+  useAnalyticsUser();
+
+  return null;
+};
+
+const DocumentLanguage = () => {
+  useDocumentLanguage();
+
+  return null;
+};
 
 function App() {
   return (
     <Provider store={store}>
+      <AnalyticsUser />
+      <DocumentLanguage />
       <BrowserRouter>
         <div className="app-shell">
           <Header />

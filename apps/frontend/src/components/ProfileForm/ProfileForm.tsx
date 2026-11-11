@@ -3,7 +3,9 @@ import type { SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUpdateMeMutation } from '../../shared/api/userApi';
 import type { UserProfile } from '../../shared/types/User';
+import { isValidPhone, normalizePhone } from '../../shared/utils/phone';
 import { AuthField } from '../AuthField';
+import { PhoneField } from '../PhoneField';
 import { ChangeEmailModal } from '../ChangeEmailModal';
 import { ChangePasswordModal } from '../ChangePasswordModal';
 import styles from './ProfileForm.module.scss';
@@ -22,7 +24,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
   const [firstName, setFirstName] = useState(profile.first_name ?? '');
   const [lastName, setLastName] = useState(profile.last_name ?? '');
   const [birthDate, setBirthDate] = useState(profile.birth_date ?? '');
-  const [phone, setPhone] = useState(profile.phone_number ?? '');
+  const [phone, setPhone] = useState(normalizePhone(profile.phone_number ?? ''));
   const [instagram, setInstagram] = useState(profile.instagram ?? '');
   const [telegram, setTelegram] = useState(profile.telegram ?? '');
   const [marketingOptIn, setMarketingOptIn] = useState(profile.marketing_opt_in);
@@ -50,7 +52,11 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
     const nextErrors = {
       firstName: firstName.trim() ? undefined : t('profile.errors.first_name_required'),
       lastName: lastName.trim() ? undefined : t('profile.errors.last_name_required'),
-      phone: phone.trim() ? undefined : t('profile.errors.phone_required'),
+      phone: !phone.trim()
+        ? t('profile.errors.phone_required')
+        : isValidPhone(phone.trim())
+          ? undefined
+          : t('checkout_form.invalid_phone'),
     };
 
     setErrors(nextErrors);
@@ -84,6 +90,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
           <AuthField
             name="profile-first-name"
             label={t('profile.first_name')}
+            visibleLabel
             value={firstName}
             onChange={handleChange(setFirstName)}
             autoComplete="given-name"
@@ -92,6 +99,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
           <AuthField
             name="profile-last-name"
             label={t('profile.last_name')}
+            visibleLabel
             value={lastName}
             onChange={handleChange(setLastName)}
             autoComplete="family-name"
@@ -101,28 +109,30 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
             name="profile-birth-date"
             type="date"
             label={t('profile.birth_date')}
+            visibleLabel
             value={birthDate}
             onChange={handleChange(setBirthDate)}
             autoComplete="bday"
           />
-          <AuthField
+          <PhoneField
             name="profile-phone"
-            type="tel"
             label={t('profile.phone')}
+            visibleLabel
             value={phone}
             onChange={handleChange(setPhone)}
-            autoComplete="tel"
             error={errors.phone}
           />
           <AuthField
             name="profile-instagram"
             label={t('profile.instagram')}
+            visibleLabel
             value={instagram}
             onChange={handleChange(setInstagram)}
           />
           <AuthField
             name="profile-telegram"
             label={t('profile.telegram')}
+            visibleLabel
             value={telegram}
             onChange={handleChange(setTelegram)}
           />
@@ -130,6 +140,7 @@ export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
             name="profile-email"
             type="email"
             label={t('profile.email')}
+            visibleLabel
             value={profile.email}
             disabled
           />

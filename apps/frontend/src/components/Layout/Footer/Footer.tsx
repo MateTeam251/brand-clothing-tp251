@@ -1,6 +1,7 @@
 import styles from './Footer.module.scss';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useScrollTopOnHome } from '../../../shared/hooks/useScrollTopOnHome';
 import Logo from '../../../shared/assets/images/logotype.png';
 import instagramIcon from '../../../shared/assets/icons/instagram.svg';
 import mailIcon from '../../../shared/assets/icons/mail.svg';
@@ -19,6 +20,7 @@ const secondColumnLinks = [
 
 export const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const handleLogoClick = useScrollTopOnHome();
 
   const renderLink = (item: { key: string; to?: string; href?: string }) => {
     const label = t(item.key);
@@ -49,7 +51,7 @@ export const Footer: React.FC = () => {
       <div className="container">
         <div className={styles['footer__content']}>
           <div className={styles['footer__brand']}>
-            <Link className={styles['footer__logo-link']} to="/" aria-label="Home">
+            <Link className={styles['footer__logo-link']} to="/" aria-label="Home" onClick={handleLogoClick}>
               <img className={styles['footer__logo']} src={Logo} alt="Logotype" />
             </Link>
             <p className={styles['footer__copyright']}>© 2026 The Art. The Artist. All rights reserved.</p>

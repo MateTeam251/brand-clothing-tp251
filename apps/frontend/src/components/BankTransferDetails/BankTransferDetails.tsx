@@ -31,9 +31,16 @@ export function BankTransferDetails({
     return null;
   }
 
-  const purpose = orderId
-    ? t('bank_transfer.purpose_with_id', { id: orderId })
-    : t('bank_transfer.purpose');
+  let purpose: string;
+  if (details.purpose) {
+    purpose = orderId
+      ? details.purpose.withId.replace('{{id}}', orderId)
+      : details.purpose.default;
+  } else {
+    purpose = orderId
+      ? t('bank_transfer.purpose_with_id', { id: orderId })
+      : t('bank_transfer.purpose');
+  }
 
   const rows = [
     { key: 'recipient', label: t('bank_transfer.recipient'), value: details.recipient },

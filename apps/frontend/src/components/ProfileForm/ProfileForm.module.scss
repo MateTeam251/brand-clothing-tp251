@@ -8,16 +8,16 @@
 
   &__fields {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
 
     @include on-desktop {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }
   }
 
-    &__actions {
+  &__actions {
     display: grid;
     grid-template-columns: 1fr;
     gap: 16px;

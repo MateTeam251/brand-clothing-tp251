@@ -58,6 +58,12 @@
     white-space: nowrap;
   }
 
+  &__value {
+    max-width: 60%;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
   &__oldPrice {
     font-weight: 400;
     color: $color-inactive;

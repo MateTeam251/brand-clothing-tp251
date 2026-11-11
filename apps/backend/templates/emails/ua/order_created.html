@@ -1,0 +1,15 @@
+{% extends "emails/ua/base.html" %}
+
+{% block title %}Замовлення отримано{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">Замовлення отримано</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;text-align:center;">Замовлення № {{ order.order_reference }}</p>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">Дякуємо за замовлення! Воно очікує на оплату. Якщо ви ще не завершили оплату, зробити це можна в особистому кабінеті.</p>
+
+{% with account_url=frontend_url|add:"/account" %}
+{% include "emails/ua/_button.html" with url=account_url label="Перейти до замовлення" %}
+{% endwith %}
+
+{% include "emails/ua/_order_summary.html" with total_label="Разом до сплати" %}
+{% endblock %}

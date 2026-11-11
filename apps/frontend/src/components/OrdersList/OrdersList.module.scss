@@ -61,8 +61,12 @@
       background-color: $secondary;
     }
 
-    &--processing {
+    &--paid {
       background-color: $status-processing;
+    }
+
+    &--awaiting_shipment {
+      background-color: $status-awaiting-shipment;
     }
 
     &--shipped {
