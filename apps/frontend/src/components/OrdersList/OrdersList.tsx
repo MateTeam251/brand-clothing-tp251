@@ -10,8 +10,8 @@ import styles from './OrdersList.module.scss';
 
 const STATUS_VIEW: Record<OrderStatus, string> = {
   PENDING: 'pending',
-  PAID: 'processing',
-  AWAITING_SHIPMENT: 'processing',
+  PAID: 'paid',
+  AWAITING_SHIPMENT: 'awaiting_shipment',
   SHIPPED: 'shipped',
   DELIVERED: 'delivered',
   CANCELED: 'canceled',
