@@ -14,6 +14,8 @@ class DeliveryCity(models.Model):
     name = models.CharField(max_length=150, db_collation="uk-x-icu")           # city
 
     class Meta:
+        verbose_name = "Delivery city"
+        verbose_name_plural = "Delivery cities"
         constraints = [
             models.UniqueConstraint(fields=["provider", "external_ref"], name="unique_city_per_provider"),
         ]
@@ -34,6 +36,8 @@ class DeliveryBranch(models.Model):
     last_synced_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name = "Delivery branch"
+        verbose_name_plural = "Delivery branches"
         constraints = [
             models.UniqueConstraint(fields=["provider", "external_ref"], name="unique_branch_per_provider"),
         ]
