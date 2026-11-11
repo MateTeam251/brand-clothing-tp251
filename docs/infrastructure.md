@@ -4,7 +4,7 @@ What runs today. All in AWS account `875476618056`, region `eu-central-1` (Cloud
 managed by Terraform in `infra/` unless marked *manual*. Day-to-day running: [handover.md](handover.md).
 Budget: ~$30/month for everything.
 
-_Last updated: 2026-10-19_
+_Last updated: 2026-11-11 (v0.6.0)_
 
 ## Environments
 
@@ -33,7 +33,9 @@ Diagram: [devops-overview.md → Architecture](devops-overview.md#2-architecture
 | `/api/*`, `/static/*` | `https://origin.<domain>` → nginx → web → db | no |
 | `/media/*` | S3 media bucket. CloudFront function `media-strip-prefix` drops `/media` (files are stored at the bucket root) | yes, up to 1 year (`Managed-CachingOptimized`; a new upload always gets a new file name) |
 
-CloudFront sends the origin name as `Host`, so Django's `ALLOWED_HOSTS` contains the origin name.
+CloudFront sends the origin name as `Host`, so Django's `ALLOWED_HOSTS` contains the origin name and the site name.
+nginx adds `X-Forwarded-Host: <site>` and Django trusts it (`USE_X_FORWARDED_HOST`), so links the API builds
+(pagination, emails) use the public name, not `origin.`.
 
 ## Compute (`modules/compute`)
 
@@ -48,15 +50,15 @@ CloudFront sends the origin name as `Host`, so Django's `ALLOWED_HOSTS` contains
 | IAM role | SSM Session Manager, S3 media, backups and reports buckets, attach own data volume + EIP, read own SSM path, ECR pull, SES send, Route 53 TXT for `_acme-challenge.<origin>` only |
 | Schedule | staging only: ASG scheduled actions start/stop |
 
-Containers (`docker-compose.prod.yml`, memory limits in brackets):
+Containers (`docker-compose.prod.yml`, memory limits in brackets; staging overrides via SSM: web 400m, db 350m, celery 192m):
 
 | Container | What |
 |---|---|
 | `nginx` (64m) | port 443 (reachable from CloudFront only), TLS with the origin certificate, rate limits (login 10/min, register/password reset 3/min, checkout 10/min), 150 MB uploads on `/api/admin/` |
 | `web` (768m) | Django + gunicorn (2 workers, timeout 60), WhiteNoise for static, runs migrations on start. DB connections reused (`CONN_MAX_AGE=60`) |
 | `db` (768m) | Postgres 16 + WAL-G (custom image `db/`): base backup nightly 03:00 UTC, WAL at least every 5 min (`archive_timeout`) |
-| `redis` (64m) | Celery broker only, no persistence |
-| `celery` (256m) | one worker with beat: emails, weekly analyst reports (Monday) |
+| `redis` (64m) | db 0: Celery broker; db 1: Django cache (DRF throttling counters). 48 MB, `noeviction`, no persistence |
+| `celery` (256m) | one worker (`--pool=solo`) with Beat (in-memory schedule): emails, abandoned carts (hourly), Nova Poshta branches sync (daily, prod 01:00 UTC / staging 07:00 UTC, max 30 min), weekly analyst report (Mondays, prod only: `CELERY_WEEKLY_REPORT=False` on staging) |
 | `certbot` (128m) | Let's Encrypt certificate for the origin name (DNS-01 via Route 53), checks every 12 h, stored in `/data/letsencrypt` |
 | `alloy` (256m) | Grafana agent: host + container (cAdvisor) + Postgres metrics, logs of web/nginx/db/celery (payments logger dropped), TLS expiry probe of nginx |
 
@@ -128,7 +130,8 @@ GitHub OIDC provider: account-wide, in `environments/prod`. No AWS access keys i
 ## Monitoring (`infra/grafana`)
 
 Grafana Cloud stack `sturdyscone1696` (Free plan), managed by Terraform, applied from `main`:
-10 alert rules (runbooks in [alerts.md](alerts.md)), email contact point, 2 synthetic checks (admin login, frontend),
+10 alert rules (runbooks in [alerts.md](alerts.md); a failed query keeps the last state, no "DatasourceError" alerts),
+contact point `brand-clothing-alerts` (Slack `#alerts` + email), 2 synthetic checks (admin login, frontend; Frankfurt, London, Paris),
 5 dashboards (Overview, Requests, Infrastructure, Database, Logs) with release markers. Details: `infra/grafana/README.md`.
 Alloy push token: `secrets/GRAFANA_CLOUD_TOKEN`.
 
@@ -137,9 +140,9 @@ Alloy push token: `secrets/GRAFANA_CLOUD_TOKEN`.
 | Resource | Details |
 |---|---|
 | AWS Budget | `brand-clothing-monthly-cap`, $30: email at 80% forecast and 100% actual |
-| IAM users / groups | *manual*: `Admins`, `Developers` (view-only + shell), `Analysts` (reports only). See [handover.md](handover.md) |
+| IAM users / groups | *manual*: `Admins`, `devs` (view-only + shell), `Analysts` (reports only). See [handover.md](handover.md) |
 | Audit | CloudTrail event history (90 days, default). No persistent trail |
 
 ## Not in use yet
 
-SES production sending, WayForPay (keys pending), frontend monitoring (Faro).
+SES production sending (Resend is used), WayForPay on prod (staging uses the public test merchant `test_merch_n1`; prod waits for the customer's merchant keys), frontend monitoring (Faro), extra protection of `/api/admin/`.
