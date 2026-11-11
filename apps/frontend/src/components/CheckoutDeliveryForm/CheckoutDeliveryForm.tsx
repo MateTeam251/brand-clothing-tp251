@@ -61,7 +61,8 @@ export function CheckoutDeliveryForm({
       (option) =>
         value.international.country ||
         option.label.toLowerCase().includes(countryQuery.trim().toLowerCase()),
-    );
+    )
+    .sort((a, b) => a.label.localeCompare(b.label, language === 'ua' ? 'uk' : 'en'));
 
   let countryMessage: string | undefined;
   if (isCountriesFetching) {
@@ -229,8 +230,6 @@ export function CheckoutDeliveryForm({
       <div className={styles.delivery__fields}>
         {value.mode === 'ukraine' ? (
           <>
-            <div className={styles.delivery__method}>{t('checkout_delivery.method')}</div>
-
             <SearchSelect
               label={t('checkout_delivery.city')}
               placeholder={t('checkout_delivery.city')}
@@ -299,22 +298,6 @@ export function CheckoutDeliveryForm({
               onChange={(address) => updateInternational({ address })}
               error={errors?.address}
               autoComplete="address-line1"
-            />
-
-            <AuthField
-              name="delivery-house-number"
-              label={t('checkout_delivery.house_number')}
-              value={value.international.houseNumber}
-              onChange={(houseNumber) => updateInternational({ houseNumber })}
-              error={errors?.houseNumber}
-            />
-
-            <AuthField
-              name="delivery-apartment"
-              label={t('checkout_delivery.apartment')}
-              value={value.international.apartment}
-              onChange={(apartment) => updateInternational({ apartment })}
-              autoComplete="address-line2"
             />
 
             <AuthField

@@ -31,7 +31,7 @@ export const deliveryApi = createApi({
       }),
     }),
     getNovaPostCountries: builder.query<NovaPostCountry[], void>({
-      query: () => 'orders/delivery/nova-post/countries/',
+      query: () => 'orders/delivery/countries/',
     }),
   }),
 });
