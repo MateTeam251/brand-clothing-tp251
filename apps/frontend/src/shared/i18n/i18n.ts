@@ -224,7 +224,8 @@ i18n.use(initReactI18next).init({
           empty: "You don't have any orders yet",
           status: {
             pending: "Awaiting payment",
-            processing: "Processing",
+            paid: "Paid",
+            awaiting_shipment: "Awaiting shipment",
             shipped: "Shipped",
             delivered: "Completed",
             canceled: "Canceled"
@@ -713,7 +714,8 @@ i18n.use(initReactI18next).init({
           empty: "У вас ще немає замовлень",
           status: {
             pending: "Очікує оплати",
-            processing: "В обробці",
+            paid: "Оплачено",
+            awaiting_shipment: "Очікує відправлення",
             shipped: "Відправлено",
             delivered: "Виконано",
             canceled: "Скасовано"
