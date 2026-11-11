@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404
+from django.utils import translation
+from django_countries import countries
 from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
 from rest_framework import generics, status, serializers
 from rest_framework.exceptions import ValidationError
@@ -9,7 +11,7 @@ from rest_framework.views import APIView
 
 from carts.models import CartStatusEnum
 from carts.views import get_or_create_active_cart
-from core.delivery import NOVA_POST_COUNTRIES
+from core.delivery import BLOCKED_COUNTRIES
 from core.openapi import DETAIL_RESPONSE, UNAUTHORIZED, VALIDATION_ERROR, THROTTLED
 from orders.models import Order
 from orders.pagination import CustomerOrderPagination
@@ -354,19 +356,30 @@ class OrderStatusView(APIView):
 
 @extend_schema(
     tags=["Orders"],
-    summary="Countries available for Nova Post international delivery",
-    responses={200: inline_serializer("NovaPostCountry", {
-        "code": serializers.CharField(),
+    summary="Countries available for international delivery",
+    description=(
+        "Public list of countries for `delivery_provider=INTERNATIONAL`. "
+        "All ISO countries except the blocked ones (`BLOCKED_COUNTRIES`). "
+        "Show `name_ua` or `name_en`, send `code` in `delivery_data.country`. "
+    ),
+    responses={200: inline_serializer("DeliveryCountry", {
+        "code": serializers.CharField(help_text="ISO 3166-1 alpha-2, e.g. PL"),
         "name_ua": serializers.CharField(),
         "name_en": serializers.CharField(),
     }, many=True)},
 )
-class NovaPostCountriesView(APIView):
+class DeliveryCountriesView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def get(self, request):
-        return Response([
-            {"code": code, "name_ua": names["ua"], "name_en": names["en"]}
-            for code, names in NOVA_POST_COUNTRIES.items()
-        ])
+        result = []
+        for code, _ in countries:
+            if code in BLOCKED_COUNTRIES:
+                continue
+            with translation.override("uk"):
+                name_ua = str(countries.name(code))
+            with translation.override("en"):
+                name_en = str(countries.name(code))
+            result.append({"code": code, "name_ua": name_ua, "name_en": name_en})
+        return Response(result)
