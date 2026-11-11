@@ -101,16 +101,28 @@
   }
 
   &__sizeSelect {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
     width: fit-content;
+    height: 42px;
+    padding: 0 12px;
     border: 1px solid $light-gray;
     border-radius: 8px;
-    height: 42px;
-    padding: 12px;
   }
 
   &__selector {
+    height: 100%;
+    padding: 0 20px 0 0;
     border: none;
     background-color: $dominant;
+    background-image: url('../../shared/assets/icons/arrow-bottom.svg');
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 11px 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
   }
 
   &__guide {
