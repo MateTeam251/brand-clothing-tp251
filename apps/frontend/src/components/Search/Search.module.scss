@@ -9,6 +9,7 @@
   border: 1px solid $color-inactive;
   border-radius: 999px;
   flex: 1;
+  min-width: 0;
 
   @include on-desktop {
     display: none;
@@ -24,6 +25,7 @@
     border: none;
     outline: none;
     flex: 1;
+    min-width: 0;
     font-size: 16px;
     font-family: inherit;
     background-color: $dominant;
