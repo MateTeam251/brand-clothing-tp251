@@ -3,7 +3,9 @@
 How the online store gets from a pull request to customers, and how we know it keeps working.
 A walkthrough for the project demo; every section links to the detailed doc.
 
-_Max, DevOps · October 2026_
+_Max, DevOps · October 2026, updated November 2026 (v0.6.0)_
+
+For the shop owner, in plain language: [owner-guide.md](owner-guide.md).
 
 ## 1. The task
 
@@ -15,7 +17,7 @@ _Max, DevOps · October 2026_
 | **Two environments** (staging + production), real domain, HTTPS, payments later | same code and images in both, only config differs |
 | **Everything as code** | Terraform for AWS and Grafana, Docker Compose for the servers, GitHub Actions for delivery |
 
-Timeline: repo started 2026-08-29 → first production release **v0.1.0 on 2026-10-01** → **v0.5.1 by 2026-10-17** (15 tagged releases).
+Timeline: repo started 2026-08-29 → first production release **v0.1.0 on 2026-10-01** → v0.5.1 on 2026-10-17 → **v0.6.0 on 2026-11-11**, before launch.
 
 ## 2. Architecture
 
@@ -27,13 +29,13 @@ flowchart LR
     subgraph EC2 ["EC2 t4g.small · Docker Compose"]
         NG[nginx · /api/*<br/>TLS, rate limits] --> WEB[web<br/>Django + gunicorn]
         WEB --> DB[(Postgres 16<br/>+ WAL-G)]
-        WEB --> RD[redis] --> CEL[celery<br/>emails, reports]
+        WEB --> RD[redis<br/>queue + rate-limit cache] --> CEL[celery<br/>emails, carts, Nova Poshta, reports]
         AL[alloy<br/>metrics + logs]
     end
     CF --> MEDIA[(S3 media<br/>photos · /media/*)]
     WEB --> MEDIA
     DB --> BK[(S3 backups<br/>WAL-G)]
-    AL --> GF[Grafana Cloud]
+    AL --> GF[Grafana Cloud] --> SL[Slack #alerts]
     %% Transparent boxes: readable in GitHub light and dark mode
     classDef default fill:transparent,stroke:#8b949e,stroke-width:1px
     style EC2 fill:transparent,stroke:#8b949e,stroke-dasharray:5 5
@@ -116,7 +118,7 @@ Details: [database-restore.md](database-restore.md)
 - **Alloy** on each server ships host, container and Postgres metrics plus logs (nginx JSON, Django with full tracebacks) to **Grafana Cloud**.
 - **5 dashboards**, all with an environment switch and **release markers** (every deploy draws a line, so "did the release cause it?" takes one glance):
   Overview → Requests (rate, errors, duration) · Infrastructure (server + containers) · Database · Logs.
-- **10 alert rules** (site/frontend down, 5xx, app errors, disk, memory, metrics missing, backup failed/missing, WAL archiving, certificate expiry), each with a **runbook** link: [alerts.md](alerts.md).
+- **10 alert rules** (site/frontend down, 5xx, app errors, disk, memory, metrics missing, backup failed/missing, WAL archiving, certificate expiry), each with a **runbook** link: [alerts.md](alerts.md). They go to **Slack `#alerts`** and email; a query error keeps the last state instead of alerting.
 - **Synthetic checks** from three European locations open the admin login to the admin page and load the frontend.
 
 ## 9. Performance: a load test that found a real bug
@@ -150,7 +152,7 @@ k6 script simulating shoppers browsing the catalog, run on staging while watchin
 
 ## 12. What's next
 
-- Extra protection for `/api/admin/`.
-- Frontend monitoring (Grafana Faro).
-- SES production access (re-apply November), WayForPay keys.
-- Move Grafana and email accounts to the customer; [handover.md](handover.md).
+- Extra protection for `/api/admin/` (after launch).
+- Frontend monitoring (Grafana Faro), in the customer's Grafana stack.
+- WayForPay production keys from the customer's merchant account; SES production access (re-apply).
+- Finish moving AWS, Grafana, WayForPay and Resend to the customer; [handover.md](handover.md).

@@ -23,7 +23,7 @@ db/                Postgres image with WAL-G backups
 nginx/             nginx config for the servers
 infra/             Terraform (bootstrap, modules, staging + prod environments, grafana)
 loadtest/          k6 load test
-docs/              handover, infrastructure, releasing, CI/CD, alerts, restore, secrets
+docs/              owner guide, handover, infrastructure, releasing, CI/CD, alerts, restore, secrets
 docker-compose.prod.yml   what runs on the servers
 ```
 
@@ -60,6 +60,7 @@ Docs (overview first, handover if you run the infrastructure):
 
 | Doc | What |
 |---|---|
+| [docs/owner-guide.md](docs/owner-guide.md) | For the shop owner: what it runs on, what you own, costs, what to do if… |
 | [docs/devops-overview.md](docs/devops-overview.md) | DevOps walkthrough: architecture, decisions, results (demo) |
 | [docs/handover.md](docs/handover.md) | Running the infrastructure: access, routines, risks, handover checklist |
 | [docs/infrastructure.md](docs/infrastructure.md) | Everything in AWS and which Terraform owns it |
