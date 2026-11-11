@@ -3,10 +3,26 @@ from django_countries import countries
 from core.enums import DeliveryProvider
 
 BLOCKED_COUNTRIES = {
-    "RU",
-    "BY",
+    "RU",  # Russia
+    "BY",  # Belarus
+    "AF",  # Afghanistan
+    "CU",  # Cuba
+    "IR",  # Iran
+    "KP",  # North Korea
+    "LY",  # Libya
+    "PS",  # Palestine
+    "SD",  # Sudan
+    "SS",  # South Sudan
+    "SO",  # Somalia
+    "SY",  # Syria
+    "YE",  # Yemen
+    "CF",  # Central African Republic
+    "SH",  # Saint Helena
+    "NU",  # Niue
+    "NR",  # Nauru
+    "KI",  # Kiribati
+    "TV",  # Tuvalu
 }
-
 
 def get_delivery_data_error(provider, delivery_data) -> str | None:
     """
