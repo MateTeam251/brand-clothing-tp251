@@ -16,6 +16,7 @@ Every secret, where it lives, and how to rotate it. Values are never in git, Ter
 | `GRAFANA_AUTH` | GitHub secret | Terraform `infra/grafana`, release annotations | yearly, on handover |
 | `GRAFANA_SM_ACCESS_TOKEN` | GitHub secret | Terraform synthetic checks | yearly, on handover |
 | `TF_BUDGET_ALERT_EMAIL` | GitHub secret | alert / budget email (not secret, just not public) | when the address changes |
+| `GRAFANA_SLACK_WEBHOOK_URL` | GitHub secret | Grafana alerts → Slack channel (anyone with it can post there) | on handover, on leak |
 
 No secret, nothing to rotate:
 - **AWS from CI**: OIDC roles, short-lived credentials.

@@ -8,7 +8,11 @@ Change things here, not in the UI (provisioned rules are read-only in the UI).
 CI (`.github/workflows/grafana.yml`): plan on PRs, apply on merge to `main` (approval).
 
 Secrets (GitHub): `GRAFANA_AUTH` (service account `terraform`, Admin),
-`GRAFANA_SM_ACCESS_TOKEN`, `TF_BUDGET_ALERT_EMAIL` (alert email; the repo is public).
+`GRAFANA_SM_ACCESS_TOKEN`, `TF_BUDGET_ALERT_EMAIL` (alert email; the repo is public),
+`GRAFANA_SLACK_WEBHOOK_URL` (Slack incoming webhook; empty = email only).
+
+Alerts: contact point `brand-clothing-alerts` = Slack + email. A failed query
+(Grafana Cloud hiccup) keeps the rule's last state (`exec_err_state = KeepLast`).
 
 Local plan (PowerShell):
 
@@ -18,6 +22,7 @@ terraform init -backend-config="../environments/prod/backend.hcl"
 $env:TF_VAR_grafana_auth    = Read-Host -MaskInput "Grafana token"
 $env:TF_VAR_sm_access_token = Read-Host -MaskInput "SM token"
 $env:TF_VAR_alert_email     = Read-Host "Alert email"
+$env:TF_VAR_slack_webhook_url = Read-Host -MaskInput "Slack webhook (optional)"
 terraform plan
 ```
 
