@@ -219,7 +219,7 @@ resource "grafana_rule_group" "this" {
       }
 
       notification_settings {
-        contact_point = grafana_contact_point.email.name
+        contact_point = grafana_contact_point.alerts.name
       }
     }
   }
