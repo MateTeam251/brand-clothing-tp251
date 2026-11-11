@@ -32,6 +32,7 @@ jsonschema-specifications==2025.9.1
 jsonschema==4.26.0
 kombu==5.6.2
 packaging==26.3
+phonenumbers==9.0.43
 pillow==13.0.0
 pluggy==1.6.0
 prompt_toolkit==3.0.53
