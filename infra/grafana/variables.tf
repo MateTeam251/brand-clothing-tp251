@@ -22,6 +22,13 @@ variable "sm_access_token" {
   sensitive   = true
 }
 
+variable "slack_webhook_url" {
+  description = "Slack incoming webhook for alerts. Secret (TF_VAR_slack_webhook_url). Empty = email only."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "alert_email" {
   description = "Where alerts go. Secret: the repo is public (TF_VAR_alert_email)."
   type        = string

@@ -59,7 +59,7 @@ class CollectionSerializer(LanguageMixin, serializers.ModelSerializer):
 
 class CollectionDetailSerializer(CollectionSerializer):
     """Full variant — with ProductList, for a page with a specific page."""
-    products = serializers.SerializerMethodField(help_text="All products of the collection, not paginated.")
+    products = serializers.SerializerMethodField(help_text="All non-archived products of the collection, not paginated.")
 
     class Meta(CollectionSerializer.Meta):
         fields = CollectionSerializer.Meta.fields + ("products",)
@@ -199,6 +199,7 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
     """
     images = ProductImageSerializer(many=True, read_only=True, help_text="All photos, sorted by `order`.")
     type = serializers.SerializerMethodField(help_text="Product type name in the `?lang=` language, e.g. \"Сукня\" / \"Dress\".")
+    slug = serializers.SerializerMethodField(help_text="Product type slug")
     description = serializers.SerializerMethodField(help_text="Description in the `?lang=` language. Can be empty.")
     fabric_composition = serializers.SerializerMethodField(help_text="Fabric composition in the `?lang=` language. Can be empty.")
     size_guide = serializers.SerializerMethodField(help_text="The size guide; the same one for every product.")
@@ -209,7 +210,7 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
 
     class Meta:
         model = Product
-        fields = ("id", "name", "type", "collection", "description", "fabric_composition",
+        fields = ("id", "name", "type", "slug", "collection", "description", "fabric_composition",
                   "price", "discounted_price",
                   "is_bestseller", "images", "is_available", "size_guide", "is_favorite")
         extra_kwargs = PRODUCT_FLAGS_HELP
@@ -229,6 +230,9 @@ class ProductDetailSerializer(LanguageMixin, CurrencyMixin, serializers.ModelSer
     def get_type(self, obj) -> str:
         """Returns the product type's name (ProductType) in the language from self._lang()."""
         return obj.type.name_eng if self._lang() == "eng" else obj.type.name_ua
+
+    def get_slug(self, obj):
+        return obj.type.slug
 
     def get_description(self, obj) -> str:
         """Returns the product description in the language from self._lang()."""
@@ -266,7 +270,8 @@ class AvailabilityRequestSerializer(serializers.ModelSerializer):
         model = AvailabilityRequest
         fields = ("product", "name", "phone_number")
         extra_kwargs = {
-            "product": {"help_text": "Product id. Must be a product with `is_available: false`, otherwise 400."},
+            "product": {"help_text": "Product id. Must be a product with `is_available: false` "
+                                       "that is not archived, otherwise 400."},
             "name": {"help_text": "Name of the person to call back, up to 100 characters."},
             "phone_number": {"help_text": "Phone to call back, up to 20 characters. Format is not checked."},
         }
@@ -275,4 +280,6 @@ class AvailabilityRequestSerializer(serializers.ModelSerializer):
     def validate_product(self, product):
         if product.is_available:
             raise serializers.ValidationError("This product is already available.")
+        elif product.is_archived:
+            raise serializers.ValidationError("This product is archived")
         return product

@@ -18,4 +18,9 @@ class FavoriteSerializer(serializers.ModelSerializer):
             "created_at": {"help_text": "When it was added, UTC."},
         }
 
+    def validate_product(self, product):
+        if product.is_archived:
+            raise serializers.ValidationError("This product is archived.")
+        return product
+
 

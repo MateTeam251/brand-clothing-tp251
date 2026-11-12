@@ -3,22 +3,36 @@ import type { SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUpdateMeMutation } from '../../shared/api/userApi';
 import type { UserProfile } from '../../shared/types/User';
+import { isValidPhone, normalizePhone } from '../../shared/utils/phone';
 import { AuthField } from '../AuthField';
+import { PhoneField } from '../PhoneField';
+import { ChangeEmailModal } from '../ChangeEmailModal';
+import { ChangePasswordModal } from '../ChangePasswordModal';
 import styles from './ProfileForm.module.scss';
 
 interface ProfileFormProps {
   profile: UserProfile;
+  onLogout: () => void;
 }
 
-export const ProfileForm = ({ profile }: ProfileFormProps) => {
+export const ProfileForm = ({ profile, onLogout }: ProfileFormProps) => {
   const { t } = useTranslation();
   const [updateMe, { isLoading }] = useUpdateMeMutation();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
-  const [name, setName] = useState(profile.name ?? '');
-  const [phone, setPhone] = useState(profile.phone_number ?? '');
+  const [firstName, setFirstName] = useState(profile.first_name ?? '');
+  const [lastName, setLastName] = useState(profile.last_name ?? '');
+  const [birthDate, setBirthDate] = useState(profile.birth_date ?? '');
+  const [phone, setPhone] = useState(normalizePhone(profile.phone_number ?? ''));
   const [instagram, setInstagram] = useState(profile.instagram ?? '');
+  const [telegram, setTelegram] = useState(profile.telegram ?? '');
   const [marketingOptIn, setMarketingOptIn] = useState(profile.marketing_opt_in);
-  const [instagramError, setInstagramError] = useState<string | undefined>();
+  const [errors, setErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  }>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -28,24 +42,39 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
     setFormError(null);
   };
 
+  const handleChangePassword = () => {
+    setIsPasswordModalOpen(true);
+  };
+
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const trimmedInstagram = instagram.trim();
+    const nextErrors = {
+      firstName: firstName.trim() ? undefined : t('profile.errors.first_name_required'),
+      lastName: lastName.trim() ? undefined : t('profile.errors.last_name_required'),
+      phone: !phone.trim()
+        ? t('profile.errors.phone_required')
+        : isValidPhone(phone.trim())
+          ? undefined
+          : t('checkout_form.invalid_phone'),
+    };
 
-    if (!trimmedInstagram) {
-      setInstagramError(t('profile.errors.instagram_required'));
+    setErrors(nextErrors);
+
+    if (nextErrors.firstName || nextErrors.lastName || nextErrors.phone) {
       return;
     }
 
-    setInstagramError(undefined);
     setFormError(null);
 
     try {
       await updateMe({
-        name: name.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        birth_date: birthDate || null,
         phone_number: phone.trim(),
-        instagram: trimmedInstagram,
+        instagram: instagram.trim(),
+        telegram: telegram.trim(),
         marketing_opt_in: marketingOptIn,
       }).unwrap();
       setIsSaved(true);
@@ -55,65 +84,130 @@ export const ProfileForm = ({ profile }: ProfileFormProps) => {
   };
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <div className={styles.form__fields}>
-        <AuthField
-          name="profile-name"
-          label={t('profile.name')}
-          value={name}
-          onChange={handleChange(setName)}
-          autoComplete="name"
-        />
-        <AuthField
-          name="profile-phone"
-          type="tel"
-          label={t('profile.phone')}
-          value={phone}
-          onChange={handleChange(setPhone)}
-          autoComplete="tel"
-        />
-        <AuthField
-          name="profile-instagram"
-          label={t('profile.instagram')}
-          value={instagram}
-          onChange={handleChange(setInstagram)}
-          error={instagramError}
-        />
-        <AuthField
-          name="profile-email"
-          type="email"
-          label={t('profile.email')}
-          value={profile.email}
-          disabled
-        />
-      </div>
+    <>
+      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <div className={styles.form__fields}>
+          <AuthField
+            name="profile-first-name"
+            label={t('profile.first_name')}
+            visibleLabel
+            value={firstName}
+            onChange={handleChange(setFirstName)}
+            autoComplete="given-name"
+            error={errors.firstName}
+          />
+          <AuthField
+            name="profile-last-name"
+            label={t('profile.last_name')}
+            visibleLabel
+            value={lastName}
+            onChange={handleChange(setLastName)}
+            autoComplete="family-name"
+            error={errors.lastName}
+          />
+          <AuthField
+            name="profile-birth-date"
+            type="date"
+            label={t('profile.birth_date')}
+            visibleLabel
+            value={birthDate}
+            onChange={handleChange(setBirthDate)}
+            autoComplete="bday"
+          />
+          <PhoneField
+            name="profile-phone"
+            label={t('profile.phone')}
+            visibleLabel
+            value={phone}
+            onChange={handleChange(setPhone)}
+            error={errors.phone}
+          />
+          <AuthField
+            name="profile-instagram"
+            label={t('profile.instagram')}
+            visibleLabel
+            value={instagram}
+            onChange={handleChange(setInstagram)}
+          />
+          <AuthField
+            name="profile-telegram"
+            label={t('profile.telegram')}
+            visibleLabel
+            value={telegram}
+            onChange={handleChange(setTelegram)}
+          />
+          <AuthField
+            name="profile-email"
+            type="email"
+            label={t('profile.email')}
+            visibleLabel
+            value={profile.email}
+            disabled
+          />
+        </div>
 
-      <label className={styles.form__checkbox}>
-        <input
-          type="checkbox"
-          checked={marketingOptIn}
-          onChange={(event) => {
-            setMarketingOptIn(event.target.checked);
-            setIsSaved(false);
-          }}
-        />
-        <span>{t('profile.marketing')}</span>
-      </label>
+        <label className={styles.form__checkbox}>
+          <input
+            type="checkbox"
+            checked={marketingOptIn}
+            onChange={(event) => {
+              setMarketingOptIn(event.target.checked);
+              setIsSaved(false);
+            }}
+          />
+          <span>{t('profile.marketing')}</span>
+        </label>
 
-      {formError && (
-        <p className={styles.form__error} role="alert">
-          {formError}
-        </p>
-      )}
-      {isSaved && (
-        <p className={styles.form__success} role="status">
-          {t('profile.saved')}
-        </p>
-      )}
+        {formError && (
+          <p className={styles.form__error} role="alert">
+            {formError}
+          </p>
+        )}
+        {isSaved && (
+          <p className={styles.form__success} role="status">
+            {t('profile.saved')}
+          </p>
+        )}
 
-      <button type="submit" className={styles.form__submit} disabled={isLoading}>
-        {t('profile.save')}
-      </button>
-    </form>
+        <div className={styles.form__actions}>
+          <div className={`${styles.form__group} ${styles.form__groupSecondary}`}>
+            <button
+              type="button"
+              className={styles.form__changePassword}
+              onClick={() => setIsEmailModalOpen(true)}
+            >
+              {t('profile.change_email')}
+            </button>
+            <button
+              type="button"
+              className={styles.form__changePassword}
+              onClick={handleChangePassword}
+            >
+              {t('profile.change_password')}
+            </button>
+          </div>
+
+          <div className={`${styles.form__group} ${styles.form__groupPrimary}`}>
+            <button type="submit" className={styles.form__submit} disabled={isLoading}>
+              {t('profile.save')}
+            </button>
+            <button type="button" className={styles.form__changePassword} onClick={onLogout}>
+              {t('profile.logout')}
+            </button>
+          </div>
+        </div>
+      </form>
+
+    {isPasswordModalOpen && (
+      <ChangePasswordModal onClose={() => setIsPasswordModalOpen(false)} />
+    )}
+      
+    {isEmailModalOpen && (
+      <ChangeEmailModal
+        currentEmail={profile.email}
+        onClose={() => setIsEmailModalOpen(false)}
+      />
+    )}
+    </>
   );
 };

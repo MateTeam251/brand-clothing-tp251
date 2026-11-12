@@ -153,11 +153,12 @@ resource "grafana_rule_group" "this" {
   dynamic "rule" {
     for_each = local.rule_groups[each.key].rules
     content {
-      name           = rule.value.name
-      condition      = "C"
-      for            = rule.value.for
-      no_data_state  = rule.value.no_data
-      exec_err_state = "Error"
+      name          = rule.value.name
+      condition     = "C"
+      for           = rule.value.for
+      no_data_state = rule.value.no_data
+      # A failed query (Grafana Cloud hiccup) keeps the last state instead of paging.
+      exec_err_state = "KeepLast"
       is_paused      = try(rule.value.paused, false)
 
       annotations = {
@@ -218,7 +219,7 @@ resource "grafana_rule_group" "this" {
       }
 
       notification_settings {
-        contact_point = grafana_contact_point.email.name
+        contact_point = grafana_contact_point.alerts.name
       }
     }
   }

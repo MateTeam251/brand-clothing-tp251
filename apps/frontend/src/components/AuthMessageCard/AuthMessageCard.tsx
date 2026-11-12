@@ -1,17 +1,23 @@
-import { useEffect, useId } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import type { MouseEvent, PointerEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import closeIcon from '../../shared/assets/icons/close.svg';
 import styles from './AuthMessageCard.module.scss';
 
 type Variant = 'mail' | 'success' | 'error';
 
 interface AuthMessageCardProps {
-  variant: Variant;
+  variant?: Variant;
   title: string;
-  text: string;
+  text?: string;
   children?: ReactNode;
+  primaryLabel?: string;
+  primaryTo?: string;
+  onPrimaryClick?: () => void;
   linkTo?: string;
   linkLabel?: string;
+  onClose?: () => void;
 }
 
 const Icon = ({ variant }: { variant: Variant }) => (
@@ -47,10 +53,16 @@ export const AuthMessageCard = ({
   title,
   text,
   children,
+  primaryLabel,
+  primaryTo,
+  onPrimaryClick,
   linkTo,
   linkLabel,
+  onClose,
 }: AuthMessageCardProps) => {
+  const { t } = useTranslation();
   const titleId = useId();
+  const pressStartedOnOverlay = useRef(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -61,22 +73,77 @@ export const AuthMessageCard = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (!onClose) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  const handleOverlayPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    pressStartedOnOverlay.current = event.target === event.currentTarget;
+  };
+
+  const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+    const startedOnOverlay = pressStartedOnOverlay.current;
+    pressStartedOnOverlay.current = false;
+
+    if (onClose && startedOnOverlay && event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className={styles.overlay}>
+    <div
+      className={styles.overlay}
+      onPointerDown={handleOverlayPointerDown}
+      onClick={handleOverlayClick}
+    >
       <section
         className={styles.card}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <div className={`${styles.card__icon} ${styles[`card__icon--${variant}`]}`}>
-          <Icon variant={variant} />
-        </div>
+        {onClose && (
+          <button
+            type="button"
+            className={styles.card__close}
+            onClick={onClose}
+            aria-label={t('close')}
+          >
+            <img src={closeIcon} alt="" />
+          </button>
+        )}
+        {variant && (
+          <div className={`${styles.card__icon} ${styles[`card__icon--${variant}`]}`}>
+            <Icon variant={variant} />
+          </div>
+        )}
         <h2 id={titleId} className={styles.card__title}>
           {title}
         </h2>
-        <p className={styles.card__text}>{text}</p>
+        {text && <p className={styles.card__text}>{text}</p>}
         {children}
+        {primaryLabel &&
+          (primaryTo ? (
+            <Link to={primaryTo} className={styles.card__primary}>
+              {primaryLabel}
+            </Link>
+          ) : (
+            <button type="button" className={styles.card__primary} onClick={onPrimaryClick}>
+              {primaryLabel}
+            </button>
+          ))}
         {linkTo && linkLabel && (
           <Link to={linkTo} className={styles.card__link}>
             {linkLabel}

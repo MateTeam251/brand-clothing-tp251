@@ -8,6 +8,20 @@
   margin-bottom: 24px;
   position: relative;
 
+  &--unavailable &__imageWrapper,
+  &--unavailable &__name,
+  &--unavailable &__size,
+  &--unavailable &__delivery,
+  &--unavailable &__footer {
+    opacity: 0.5;
+  }
+
+  &__status {
+    margin: 0;
+    font-size: 14px;
+    color: $color-inactive;
+  }
+
   &__link {
     flex-shrink: 0;
     text-decoration: none;
@@ -51,7 +65,7 @@
 
   &__name {
     margin: 0;
-    font-family: 'Bodoni', serif;
+    font-family: $font-heading;
     font-size: 20px;
   }
 
@@ -179,8 +193,23 @@
     text-align: center;
   }
 
+  &__prices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 4px 8px;
+  }
+
+  &__oldPrice {
+    font-family: $font-body;
+    font-size: 14px;
+    color: $color-inactive;
+    text-decoration: line-through;
+  }
+
   &__price {
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
     font-weight: bold;
     font-size: 16px;
   }

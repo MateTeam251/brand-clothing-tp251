@@ -5,8 +5,9 @@
 locals {
   app_config = {
     DEBUG                   = "False"
-    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host}"
+    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host},${local.site_host}"
     SITE_URL                = "https://${local.site_host}"
+    FRONTEND_URL            = "https://${local.site_host}"
     CSRF_TRUSTED_ORIGINS    = "https://${local.site_host},https://www.${local.site_host}"
     CORS_ALLOWED_ORIGINS    = "https://${local.site_host},https://www.${local.site_host}"
     DEFAULT_FROM_EMAIL      = "The Art — The Artist <noreply@theart-theartist.com>"
@@ -20,6 +21,9 @@ locals {
     AWS_STORAGE_BUCKET_NAME = module.storage.media_bucket_name
     WALG_S3_PREFIX          = "s3://${module.storage.backups_bucket_name}/wal-g"
     ECR_REGISTRY            = "875476618056.dkr.ecr.eu-central-1.amazonaws.com"
+
+    # Photo links via CloudFront /media/* (cached, unsigned) instead of signed S3 URLs.
+    AWS_S3_CUSTOM_DOMAIN = "${local.site_host}/media"
 
     # Weekly cart report (carts.reports). Private bucket, not the media one.
     ANALYTICS_REPORTS_BUCKET = module.storage.reports_bucket_name
@@ -36,6 +40,9 @@ locals {
 
     # Name CloudFront uses for the backend (dns.tf); certbot gets its certificate.
     ORIGIN_HOST = local.origin_host
+
+    # Public name nginx passes to Django as X-Forwarded-Host.
+    SITE_HOST = local.site_host
 
     # Starts the redis + celery services in docker-compose.prod.yml.
     COMPOSE_PROFILES = "celery"

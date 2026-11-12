@@ -1,0 +1,101 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @include on-desktop {
+    padding: 24px 16px;
+    border: 1px solid $color-inactive;
+    border-radius: 24px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+
+    @include on-desktop {
+      display: none;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0 0 16px;
+    border-bottom: 1px solid $color-inactive;
+    list-style: none;
+  }
+
+  &__item {
+    font-family: $font-body;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    font-size: 12px;
+    color: #000;
+
+    @include on-desktop {
+      font-size: 16px;
+    }
+
+    &--unavailable {
+      opacity: 0.6;
+    }
+  }
+
+  &__price {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__value {
+    max-width: 60%;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  &__oldPrice {
+    font-weight: 400;
+    color: $color-inactive;
+    text-decoration: line-through;
+  }
+
+  &__warning {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 12px;
+    color: $error;
+  }
+
+  &__total {
+    font-family: $font-body;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #000;
+
+    @include on-desktop {
+      font-size: 16px;
+    }
+  }
+
+  &__totalPrice {
+    font-size: 16px;
+    font-weight: 600;
+
+    @include on-desktop {
+      font-size: 24px;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Order canceled{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">Order canceled</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;text-align:center;">Order No. {{ order.order_reference }}</p>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">Your order has been canceled. If you have any questions, message us — we’ll be happy to help.</p>
+
+{% with catalog_url=frontend_url|add:"/catalog" %}
+{% include "emails/_button.html" with url=catalog_url label="Go to catalog" %}
+{% endwith %}
+{% endblock %}

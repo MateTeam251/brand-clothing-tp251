@@ -16,8 +16,11 @@ export interface RegisterRequest {
   email: string;
   password: string;
   password_confirm: string;
-  name?: string;
+  first_name?: string;
+  last_name?: string;
+  phone_number: string;
   instagram: string;
+  telegram: string;
   agree_to_terms: boolean;
   marketing_opt_in: boolean;
 }
@@ -36,6 +39,13 @@ export const authApi = createApi({
     register: builder.mutation<void, RegisterRequest>({
       query: (body) => ({
         url: 'auth/register/',
+        method: 'POST',
+        body,
+      }),
+    }),
+     resendActivation: builder.mutation<void, { email: string }>({
+      query: (body) => ({
+        url: 'auth/resend-activation/',
         method: 'POST',
         body,
       }),
@@ -85,4 +95,5 @@ export const {
   useRequestPasswordResetMutation,
   useConfirmPasswordResetMutation,
   useGetUserQuery,
+  useResendActivationMutation,
 } = authApi;

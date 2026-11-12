@@ -1,114 +1,163 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAppDispatch, useAppSelector } from '../../shared/hooks/reduxHooks';
-import { incrementQuantity, decrementQuantity, removeFromCart, changeSize } from '../../app/store/reducers/cartSlice';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../../shared/hooks/reduxHooks';
+import { useCart } from '../../shared/hooks/useCart';
+import {
+  useChangeCartItemSizeMutation,
+  useRemoveCartItemMutation,
+  useUpdateCartItemQuantityMutation,
+} from '../../shared/api/cartApi';
 import styles from './CartPage.module.scss';
-import { useGetProductsQuery } from '../../shared/api/productsApi';
-import { Link } from 'react-router-dom';
+import { Loader } from '../../components/Loader';
+import { ErrorState } from '../../components/ErrorState';
 import { CartItem } from '../../components/CartItem/CartItem';
+import cartIcon from '../../shared/assets/icons/cart.svg';
+import type { CartLine } from '../../shared/types/Cart';
+import { cartLineToAnalyticsItem, trackEvent } from '../../shared/analytics';
 
 export const CartPage = () => {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { currency } = useAppSelector((state) => state.settings);
 
-  const cartItems = useAppSelector((state) => state.cart.items);
-  const { currency, language } = useAppSelector((state) => state.settings);
+  const { data: cart, isLoading, isError, refetch } = useCart();
+  const [updateQuantity] = useUpdateCartItemQuantityMutation();
+  const [removeItem] = useRemoveCartItemMutation();
+  const [changeSize] = useChangeCartItemSizeMutation();
 
-  const { data: productsData } = useGetProductsQuery({ currency, lang: language });
-  const products = productsData?.results;
+  const cartItems = [...(cart?.items ?? [])].sort((a, b) => a.id - b.id);
+  const totalCount = cart?.items_count ?? 0;
+  const totalPrice = Number(cart?.items_total ?? 0);
+  const hasTrackedCartView = useRef(false);
 
-  const fullCartItems = cartItems.map(cartItem => {
-    const productDetails = products?.find(p => p.id === cartItem.product);
-    return {
-      ...productDetails,
-      ...cartItem,
-    };
-  });
+  useEffect(() => {
+    if (!cart || cart.items.length === 0 || hasTrackedCartView.current) {
+      return;
+    }
 
-  const totalCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+    hasTrackedCartView.current = true;
 
-  const totalPrice = fullCartItems.reduce((acc, item) => {
-    const rawPrice = Number(item.discounted_price ?? item.price ?? 0);
-    return acc + rawPrice * item.quantity;
-  }, 0);
+    trackEvent('view_cart', {
+      cart_id: cart.id,
+      currency: currency.toUpperCase(),
+      value: Number(cart.items_total),
+      items: cart.items.map(cartLineToAnalyticsItem),
+    });
+  }, [cart, currency]);
+
+  const handleRemove = async (item: CartLine) => {
+    try {
+      await removeItem(item.id).unwrap();
+
+      trackEvent('remove_from_cart', {
+        cart_id: cart?.id,
+        currency: currency.toUpperCase(),
+        value: Number(item.total_price),
+        items: [cartLineToAnalyticsItem(item)],
+      });
+    } catch {
+      // видалення не вдалося: подію не відправляємо
+    }
+  };
 
   const formatPrice = (price: number) =>
-  new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-    currencyDisplay: 'narrowSymbol',
-    maximumFractionDigits: 0,
-  }).format(price);
+    new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+      currencyDisplay: 'narrowSymbol',
+      maximumFractionDigits: 2,
+    }).format(price);
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={refetch} />;
+  }
+
+  if (cartItems.length === 0) {
+    return (
+      <section className={styles.empty}>
+        <div className={styles.empty__icon}>
+          <img src={cartIcon} alt="" />
+        </div>
+        <h2 className={styles.empty__title}>{t('cart.empty_title')}</h2>
+        <p className={styles.empty__text}>{t('cart.empty_text')}</p>
+        <Link to="/catalog" className={styles.empty__button}>
+          {t('cart.empty_button')}
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.cart}>
-        <article className={styles['cart__wrapper']}>
-          <h2 className={styles['cart__title']}>
-            {t('cart.title')} ({cartItems.length})
-          </h2>
+      <article className={styles['cart__wrapper']}>
+        <h2 className={styles['cart__title']}>
+          {t('cart.title')} ({cartItems.length})
+        </h2>
 
-          {cartItems.length === 0 ? (
-            <div className={styles['cart__empty']}>
-              <p>{t('cart.empty')}</p>
-            </div>
-          ) : (
-            <div className={styles['cart__content']}>
-              <div className={styles['cart__list']}>
-                {fullCartItems.map((item) => (
-                  <CartItem
-                    key={item.id}
-                    item={item}
-                    onIncrement={() => {
-                      dispatch(incrementQuantity({ id: item.id, size: item.size })); 
-                    }}
-                    onDecrement={() => {
-                      dispatch(decrementQuantity({ id: item.id, size: item.size })); 
-                    }}
-                    onRemove={() => {
-                      dispatch(removeFromCart({ id: item.id, size: item.size }));
-                    }}
-                    onSizeChange={(newSize) => {
-                      dispatch(changeSize({
-                        id: item.id,     
-                        oldSize: item.size,
-                        newSize,
-                      }));
-                    }}
-                  />
-                ))}
-              </div>
-
-            </div>
-        )}
-          <div className={styles['cart__bottom']}>
-            <div className={styles['cart__summary']}>
-              <div className={styles['cart__box']}>
-                <div className={styles['cart__total-row']}>
-                  <span>{t('cart.products')} ({totalCount})</span>
-                <span className={styles['cart__price']}>{formatPrice(totalPrice)}</span>
-                </div>
-                <div className={styles['cart__total-row']}>
-                  <span>{t('delivery')}</span>
-                  <span>{t('cart.delivery_details')}</span>
-                </div>
-                <div className={styles['cart__divider']}>
-                  <div className={styles['cart__total-row']}>
-                    <span>{t('cart.total')}</span>
-                    <span className={styles['cart__price']}>{formatPrice(totalPrice)}</span>
-                  </div>
-                </div>
-              </div>
+        <div className={styles['cart__content']}>
+          <div className={styles['cart__list']}>
+            {cartItems.map((item) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                onIncrement={() => {
+                  updateQuantity({ id: item.id, quantity: item.quantity + 1 });
+                }}
+                onDecrement={() => {
+                  updateQuantity({ id: item.id, quantity: item.quantity - 1 });
+                }}
+                onRemove={() => void handleRemove(item)}
+                onSizeChange={(newSize) => {
+                  changeSize({
+                    id: item.id,
+                    product: item.product,
+                    quantity: item.quantity,
+                    size: newSize,
+                  });
+                }}
+              />
+            ))}
           </div>
-          
+        </div>
+
+        <div className={styles['cart__bottom']}>
+          <div className={styles['cart__summary']}>
+            <div className={styles['cart__box']}>
+              <div className={styles['cart__total-row']}>
+                <span>{t('cart.products')} ({totalCount})</span>
+                <span className={styles['cart__price']}>{formatPrice(totalPrice)}</span>
+              </div>
+              <div className={styles['cart__total-row']}>
+                <span>{t('delivery')}</span>
+                <span>{t('cart.delivery_details')}</span>
+              </div>
+              <div className={styles['cart__divider']}>
+                <div className={styles['cart__total-row']}>
+                  <span>{t('cart.total')}</span>
+                  <span className={styles['cart__price']}>{formatPrice(totalPrice)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className={styles['cart__buttons']}>
-            <button className={styles['cart__checkout-btn']}>
+            <button
+              type="button"
+              className={styles['cart__checkout-btn']}
+              onClick={() => navigate('/checkout')}
+            >
               {t('checkout_btn')}
             </button>
-            
+
             <Link to={'/catalog'} className={styles['cart__continue-btn']}>{t('continue_btn')}</Link>
           </div>
-          </div>
-        </article>
-
+        </div>
+      </article>
     </section>
   );
 };

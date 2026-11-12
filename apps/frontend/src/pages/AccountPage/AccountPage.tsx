@@ -47,17 +47,13 @@ export const AccountPage = () => {
 
         {isLoading && <Loader />}
         {isError && <ErrorState />}
-        {profile && <ProfileForm key={profile.id} profile={profile} />}
+        {profile && <ProfileForm key={profile.id} profile={profile} onLogout={handleLogout} />}
       </div>
 
       <div className={styles.account__section}>
         <h2 className={styles.account__sectionTitle}>{t('orders.title')}</h2>
         <OrdersList />
       </div>
-
-      <button type="button" className={styles.account__logout} onClick={handleLogout}>
-        {t('profile.logout')}
-      </button>
     </section>
   );
 };

@@ -16,7 +16,8 @@ FAVORITE_ID_PARAM = OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PA
 @extend_schema_view(
     list=extend_schema(
         summary="My favorites",
-        description="Paginated, only the logged-in user's favorites.",
+        description="Paginated, only the logged-in user's favorites. Archived products are hidden "
+                    "(the record is kept and shows up again if the product is unarchived).",
         responses={200: FavoriteSerializer(many=True), 401: UNAUTHORIZED},
     ),
     retrieve=extend_schema(
@@ -27,7 +28,7 @@ FAVORITE_ID_PARAM = OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PA
     create=extend_schema(
         summary="Add to favorites",
         description="Adding a product that is already in favorites is not an error: "
-                    "201 with the existing record, no duplicate is created.",
+                    "201 with the existing record, no duplicate is created. An archived product gives 400.",
         responses={201: FavoriteSerializer, 400: VALIDATION_ERROR, 401: UNAUTHORIZED},
     ),
     destroy=extend_schema(
@@ -52,7 +53,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     """
     Manage the authenticated user's favorite products.
 
-    GET (list) returns only the current user's favorites.
+    GET (list) returns only the current user's favorites, without archived products.
     POST adds a product to favorites (product id in the body).
     DELETE removes a favorite.
     PUT/PATCH are disabled — a favorite is either present or not,
@@ -65,7 +66,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
 
     def get_queryset(self):
-        return Favorite.objects.filter(user=self.request.user)
+        return Favorite.objects.filter(user=self.request.user, product__is_archived=False)
 
 
     def perform_create(self, serializer):

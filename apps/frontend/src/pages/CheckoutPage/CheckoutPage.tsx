@@ -1,6 +1,477 @@
-export const CheckoutPage = () => {
-  return (
-    <div>
-    </div>
-  );
+import { useEffect, useRef, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useAppSelector } from '../../shared/hooks/reduxHooks';
+import { useCart } from '../../shared/hooks/useCart';
+import { useGetMeQuery } from '../../shared/api/userApi';
+import { useCheckoutFopMutation, useCheckoutMutation } from '../../shared/api/ordersApi';
+import { Loader } from '../../components/Loader';
+import { ErrorState } from '../../components/ErrorState';
+import { CheckoutContactForm } from '../../components/CheckoutContactForm';
+import { CheckoutDeliveryForm } from '../../components/CheckoutDeliveryForm';
+import { CheckoutSummary } from '../../components/CheckoutSummary';
+import { FopOrderModal } from '../../components/FopOrderModal';
+import { BankTransferDetails } from '../../components/BankTransferDetails';
+import { BANK_TRANSFER_DETAILS } from '../../shared/config/bankTransferDetails';
+import { isValidPhone, normalizePhone } from '../../shared/utils/phone';
+import { cartLineToAnalyticsItem, trackEvent } from '../../shared/analytics';
+import type { Currency } from '../../shared/types/orders';
+import {
+  CHECKOUT_DELIVERY_PROVIDER,
+  INTERNATIONAL_DELIVERY_PROVIDER,
+} from '../../shared/types/delivery';
+import type { Cart } from '../../shared/types/Cart';
+import type { UserProfile } from '../../shared/types/User';
+import type {
+  CheckoutContactErrors,
+  CheckoutContactValues,
+  CheckoutDeliveryErrors,
+  CheckoutDeliveryValues,
+  CheckoutRequest,
+  InternationalDeliveryValues,
+} from '../../shared/types/checkout';
+import styles from './CheckoutPage.module.scss';
+
+const EMAIL_REGEX =
+  /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
+const MAX_ADDRESS_LENGTH = 255;
+
+const getInternationalAddress = ({
+  address,
+  houseNumber,
+  apartment,
+  city,
+  region,
+  postalCode,
+  countryName,
+}: InternationalDeliveryValues) => {
+  const street = [address.trim(), houseNumber.trim()].filter(Boolean).join(' ');
+  const apartmentPart = apartment.trim() ? `apt. ${apartment.trim()}` : '';
+
+  return [street, apartmentPart, city.trim(), region.trim(), postalCode.trim(), countryName]
+    .filter(Boolean)
+    .join(', ');
+};
+
+const getInitialContact = (profile?: UserProfile): CheckoutContactValues => {
+  if (!profile) {
+    return { first_name: '', last_name: '', phone: '', email: '' };
+  }
+
+  return {
+    first_name: profile.first_name ?? '',
+    last_name: profile.last_name ?? '',
+    phone: normalizePhone(profile.phone_number ?? ''),
+    email: profile.email,
+  };
+};
+
+interface CheckoutContentProps {
+  cart: Cart;
+  profile?: UserProfile;
 }
+
+const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
+  const { t } = useTranslation();
+  const currency = useAppSelector((state) => state.settings.currency);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const [checkout, { isLoading: isSubmitting }] = useCheckoutMutation();
+  const [checkoutFop, { isLoading: isSubmittingFop }] = useCheckoutFopMutation();
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'fop'>('card');
+  const [fopOrderReference, setFopOrderReference] = useState<string | null>(null);
+  const isFopAvailable = Boolean(BANK_TRANSFER_DETAILS[currency.toUpperCase() as Currency]);
+  const activeMethod = isFopAvailable ? paymentMethod : 'card';
+
+  const [contact, setContact] = useState<CheckoutContactValues>(() =>
+    getInitialContact(profile),
+  );
+  const [delivery, setDelivery] = useState<CheckoutDeliveryValues>({
+    mode: 'ukraine',
+    city: null,
+    branch: null,
+    international: {
+      country: '',
+      countryName: '',
+      city: '',
+      address: '',
+      houseNumber: '',
+      apartment: '',
+      region: '',
+      postalCode: '',
+    },
+  });
+  const [contactErrors, setContactErrors] = useState<CheckoutContactErrors>({});
+  const [deliveryErrors, setDeliveryErrors] = useState<CheckoutDeliveryErrors>({});
+  const [submitError, setSubmitError] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsRedirecting(false);
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
+  const hasTrackedBeginCheckout = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedBeginCheckout.current) {
+      return;
+    }
+
+    hasTrackedBeginCheckout.current = true;
+
+    trackEvent('begin_checkout', {
+      cart_id: cart.id,
+      currency: currency.toUpperCase(),
+      value: Number(cart.items_total),
+      items_count: cart.items_count,
+      items: cart.items.map(cartLineToAnalyticsItem),
+    });
+  }, [cart, currency]);
+
+  const hasUnavailable = cart.items.some((item) => !item.is_available || item.is_archived);
+
+  const handleContactChange = (field: keyof CheckoutContactValues, value: string) => {
+    setContact((prev) => ({ ...prev, [field]: value }));
+    setContactErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const handleDeliveryChange = (value: CheckoutDeliveryValues) => {
+    setDelivery(value);
+    setDeliveryErrors({});
+  };
+
+  const validate = () => {
+    const nextContactErrors: CheckoutContactErrors = {};
+    const nextDeliveryErrors: CheckoutDeliveryErrors = {};
+    const required = t('checkout_form.required');
+
+    if (!contact.first_name.trim()) {
+      nextContactErrors.first_name = required;
+    }
+
+    if (!contact.last_name.trim()) {
+      nextContactErrors.last_name = required;
+    }
+
+    const phone = contact.phone.trim();
+    if (!phone) {
+      nextContactErrors.phone = required;
+    } else if (!isValidPhone(phone)) {
+      nextContactErrors.phone = t('checkout_form.invalid_phone');
+    }
+
+    const email = contact.email.trim();
+    if (!email) {
+      nextContactErrors.email = required;
+    } else if (!EMAIL_REGEX.test(email)) {
+      nextContactErrors.email = t('checkout_form.invalid_email');
+    }
+
+    if (delivery.mode === 'ukraine') {
+      if (!delivery.city) {
+        nextDeliveryErrors.city = t('checkout_form.select_city');
+      } else if (!delivery.branch) {
+        nextDeliveryErrors.branch = t('checkout_form.select_branch');
+      }
+    } else {
+      const { country, city, address, houseNumber, postalCode } = delivery.international;
+
+      if (!country) {
+        nextDeliveryErrors.country = t('checkout_form.select_country');
+      }
+
+      if (!city.trim()) {
+        nextDeliveryErrors.internationalCity = required;
+      }
+
+      if (!address.trim()) {
+        nextDeliveryErrors.address = required;
+      } else if (getInternationalAddress(delivery.international).length > MAX_ADDRESS_LENGTH) {
+        nextDeliveryErrors.address = t('checkout_delivery.address_too_long');
+      }
+
+      if (!houseNumber.trim()) {
+        nextDeliveryErrors.houseNumber = required;
+      }
+
+      if (!postalCode.trim()) {
+        nextDeliveryErrors.postalCode = required;
+      }
+    }
+
+    setContactErrors(nextContactErrors);
+    setDeliveryErrors(nextDeliveryErrors);
+
+    return (
+      Object.keys(nextContactErrors).length === 0 &&
+      Object.keys(nextDeliveryErrors).length === 0
+    );
+  };
+
+  const handleSubmit = async () => {
+    setSubmitError('');
+
+    if (hasUnavailable || !validate()) {
+      return;
+    }
+
+    let deliveryPayload: Pick<
+      CheckoutRequest,
+      'delivery_provider' | 'delivery_address' | 'delivery_data'
+    >;
+    let shippingAnalytics: Record<string, unknown>;
+
+    if (delivery.mode === 'international') {
+      const { country, city, address, houseNumber, apartment, region, postalCode } =
+        delivery.international;
+
+      deliveryPayload = {
+        delivery_provider: INTERNATIONAL_DELIVERY_PROVIDER,
+        delivery_address: getInternationalAddress(delivery.international),
+        delivery_data: {
+          country,
+          city: city.trim(),
+          address: address.trim(),
+          house_number: houseNumber.trim(),
+          apartment: apartment.trim(),
+          region: region.trim(),
+          postal_code: postalCode.trim(),
+        },
+      };
+      shippingAnalytics = {
+        shipping_tier: 'international',
+        provider: INTERNATIONAL_DELIVERY_PROVIDER,
+        country,
+        city: city.trim(),
+      };
+    } else {
+      const { city, branch } = delivery;
+
+      if (!city || !branch) {
+        return;
+      }
+
+      deliveryPayload = {
+        delivery_provider: CHECKOUT_DELIVERY_PROVIDER,
+        delivery_address: [city.name, branch.name].filter(Boolean).join(', '),
+        delivery_data: {
+          delivery_type: 'branch',
+          city_id: city.id,
+          city_name: city.name,
+          branch_id: branch.id,
+          branch_name: branch.name,
+          postal_code: branch.postal_code,
+        },
+      };
+      shippingAnalytics = {
+        shipping_tier: 'branch',
+        provider: CHECKOUT_DELIVERY_PROVIDER,
+        country: 'UA',
+        city: city.name,
+      };
+    }
+
+    const analyticsBase = {
+      cart_id: cart.id,
+      currency: currency.toUpperCase(),
+      value: Number(cart.items_total),
+      items: cart.items.map(cartLineToAnalyticsItem),
+    };
+
+    trackEvent('add_shipping_info', { ...analyticsBase, ...shippingAnalytics });
+
+    trackEvent('add_payment_info', {
+      ...analyticsBase,
+      payment_type: activeMethod === 'fop' ? 'bank_transfer' : 'card',
+    });
+
+    const payload: CheckoutRequest = {
+      first_name: contact.first_name.trim(),
+      last_name: contact.last_name.trim(),
+      phone: contact.phone.trim(),
+      email: contact.email.trim(),
+      currency: currency.toUpperCase() as CheckoutRequest['currency'],
+      ...deliveryPayload,
+    };
+
+    try {
+      if (activeMethod === 'fop') {
+        const fopResponse = await checkoutFop(payload).unwrap();
+
+        setFopOrderReference(fopResponse.order_reference);
+        return;
+      }
+
+      const response = await checkout(payload).unwrap();
+
+      setIsRedirecting(true);
+      window.location.assign(response.payment_url);
+    } catch (error) {
+      const { status, data } = error as { status?: number; data?: Record<string, unknown> };
+
+      if (status === 400 && data) {
+        const fieldErrors: CheckoutContactErrors = {};
+
+        if (data.email) {
+          fieldErrors.email = t('checkout_form.invalid_email');
+        }
+
+        if (data.phone) {
+          fieldErrors.phone = t('checkout_form.invalid_phone');
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+          setContactErrors((prev) => ({ ...prev, ...fieldErrors }));
+          return;
+        }
+      }
+
+      if (status === 429) {
+        setSubmitError(t('auth.errors.too_many_requests'));
+      } else if (status === 502) {
+        setSubmitError(t('checkout_form.payment_unavailable'));
+      } else {
+        setSubmitError(t('checkout_form.submit_error'));
+      }
+    }
+  };
+
+  const deliveryAddress =
+    delivery.mode === 'international'
+      ? getInternationalAddress(delivery.international)
+      : [delivery.city?.name, delivery.branch?.name].filter(Boolean).join(', ');
+
+  const isBusy = isSubmitting || isSubmittingFop || isRedirecting;
+  const submitLabel =
+    activeMethod === 'fop' ? t('checkout_form.submit_fop') : t('checkout_form.submit');
+
+  const handleFopClose = () => {
+    window.location.assign(isAuthenticated ? '/account' : '/');
+  };
+
+  return (
+    <section className={styles.checkout}>
+      <h1 className={styles.checkout__title}>{t('checkout.title')}</h1>
+
+      <div className={styles.checkout__layout}>
+        <div className={styles.checkout__contact}>
+          <CheckoutContactForm
+            values={contact}
+            errors={contactErrors}
+            onChange={handleContactChange}
+          />
+        </div>
+
+        <div className={styles.checkout__delivery}>
+          <CheckoutDeliveryForm
+            value={delivery}
+            errors={deliveryErrors}
+            onChange={handleDeliveryChange}
+          />
+        </div>
+
+        <div className={styles.checkout__order}>
+          <CheckoutSummary
+            cart={cart}
+            currency={currency}
+            deliveryMode={delivery.mode}
+            deliveryAddress={deliveryAddress}
+          />
+
+          {isFopAvailable && (
+            <div
+              className={styles.checkout__payment}
+              role="radiogroup"
+              aria-labelledby="payment-method-title"
+            >
+              <h2 id="payment-method-title" className={styles.checkout__paymentTitle}>
+                {t('checkout_form.payment_method')}
+              </h2>
+
+              <label className={styles.checkout__paymentOption}>
+                <input
+                  type="radio"
+                  name="payment-method"
+                  checked={activeMethod === 'card'}
+                  onChange={() => setPaymentMethod('card')}
+                />
+                <span>{t('checkout_form.payment_card')}</span>
+              </label>
+
+              <label className={styles.checkout__paymentOption}>
+                <input
+                  type="radio"
+                  name="payment-method"
+                  checked={activeMethod === 'fop'}
+                  onChange={() => setPaymentMethod('fop')}
+                />
+                <span>{t('checkout_form.payment_fop')}</span>
+              </label>
+            </div>
+          )}
+
+          {isFopAvailable && activeMethod === 'fop' && (
+            <BankTransferDetails
+              currency={currency.toUpperCase() as Currency}
+              defaultOpen
+            />
+          )}
+
+          <div className={styles.checkout__actions}>
+            {submitError && <p className={styles.checkout__error}>{submitError}</p>}
+
+            <button
+              type="button"
+              className={styles.checkout__submit}
+              disabled={isBusy || hasUnavailable}
+              onClick={() => void handleSubmit()}
+            >
+              {isBusy ? t('checkout_form.submitting') : submitLabel}
+            </button>
+
+            <Link to="/catalog" className={styles.checkout__continue}>
+              {t('checkout_form.continue_shopping')}
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {fopOrderReference && (
+        <FopOrderModal
+          orderReference={fopOrderReference}
+          currency={currency.toUpperCase() as Currency}
+          onClose={handleFopClose}
+        />
+      )}
+    </section>
+  );
+};
+
+export const CheckoutPage = () => {
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { data: cart, isLoading, isError, refetch } = useCart();
+  const { data: profile, isLoading: isProfileLoading } = useGetMeQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  if (isLoading || isProfileLoading) {
+    return <Loader />;
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={refetch} />;
+  }
+
+  if (!cart || cart.items.length === 0) {
+    return <Navigate to="/cart" replace />;
+  }
+
+  return <CheckoutContent key={profile?.id ?? 'guest'} cart={cart} profile={profile} />;
+};

@@ -1,7 +1,9 @@
 # Alert runbooks
 
 One section per Grafana alert (folder `brand-clothing`). Each alert's **Runbook URL** points here.
-Rule definitions: `infra/grafana/alerts/brand-clothing.yml`.
+Rule definitions: `infra/grafana/alerts.tf`. Alerts arrive in **Slack `#alerts`** (title, status, runbook link) and by email,
+both from the contact point `brand-clothing-alerts`; a "Resolved" message follows when it is fixed.
+A failed query (Grafana or the data source briefly unreachable) keeps the last state instead of alerting.
 
 **Shell on prod** (needed by most sections):
 

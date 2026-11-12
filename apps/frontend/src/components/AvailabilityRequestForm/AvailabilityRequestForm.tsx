@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSubmitAvailabilityRequestMutation } from '../../shared/api/productsApi';
+import { isValidPhone } from '../../shared/utils/phone';
+import { PhoneField } from '../PhoneField';
 import styles from './AvailabilityRequestForm.module.scss';
 
 interface AvailabilityRequestFormProps {
@@ -30,7 +32,7 @@ export const AvailabilityRequestForm = ({ productId }: AvailabilityRequestFormPr
 
   const handleSubmitRequest = async () => {
     const nameValid = requestName.trim().length > 0;
-    const phoneValid = /^\+?\d{9,13}$/.test(requestPhone.replace(/[\s()-]/g, ''));
+    const phoneValid = isValidPhone(requestPhone);
 
     setNameError(!nameValid);
     setPhoneError(!phoneValid);
@@ -67,23 +69,26 @@ export const AvailabilityRequestForm = ({ productId }: AvailabilityRequestFormPr
       ) : (
           <>
             <div className={styles.form__fields}>
-              <input
-                type="text"
-                placeholder={t('product.your_name')}
-                value={requestName}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className={nameError ? styles.form__inputError : styles.form__input}
-              />
-              {nameError && <p className={styles.form__errorText}>{t('product.name_required')}</p>}
+              <div className={styles.form__field}>
+                <input
+                  type="text"
+                  placeholder={t('product.your_name')}
+                  value={requestName}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className={`${styles.form__input} ${nameError ? styles.form__inputError : ''}`}
+                />
+                {nameError && <p className={styles.form__errorText}>{t('product.name_required')}</p>}
+              </div>
 
-              <input
-                type="tel"
-                placeholder={t('product.phone_number')}
-                value={requestPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                className={phoneError ? styles.form__inputError : styles.form__input}
-              />
-              {phoneError && <p className={styles.form__errorText}>{t('product.invalid_phone')}</p>}
+              <div className={styles.form__field}>
+                <PhoneField
+                  name="availability-phone"
+                  label={t('product.phone_number')}
+                  value={requestPhone}
+                  onChange={handlePhoneChange}
+                  error={phoneError ? t('product.invalid_phone') : undefined}
+                />
+              </div>
             </div>
 
             <div className={styles.form__submitBlock}>

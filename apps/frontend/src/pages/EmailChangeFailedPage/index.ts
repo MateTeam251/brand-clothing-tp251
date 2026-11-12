@@ -1,0 +1,1 @@
+export { EmailChangeFailedPage } from './EmailChangeFailedPage';

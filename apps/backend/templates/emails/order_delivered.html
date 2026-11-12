@@ -1,0 +1,16 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Order delivered{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 16px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:28px;line-height:36px;font-weight:400;color:#000000;text-align:center;">Order delivered</h1>
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:14px;line-height:22px;color:#6B6B6B;text-align:center;">Order No. {{ order.order_reference }}</p>
+
+{% include "emails/_progress.html" with step=4 %}
+
+<p style="margin:0 0 24px;font-family:Cambria,Georgia,'Times New Roman',serif;font-size:16px;line-height:24px;color:#6B6B6B;text-align:center;">We hope you love your new pieces. If the size isn’t right, you can exchange it within 14 days of receipt.</p>
+
+{% with returns_url=frontend_url|add:"/returns" %}
+{% include "emails/_button.html" with url=returns_url label="Returns &amp; exchanges" %}
+{% endwith %}
+{% endblock %}

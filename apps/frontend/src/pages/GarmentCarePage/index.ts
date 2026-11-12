@@ -1,0 +1,1 @@
+export { GarmentCarePage } from './GarmentCarePage';

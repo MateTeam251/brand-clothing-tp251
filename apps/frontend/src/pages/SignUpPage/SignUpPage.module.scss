@@ -1,0 +1,33 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.resend {
+  @include flex(column, 8px);
+  align-items: center;
+
+  &__button {
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:disabled {
+      color: $color-inactive;
+      text-decoration: none;
+      cursor: default;
+    }
+  }
+
+  &__status {
+    margin: 0;
+    color: $color-inactive;
+    font-size: 14px;
+
+    &--error {
+      color: $error;
+    }
+  }
+}

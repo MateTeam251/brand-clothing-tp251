@@ -54,7 +54,7 @@ class CartViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     ),
     partial_update=extend_schema(
         summary="Change a cart line",
-        description="Send only what changes: `quantity`, `size` or `product`. If the product is out of stock, "
+        description="Send only what changes: `quantity`, `size` or `product`. If the product is out of stock or archived, "
                     "the line can only be reduced (or deleted); raising `quantity`, changing `size` "
                     "or `product` gives 400. " + WHOSE_CART,
         parameters=[ITEM_ID_PARAM],

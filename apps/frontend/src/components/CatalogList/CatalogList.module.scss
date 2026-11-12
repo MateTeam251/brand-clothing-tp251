@@ -16,17 +16,8 @@
       }
     }
   
-    &__loadMore {
-      display: block;
-      margin: 32px auto 0;
-      padding: 12px 32px;
-      background: none;
-      border: 1px solid $color-inactive;
-      cursor: pointer;
-  
-      &:disabled {
-        opacity: 0.5;
-        cursor: default;
-      }
+    &__sentinel {
+      grid-column: 1 / -1;
+      height: 1px;
     }
 }

@@ -5,8 +5,9 @@ import pytest
 from django.test import override_settings
 from rest_framework.test import APIClient
 
-from orders.models import Order, OrderStatus
-from payments.models import Payment, PaymentProvider, PaymentStatus
+from core.enums import OrderStatus, PaymentProvider, PaymentStatus
+from orders.models import Order
+from payments.models import Payment
 from payments.providers.wayforpay.signatures import (
     build_callback_response_signature,
     build_callback_signature,
@@ -44,7 +45,8 @@ def payment():
         discount_amount=Decimal("0.00"),
         total_amount=Decimal("100.00"),
         delivery_provider="NOVA_POSHTA",
-        user_name="Test User",
+        first_name="User",
+        last_name="Test",
         user_phone="+380991234567",
     )
 
@@ -132,7 +134,6 @@ def test_wayforpay_callback_processes_payment(
     payment.order.refresh_from_db()
 
     assert payment.status == PaymentStatus.SUCCESSFUL
-    assert payment.transaction_id == TEST_ORDER_REF
     assert payment.paid_at is not None
     assert payment.order.status == OrderStatus.PAID
 
@@ -292,7 +293,7 @@ def test_wayforpay_callback_is_idempotent(
 
     payment.refresh_from_db()
     first_paid_at = payment.paid_at
-    first_transaction_id = payment.transaction_id
+    first_transaction_id = payment.provider_order_reference
 
     second_response = api_client.post(
         "/api/payments/wayforpay/callback/",
@@ -307,4 +308,4 @@ def test_wayforpay_callback_is_idempotent(
 
     assert payment.status == PaymentStatus.SUCCESSFUL
     assert payment.paid_at == first_paid_at
-    assert payment.transaction_id == first_transaction_id
+    assert payment.provider_order_reference == first_transaction_id

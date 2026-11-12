@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
-import type { ProductListItem } from '../../shared/types/products';
 import type { Size } from '../../shared/types/common';
 import styles from './CartItem.module.scss';
 import { useTranslation } from 'react-i18next';
@@ -8,14 +7,14 @@ import { useState } from 'react';
 
 import arrowBottom from '../../shared/assets/icons/arrow-bottom.svg';
 import classNames from 'classnames';
-import type { CartElement } from '../../shared/types/Cart';
+import type { CartLine } from '../../shared/types/Cart';
 import minusIcon from '../../shared/assets/icons/minus.svg';
 import plusIcon from '../../shared/assets/icons/plus.svg';
 
 const ALL_SIZES: Size[] = ['2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
 type CartItemProps = {
-  item: CartElement & Partial<ProductListItem>;
+  item: CartLine;
   onIncrement: () => void;
   onDecrement: () => void;
   onRemove: () => void;
@@ -26,20 +25,28 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
   const { currency } = useAppSelector((state) => state.settings);
   const { t } = useTranslation();
   const [isDropdownOpened, setIsDropdownOpened] = useState(false);
-
-  const rawPrice = Number(item.discounted_price ?? item.price ?? 0);
+  const isUnavailable = !item.is_available || item.is_archived;
+  const hasDiscount = Number(item.total_full_price) > Number(item.total_price);
 
   const formatPrice = (price: number) =>
   new Intl.NumberFormat(currency.toUpperCase() === 'UAH' ? 'uk-UA' : 'en-US', {
     style: 'currency',
     currency: currency.toUpperCase(),
     currencyDisplay: 'narrowSymbol',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(price);
 
   return (
-    <article className={styles.card}>
-      <Link className={styles.card__link} to={`/product/${item.product}`}>
+    <article className={classNames(styles.card, { [styles['card--unavailable']]: isUnavailable })}>
+      <Link
+        className={styles.card__link}
+        to={`/product/${item.product}`}
+        onClick={(e) => {
+          if (item.is_archived) {
+            e.preventDefault();
+          }
+        }}
+      >
         <div className={styles.card__imageWrapper}>
           {item.main_image ? (
             <img className={styles.card__image} src={item.main_image.image} alt={item.name || 'Product'} />
@@ -72,6 +79,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
               type="button"
               className={styles['card__dropdown']} 
               onClick={() => setIsDropdownOpened((prev) => !prev)}
+              disabled={isUnavailable}
             >
               <img 
                 src={arrowBottom} 
@@ -102,6 +110,8 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
           )}
         </div>
 
+        {isUnavailable && <p className={styles.card__status}>{t('cart.unavailable')}</p>}
+
         <p className={styles.card__delivery}>{t('cart_item_desc')}</p>
 
         <div className={styles.card__footer}>
@@ -114,7 +124,7 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
               />
             </button>
             <span className={styles.card__counterValue}>{item.quantity}</span>
-            <button className={styles.card__counterBtn} onClick={onIncrement}>
+            <button className={styles.card__counterBtn} onClick={onIncrement} disabled={isUnavailable}>
               <img
                 className={styles.card__btnIcon}
                 src={plusIcon}
@@ -123,9 +133,16 @@ export const CartItem = ({ item, onIncrement, onDecrement, onRemove, onSizeChang
             </button>
           </div>
 
-          <span className={styles.card__price}>
-            {formatPrice(rawPrice * item.quantity)}
-          </span>
+          <div className={styles.card__prices}>
+            {hasDiscount && (
+              <span className={styles.card__oldPrice}>
+                {formatPrice(Number(item.total_full_price))}
+              </span>
+            )}
+            <span className={styles.card__price}>
+              {formatPrice(Number(item.total_price))}
+            </span>
+          </div>
         </div>
       </div>
     </article>

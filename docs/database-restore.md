@@ -3,7 +3,7 @@
 Prod Postgres is backed up by WAL-G to `s3://brand-clothing-db-backups-wal-875476618056/wal-g`:
 
 - **base backup** every night at 03:00 UTC (`db/scripts/crontab`), result in Grafana: `{env="prod", container="db"} |= "WAL-G backup"`
-- **WAL** (every change) continuously via `archive_command`, so a restore gets everything up to the last few seconds/minutes, not just last night
+- **WAL** (every change) via `archive_command`, at least every 5 minutes (`archive_timeout = 300` in `db/postgresql.conf`), so a restore loses at most ~5 minutes, not everything since last night. Grafana → Database → *Last WAL archived*: under ~5 min while the shop is used; it can grow when nothing is written (e.g. at night), which is fine
 
 Two procedures below: the **drill** (safe, run monthly on the live prod instance) and the **real restore** (when prod data is gone or broken).
 

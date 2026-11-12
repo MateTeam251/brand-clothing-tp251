@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useGetOrdersQuery } from '../../shared/api/ordersApi';
+import { useGetOrdersQuery, useRetryPaymentMutation } from '../../shared/api/ordersApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import type { Currency, OrderStatus } from '../../shared/types/orders';
 import { Loader } from '../Loader/Loader';
@@ -9,8 +10,8 @@ import styles from './OrdersList.module.scss';
 
 const STATUS_VIEW: Record<OrderStatus, string> = {
   PENDING: 'pending',
-  PAID: 'processing',
-  AWAITING_SHIPMENT: 'processing',
+  PAID: 'paid',
+  AWAITING_SHIPMENT: 'awaiting_shipment',
   SHIPPED: 'shipped',
   DELIVERED: 'delivered',
   CANCELED: 'canceled',
@@ -24,14 +25,43 @@ const formatMoney = (value: string, currency: Currency) => {
 export const OrdersList = () => {
   const { t } = useTranslation();
   const language = useAppSelector((state) => state.settings.language);
-  const { data: orders, isLoading, isError } = useGetOrdersQuery();
+  const { data: orders, isLoading, isError, refetch } = useGetOrdersQuery();
+  const [retryPayment] = useRetryPaymentMutation();
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+  const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setPayingOrderId(null);
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
+  const handlePay = async (orderId: string) => {
+    setFailedOrderId(null);
+    setPayingOrderId(orderId);
+
+    try {
+      const response = await retryPayment(orderId).unwrap();
+
+      window.location.assign(response.payment_url);
+    } catch {
+      setPayingOrderId(null);
+      setFailedOrderId(orderId);
+    }
+  };
 
   if (isLoading) {
     return <Loader />;
   }
 
   if (isError) {
-    return <ErrorState />;
+    return <ErrorState onRetry={refetch} />;
   }
 
   if (!orders || orders.length === 0) {
@@ -52,10 +82,12 @@ export const OrdersList = () => {
         const hasDiscount = Number(order.discount_amount) > 0;
 
         return (
-          <li key={order.id} className={styles.orders__item}>
+          <li key={order.order_reference} className={styles.orders__item}>
             <div className={styles.orders__header}>
               <div>
-                <h3 className={styles.orders__number}>{t('orders.number', { id: order.id })}</h3>
+                <h3 className={styles.orders__number}>
+                  {t('orders.number', { id: order.order_reference })}
+                </h3>
                 <p className={styles.orders__meta}>
                   {dateFormatter.format(new Date(order.created_at))} · {t('orders.items_count', { count: itemsCount })}
                 </p>
@@ -99,7 +131,26 @@ export const OrdersList = () => {
                 <dt>{t('orders.total')}</dt>
                 <dd>{formatMoney(order.total_amount, order.currency)}</dd>
               </div>
-            </dl>
+                       </dl>
+
+            {order.status === 'PENDING' && (
+              <div className={styles.orders__payBlock}>
+                <button
+                  type="button"
+                  className={styles.orders__pay}
+                  disabled={payingOrderId !== null}
+                  onClick={() => void handlePay(order.order_reference)}
+                >
+                  {payingOrderId === order.order_reference
+                    ? t('orders_pay.paying')
+                    : t('orders_pay.pay')}
+                </button>
+
+                {failedOrderId === order.order_reference && (
+                  <p className={styles.orders__payError}>{t('orders_pay.error')}</p>
+                )}
+              </div>
+            )}
           </li>
         );
       })}

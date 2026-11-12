@@ -1,6 +1,6 @@
 from django.urls import path
 
-from payments.views import WayForPayCallbackView, PaymentSuccessView
+from payments.views import WayForPayCallbackView, PaymentReturnView
 
 urlpatterns = [
     path(
@@ -9,9 +9,9 @@ urlpatterns = [
         name="wayforpay-callback"
     ),
     path(
-        "success/",
-        PaymentSuccessView.as_view(),
-        name="payment-success"
+        "wayforpay/return/",
+        PaymentReturnView.as_view(),
+        name="wayforpay-return"
     )
 ]
 

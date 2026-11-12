@@ -1,16 +1,22 @@
 from rest_framework import serializers
 
+from core.delivery import get_delivery_data_error
+from core.mixins import LanguageMixin
+from core.validators import normalize_phone
 from orders.models import OrderItem, Order
 from core.enums import Currency, DeliveryProvider
 
 
-class OrderItemSerializer(serializers.ModelSerializer):
+class OrderItemSerializer(LanguageMixin, serializers.ModelSerializer):
     """
     Read-only serializer for products included in a customer order.
 
     The "Product" and "Financial Data" fields are snapshots of the product state
     stored at the time of order creation and cannot be modified via the client API.
     """
+    fabric_composition = serializers.SerializerMethodField()
+
+    product_main_image = serializers.ImageField(read_only=True)
 
     unit_price_after_discount = serializers.DecimalField(
         max_digits=10,
@@ -33,13 +39,12 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = (
-            "id",
             "product",
             "product_name",
+            "product_main_image",
             "size",
             "quantity",
-            "fabric_composition_ua",
-            "fabric_composition_eng",
+            "fabric_composition",
             "price_at_purchase",
             "discount_percent_at_purchase",
             "unit_price_after_discount",
@@ -47,6 +52,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "line_total",
         )
         read_only_fields = fields
+
+    def get_fabric_composition(self, obj) -> str:
+        """Returns the fabric composition in the language resolved by LanguageMixin."""
+        return obj.fabric_composition_eng if self._lang() == "eng" else obj.fabric_composition_ua
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -65,8 +74,9 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            "id",
-            "user_name",
+            "order_reference",
+            "first_name",
+            "last_name",
             "user_phone",
             "email",
             "delivery_address",
@@ -94,7 +104,7 @@ class CheckoutSerializer(serializers.ModelSerializer):
 
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
-    phone = serializers.CharField(max_length=50)
+    phone = serializers.CharField(max_length=20)
     email = serializers.EmailField()
 
     currency = serializers.ChoiceField(
@@ -129,8 +139,32 @@ class CheckoutSerializer(serializers.ModelSerializer):
             "delivery_data",
         )
 
+    def validate_email(self, value):
+        """Normalizes the email: trims spaces and lowercases it."""
+        return value.strip().lower()
+
+    def validate_phone(self, value):
+        """Checks the phone and stores it in E.164 format (+380501234567)."""
+        return normalize_phone(value)
+
+    def validate(self, attrs):
+        """
+        Cross-field check: for INTERNATIONAL delivery, delivery_data must contain
+        a valid, non-blocked country code.
+        """
+        attrs = super().validate(attrs)
+
+        error = get_delivery_data_error(
+            attrs["delivery_provider"],
+            attrs.get("delivery_data"),
+        )
+        if error:
+            raise serializers.ValidationError({"delivery_data": error})
+
+        return attrs
+
 
 class CheckoutResponseSerializer(serializers.Serializer):
-    order_id = serializers.IntegerField(required=False)
-    payment_id = serializers.IntegerField()
+    order_reference = serializers.CharField()
+    payment_reference = serializers.CharField()
     payment_url = serializers.URLField()

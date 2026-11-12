@@ -13,7 +13,12 @@ def build_purchase_payload(
         product_names: list[str],
         product_counts: list[str],
         product_prices: list[str],
-        language: str = "UA"
+        order_timeout: int = 900,
+        language: str = "UA",
+        client_first_name: str = "",
+        client_last_name: str = "",
+        client_email: str = "",
+        client_phone: str = "",
 ) -> dict:
     """
     Creating a payload for a Purchase request in WayForPay.
@@ -41,7 +46,7 @@ def build_purchase_payload(
         secret_key=config.secret_key,
     )
 
-    return {
+    payload = {
         "merchantAccount": config.merchant_account,
         "merchantDomainName": config.merchant_domain,
         "merchantTransactionType": "AUTO",
@@ -55,10 +60,21 @@ def build_purchase_payload(
         "orderDate": order_date,
         "amount": amount,
         "currency": currency,
+        "orderTimeout": order_timeout,
         "productName[]": product_names,
         "productCount[]": product_counts,
         "productPrice[]": product_prices,
     }
+
+    optional_fields = {
+        "clientFirstName": client_first_name,
+        "clientLastName": client_last_name,
+        "clientEmail": client_email,
+        "clientPhone": client_phone,
+    }
+    payload.update({key: value for key, value in optional_fields.items() if value})
+
+    return payload
 
 
 def send_purchase_request(
@@ -70,7 +86,12 @@ def send_purchase_request(
         product_names: list[str],
         product_counts: list[str],
         product_prices: list[str],
-        language: str = "UA"
+        order_timeout: int,
+        language: str = "UA",
+        client_first_name: str = "",
+        client_last_name: str = "",
+        client_email: str = "",
+        client_phone: str = "",
 ) -> str:
     """
     Creates and sends a signed purchase Request to WayForPay and returns its response.
@@ -84,7 +105,12 @@ def send_purchase_request(
         product_names=product_names,
         product_counts=product_counts,
         product_prices=product_prices,
-        language=language
+        order_timeout=order_timeout,
+        language=language,
+        client_first_name=client_first_name,
+        client_last_name=client_last_name,
+        client_email=client_email,
+        client_phone=client_phone,
     )
 
     config = get_wayforpay_config()

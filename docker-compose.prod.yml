@@ -67,6 +67,7 @@ services:
       - "443:443"
     environment:
       ORIGIN_HOST: ${ORIGIN_HOST:-}
+      SITE_HOST: ${SITE_HOST:-}
     volumes:
       - ./nginx/default.conf:/etc/nginx/templates/default.conf.template:ro
       - /data/letsencrypt:/etc/letsencrypt:ro
@@ -79,7 +80,7 @@ services:
   # DNS-01 via Route 53. certonly --keep-until-expiring also renews (< 30 days
   # left), so one loop does both. The hook lets nginx workers read the key.
   certbot:
-    image: certbot/dns-route53:v5.8.0
+    image: certbot/dns-route53:v5.9.0
     container_name: brand_clothing_certbot
     restart: always
     environment:
@@ -100,16 +101,13 @@ services:
     mem_limit: 128m
     logging: *logging
 
-  # Background jobs (carts.tasks: hourly abandoned-cart marking, weekly
-  # report to the reports bucket). Only started where COMPOSE_PROFILES
-  # contains "celery" (SSM app-config): prod yes, staging no (1 GB RAM).
-  # Run the same jobs by hand on staging:
-  #   docker compose run --rm web python manage.py cart_report --mark-abandoned
+  # Celery broker (db 0) and Django cache (db 1: DRF throttle counters).
+  # Runs everywhere, a few MB. Celery itself only where COMPOSE_PROFILES
+  # contains "celery" (SSM app-config).
   redis:
     image: public.ecr.aws/docker/library/redis:7.4-alpine
     container_name: brand_clothing_redis
     restart: always
-    profiles: ["celery"]
     # Broker only: no persistence (a lost queued task is re-sent by beat on
     # its next run), fixed memory cap, refuse writes instead of evicting tasks.
     command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "48mb", "--maxmemory-policy", "noeviction"]
@@ -122,14 +120,18 @@ services:
     logging: *logging
 
   # One worker with beat embedded (-B): safe because there is always exactly
-  # one instance. Same image as web. Schedule file in /tmp (/app is read-only
-  # for the app user).
+  # one instance. Same image as web. Beat keeps the schedule in memory
+  # (celery.beat:Scheduler): the default file store is SQLite on Python 3.13+
+  # and crashed with "locking protocol". Fixed-time crontabs need no file.
   celery:
     image: ${ECR_REGISTRY}/brand-clothing-backend:${IMAGE_TAG}
     container_name: brand_clothing_celery
     restart: always
     profiles: ["celery"]
-    command: ["celery", "-A", "config", "worker", "-B", "--concurrency=1", "--loglevel=INFO", "-s", "/tmp/celerybeat-schedule"]
+    # --pool=solo: tasks run in the main process, no extra worker process
+    # (~70 MB less). Tasks run one at a time anyway. Solo can't enforce
+    # time_limit, so long tasks stop themselves (delivery.tasks MAX_SYNC_SECONDS).
+    command: ["celery", "-A", "config", "worker", "-B", "--pool=solo", "--loglevel=INFO", "--scheduler", "celery.beat:Scheduler"]
     env_file:
       - .env
     environment:
@@ -146,7 +148,7 @@ services:
   # Outbound HTTPS only, no ports. Values come from SSM via .env
   # (app-config.tf; the token from secrets/GRAFANA_CLOUD_TOKEN).
   alloy:
-    image: grafana/alloy:v1.20.1
+    image: grafana/alloy:v1.21.3
     container_name: brand_clothing_alloy
     restart: always
     command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]

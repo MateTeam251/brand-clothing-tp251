@@ -1,0 +1,91 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.delivery {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 32px;
+  padding-bottom: 64px;
+  font-family: $font-body;
+
+  @include on-desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 440px) minmax(0, 668px);
+    justify-content: space-between;
+    align-items: start;
+    gap: 40px;
+    padding-top: 56px;
+    padding-bottom: 96px;
+  }
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  line-height: 1.3;
+
+  @include on-desktop {
+    font-size: 32px;
+  }
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+
+  @include on-desktop {
+    font-size: 18px;
+  }
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  @include on-desktop {
+    gap: 24px;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 8px;
+  background: $secondary;
+
+  @include on-desktop {
+    padding: 32px;
+  }
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+
+  @include on-desktop {
+    font-size: 20px;
+  }
+}
+
+.cardText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $color-inactive;
+
+  @include on-desktop {
+    font-size: 18px;
+  }
+}

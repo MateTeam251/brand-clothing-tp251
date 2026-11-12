@@ -1,6 +1,6 @@
 # Production image: built by CI (docker-build.yml), pushed to ECR, run by docker-compose.prod.yml.
 # Keep the base/dependency part in sync with Dockerfile.dev.
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

@@ -306,7 +306,7 @@
             "type": "loki",
             "uid": "grafanacloud-logs"
           },
-          "expr": "sum(count_over_time({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" | status = 429 [$__range]))",
+          "expr": "sum(count_over_time({env=\"$env\", container=\"nginx\"} | json | __error__=\"\" | status = 429 [$__range])) or vector(0)",
           "editorMode": "code",
           "queryType": "instant"
         }

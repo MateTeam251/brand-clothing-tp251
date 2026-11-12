@@ -5,6 +5,9 @@ from orders.views import (
     CustomerOrderDetailView,
     CheckoutView,
     RetryPaymentView,
+    OrderStatusView,
+    CheckoutFopView,
+    DeliveryCountriesView,
 )
 
 urlpatterns = [
@@ -14,19 +17,34 @@ urlpatterns = [
         name="order-list",
     ),
     path(
-        "<int:pk>/",
-        CustomerOrderDetailView.as_view(),
-        name="order-detail",
-    ),
-    path(
         "checkout/",
         CheckoutView.as_view(),
         name="checkout",
     ),
     path(
-        "<int:pk>/retry-payment/",
+      "checkout-fop/",
+        CheckoutFopView.as_view(),
+        name="checkout-fop",
+    ),
+    path(
+        "delivery/countries/",
+        DeliveryCountriesView.as_view(),
+        name="delivery-countries",
+    ),
+    path(
+        "<str:order_reference>/",
+        CustomerOrderDetailView.as_view(),
+        name="order-detail",
+    ),
+    path(
+        "<str:order_reference>/retry-payment/",
         RetryPaymentView.as_view(),
         name="retry-payment",
+    ),
+    path(
+        "<str:order_reference>/status/",
+        OrderStatusView.as_view(),
+        name="order-status",
     )
 ]
 

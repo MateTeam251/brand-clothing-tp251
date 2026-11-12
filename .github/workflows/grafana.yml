@@ -21,6 +21,7 @@ env:
   TF_VAR_grafana_auth: ${{ secrets.GRAFANA_AUTH }}
   TF_VAR_sm_access_token: ${{ secrets.GRAFANA_SM_ACCESS_TOKEN }}
   TF_VAR_alert_email: ${{ secrets.TF_BUDGET_ALERT_EMAIL }}
+  TF_VAR_slack_webhook_url: ${{ secrets.GRAFANA_SLACK_WEBHOOK_URL }}
 
 defaults:
   run:

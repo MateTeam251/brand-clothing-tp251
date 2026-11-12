@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../../shared/hooks/reduxHooks';
 import { useTranslation } from 'react-i18next';
 import Logo from '../../../shared/assets/images/logotype.png';
-
 import BurgerIcon from '../../../shared/assets/icons/burger.svg';
 import FavouriteIcon from '../../../shared/assets/icons/favourite.svg';
 import CartIcon from '../../../shared/assets/icons/cart.svg';
@@ -17,10 +16,13 @@ import { LanguageSwitcher } from '../../LanguageSwitcher';
 import { CurrencySwitcher } from '../../CurrencySwitcher';
 import { useGetFavoritesQuery } from '../../../shared/api/favoritesApi';
 import FavouriteActiveIcon from '../../../shared/assets/icons/favourite-hovered.svg';
+import UserActiveIcon from '../../../shared/assets/icons/user-active.svg';
+import { useCart } from '../../../shared/hooks/useCart';
+import { useScrollTopOnHome } from '../../../shared/hooks/useScrollTopOnHome';
 
 export const Header: React.FC = () => {
-  const cartItems = useAppSelector((state) => state.cart.items);
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const { data: cart } = useCart();
+  const cartCount = cart?.items_count ?? 0;
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { data: favoritesData } = useGetFavoritesQuery({ limit: 1 }, { skip: !isAuthenticated });
   const favoritesCount = isAuthenticated ? (favoritesData?.count ?? 0) : 0;
@@ -28,6 +30,7 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const handleLogoClick = useScrollTopOnHome();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState(location.pathname);
@@ -63,23 +66,30 @@ export const Header: React.FC = () => {
   };
   const isCartPage = location.pathname === '/cart';
   const isFavoritesPage = location.pathname === '/favorites';
-    const favoritesBadge = favoritesCount > 0 && (
+  const isAccountPage = location.pathname.startsWith('/account');
+
+  const favoritesBadge = favoritesCount > 0 && (
     <span
       className={`${styles['header__favorites-count']} ${
         isFavoritesPage ? styles['header__favorites-count--active'] : ''
       }`}
-    >
-      {favoritesCount}
+  >
+    {favoritesCount}
     </span>
   );
 
   useEffect(() => {
-    if(isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
+    if (!isMenuOpen) {
+      return;
     }
-  }, [isMenuOpen])
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMenuOpen]);
 
   return (
     <>
@@ -95,7 +105,6 @@ export const Header: React.FC = () => {
               <li><Link className={styles['header__link']} to="/catalog">{t('catalog')}</Link></li>
               <li><Link className={styles['header__link']} to="/about">{t('about')}</Link></li>
               <li><Link className={styles['header__link']} to="/catalog?is_bestseller=true">{t('bestsellers')}</Link></li>
-              {/* <li><Link className={styles['header__link']} to="/collections">{t('collections')}</Link></li> */}
             </ul>
           </nav>
           <nav className={`${styles['header__nav']} ${styles['header__nav--mobile']}`} aria-label="Mobile navigation">
@@ -144,7 +153,7 @@ export const Header: React.FC = () => {
               </button>
             </form>
           ) : (
-            <Link className={styles['header__logo-link']} to="/" aria-label="Home">
+            <Link className={styles['header__logo-link']} to="/" aria-label="Home" onClick={handleLogoClick}>
               <img className={styles['header__logo']} src={Logo} alt="Logotype" />
             </Link>
           )}
@@ -191,8 +200,13 @@ export const Header: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link className={styles['header__icon-button']} to="/account" aria-label="Account">
-                  <img className={styles['header__icon']} src={UserIcon} alt="User" />
+                <Link
+                  className={styles['header__icon-button']}
+                  to={isAuthenticated ? '/account' : '/signin'}
+                  state={isAuthenticated ? undefined : { from: location }}
+                  aria-label="Account"
+                >
+                  <img className={styles['header__icon']} src={isAccountPage ? UserActiveIcon : UserIcon} alt="User" />
                 </Link>
               </li>
             </ul>
@@ -218,7 +232,15 @@ export const Header: React.FC = () => {
             <img src={FavouriteIcon} alt="" aria-hidden="true" />
           </Link>
 
-          <Link className={styles.menu__logoLink} to="/" onClick={() => setIsMenuOpen(false)} aria-label="Home">
+          <Link
+            className={styles.menu__logoLink}
+            to="/"
+            onClick={() => {
+              setIsMenuOpen(false);
+              handleLogoClick();
+            }}
+            aria-label="Home"
+          >
             <img className={styles.menu__logo} src={Logo} alt="Logotype" />
           </Link>
 
@@ -235,7 +257,6 @@ export const Header: React.FC = () => {
           <ul className={styles.menu__list}>
             <li><Link className={styles.menu__link} to="/catalog" onClick={() => setIsMenuOpen(false)}>{t('catalog', { defaultValue: 'Каталог' })}</Link></li>
             <li><Link className={styles.menu__link} to="/catalog?is_bestseller=true" onClick={() => setIsMenuOpen(false)}>{t('bestsellers', { defaultValue: 'Бестселери' })}</Link></li>
-            <li><Link className={styles.menu__link} to="/collections" onClick={() => setIsMenuOpen(false)}>{t('collections', { defaultValue: 'Колекції' })}</Link></li>
             <li><Link className={styles.menu__link} to="/about" onClick={() => setIsMenuOpen(false)}>{t('about', { defaultValue: 'Про нас' })}</Link></li>
           </ul>
         </div>

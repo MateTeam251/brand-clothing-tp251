@@ -3,8 +3,9 @@ import uuid
 import pytest
 from django.test import override_settings
 
-from orders.models import Order, OrderStatus
-from payments.models import Payment, PaymentProvider, PaymentStatus
+from core.enums import OrderStatus, PaymentProvider, PaymentStatus
+from orders.models import Order
+from payments.models import Payment
 from payments.providers.wayforpay.callback import handle_callback
 from payments.providers.wayforpay.signatures import (
     build_callback_signature,
@@ -33,7 +34,8 @@ def wayforpay_settings():
 @pytest.fixture
 def payment():
     order = Order.objects.create(
-        user_name="User 1",
+        first_name="User",
+        last_name="1",
         user_phone="+380991234567",
         email="user1@test.com",
         delivery_address="Kyiv, Ukraine",
@@ -140,7 +142,6 @@ def test_handle_successful_callback(
     payment.order.refresh_from_db()
 
     assert payment.status == PaymentStatus.SUCCESSFUL
-    assert payment.transaction_id == TEST_ORDER_REF
     assert payment.paid_at is not None
     assert payment.order.status == OrderStatus.PAID
 
@@ -226,7 +227,6 @@ def test_handle_duplicate_successful_callback(
     payment.refresh_from_db()
 
     first_paid_at = payment.paid_at
-    first_transaction_id = payment.transaction_id
 
     handle_callback(data)
 
@@ -234,7 +234,6 @@ def test_handle_duplicate_successful_callback(
 
     assert payment.status == PaymentStatus.SUCCESSFUL
     assert payment.paid_at == first_paid_at
-    assert payment.transaction_id == first_transaction_id
 
 
 @pytest.mark.django_db

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FiltersValue } from "../Filters/Filters";
 import type { SortValue } from "../Sort/Sort";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ProductListItem } from "../../shared/types/products";
 import { useGetProductsQuery } from "../../shared/api/productsApi";
 import { Loader } from "../Loader";
@@ -9,6 +9,7 @@ import { ErrorState } from "../ErrorState";
 import { EmptyState } from "../EmptyState";
 import styles from './CatalogList.module.scss';
 import { ProductCard } from "../ProductCard";
+import { toAnalyticsItem, trackEvent } from "../../shared/analytics";
 
 const PRODUCTS_LIMIT = 12;
 
@@ -23,8 +24,9 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   const { t } = useTranslation();
   const [pages, setPages] = useState<ProductListItem[][]>([]);
   const [offset, setOffset] = useState(0);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, isFetching, error } = useGetProductsQuery({
+  const { data, currentData, isLoading, isFetching, error, refetch } = useGetProductsQuery({
     limit: PRODUCTS_LIMIT,
     offset,
     currency,
@@ -36,25 +38,65 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   });
 
   const currentPageIndex = offset / PRODUCTS_LIMIT;
-  const allPages = data && pages[currentPageIndex] !== data.results
-    ? [...pages.slice(0, currentPageIndex), data.results]
-    : pages;
+  const allPages = useMemo(
+    () =>
+      currentData && pages[currentPageIndex] !== currentData.results
+        ? [...pages.slice(0, currentPageIndex), currentData.results]
+        : pages,
+    [currentData, pages, currentPageIndex],
+  );
 
   const products = allPages.flat();
 
-  const handleLoadMore = () => {
-    if (data) {
+  const handleLoadMore = useCallback(() => {
+    if (currentData) {
       setPages(allPages);
     }
     setOffset((prev) => prev + PRODUCTS_LIMIT);
-  };
+  }, [currentData, allPages]);
+
+  const hasMore = Boolean(data?.next);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+
+    if (!node || isFetching || !hasMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: '300px' },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [isFetching, hasMore, handleLoadMore]);
+
+  useEffect(() => {
+    if (!currentData) {
+      return;
+    }
+
+    trackEvent('view_item_list', {
+      item_list_name: 'catalog',
+      items: currentData.results.map((product, index) =>
+        toAnalyticsItem(product, { item_list_name: 'catalog', index: offset + index }),
+      ),
+    });
+  }, [currentData, offset]);
 
   if (isLoading && offset === 0) {
     return <Loader />;
   }
 
-  if (error) {
-    return <ErrorState />;
+    if (error && products.length === 0) {
+    return <ErrorState onRetry={refetch} />;
   }
 
   if (products.length === 0) {
@@ -64,20 +106,17 @@ export const CatalogList = ({ currency, sortValue, filtersValue, debouncedSearch
   return (
     <>
       <div className={styles.catalog__grid}>
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        {products.map((product, index) => (
+          <ProductCard key={product.id} product={product} listName="catalog" position={index} />
         ))}
       </div>
 
-      {data?.next && (
-        <button
-          type="button"
-          className={styles.catalog__loadMore}
-          onClick={handleLoadMore}
-          disabled={isFetching}
-        >
-          {isFetching ? t('catalog_page.loading') : t('catalog_page.load_more')}
-        </button>
+      {isFetching && offset > 0 && <Loader />}
+
+      {error ? (
+        <ErrorState onRetry={refetch} />
+      ) : (
+        hasMore && <div ref={sentinelRef} className={styles.catalog__sentinel} />
       )}
     </>
   );

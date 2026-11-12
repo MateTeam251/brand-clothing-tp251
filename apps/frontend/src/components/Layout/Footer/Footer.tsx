@@ -1,23 +1,26 @@
 import styles from './Footer.module.scss';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-
+import { useScrollTopOnHome } from '../../../shared/hooks/useScrollTopOnHome';
 import Logo from '../../../shared/assets/images/logotype.png';
+import instagramIcon from '../../../shared/assets/icons/instagram.svg';
+import mailIcon from '../../../shared/assets/icons/mail.svg';
+import { CONTACT_EMAIL, INSTAGRAM_URL } from '../../../shared/config/contacts';
 
 const firstColumnLinks = [
   { key: 'about', to: '/about' },
-  { key: 'instagram', href: 'https://www.instagram.com/theart.theartist.ua/' },
-  { key: 'care', to: '/catalog' },
+  { key: 'care', to: '/garment-care' },
 ] as const;
 
 const secondColumnLinks = [
-  { key: 'delivery', to: '/about' },
-  { key: 'refund', to: '/about' },
-  { key: 'privacy', to: '/about' },
+  { key: 'delivery', to: '/delivery' },
+  { key: 'refund', to: '/returns' },
+  { key: 'privacy', to: '/privacy' },
 ] as const;
 
 export const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const handleLogoClick = useScrollTopOnHome();
 
   const renderLink = (item: { key: string; to?: string; href?: string }) => {
     const label = t(item.key);
@@ -48,7 +51,7 @@ export const Footer: React.FC = () => {
       <div className="container">
         <div className={styles['footer__content']}>
           <div className={styles['footer__brand']}>
-            <Link className={styles['footer__logo-link']} to="/" aria-label="Home">
+            <Link className={styles['footer__logo-link']} to="/" aria-label="Home" onClick={handleLogoClick}>
               <img className={styles['footer__logo']} src={Logo} alt="Logotype" />
             </Link>
             <p className={styles['footer__copyright']}>© 2026 The Art. The Artist. All rights reserved.</p>
@@ -62,6 +65,16 @@ export const Footer: React.FC = () => {
                     {renderLink(item)}
                   </li>
                 ))}
+                <li className={styles['footer__item']}>
+                  <div className={styles['footer__icons']}>
+                    <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram">
+                      <img className={styles['footer__icon']} src={instagramIcon} alt="" />
+                    </a>
+                    <a href={`mailto:${CONTACT_EMAIL}`} aria-label="Email">
+                      <img className={styles['footer__icon']} src={mailIcon} alt="" />
+                    </a>
+                  </div>
+                </li>
               </ul>
             </nav>
           </div>

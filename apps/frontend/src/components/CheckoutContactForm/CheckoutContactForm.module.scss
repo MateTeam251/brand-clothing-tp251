@@ -1,0 +1,40 @@
+@use '../../app/styles/mixins.scss' as *;
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 28px;
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    @include on-desktop {
+      gap: 16px;
+    }
+
+    input {
+      @include on-desktop {
+        min-height: 56px;
+        padding: 0 16px;
+        font-size: 16px;
+      }
+    }
+
+    :global(.react-international-phone-input-container) {
+      @include on-desktop {
+        --react-international-phone-height: 56px;
+        --react-international-phone-font-size: 16px;
+        --react-international-phone-dial-code-preview-font-size: 16px;
+      }
+    }
+  }
+}

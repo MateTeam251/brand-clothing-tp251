@@ -1,0 +1,104 @@
+@use '../../app/styles/variables.scss' as *;
+@use '../../app/styles/mixins.scss' as *;
+
+.delivery {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 28px;
+  }
+
+  &__modes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    @include on-desktop {
+      gap: 4px;
+    }
+  }
+
+  &__mode {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: $font-body;
+    font-size: 14px;
+    cursor: pointer;
+
+    input {
+      appearance: none;
+      -webkit-appearance: none;
+      position: relative;
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      border: 1px solid $color-inactive;
+      border-radius: 50%;
+      cursor: pointer;
+
+      @include on-desktop {
+        width: 26px;
+        height: 26px;
+      }
+
+      &:checked {
+        background: $accent;
+        border-color: $accent;
+      }
+
+      &:checked::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #000;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #000;
+        outline-offset: 2px;
+      }
+    }
+
+    @include on-desktop {
+      font-size: 16px;
+    }
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__method {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid #d6d6d6;
+    border-radius: 8px;
+    background-color: #fff;
+    font-family: $font-body;
+    font-size: 14px;
+    color: $color-inactive;
+
+    @include on-desktop {
+      min-height: 56px;
+      padding: 0 16px;
+      font-size: 16px;
+    }
+  }
+}

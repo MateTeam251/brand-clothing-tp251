@@ -47,6 +47,11 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 # nginx terminates HTTPS in prod and forwards the original scheme
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# nginx sets X-Forwarded-Host to the public site name (it overwrites any value
+# from the client). Links Django builds then use it instead of the origin name.
+# The name must be in ALLOWED_HOSTS.
+USE_X_FORWARDED_HOST = True
+
 # Cookies only over HTTPS on servers (local dev runs on plain http).
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -73,6 +78,7 @@ INSTALLED_APPS = [
     "favorites",
     "carts",
     "storages",
+    "delivery",
     # Deletes a file from S3 when its row is deleted or the file is replaced.
     # Must stay last, so it sees the file fields of every app above.
     "django_cleanup.apps.CleanupConfig",
@@ -120,7 +126,24 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 12,
+    "DEFAULT_THROTTLE_RATES": {
+        "change_password": "5/minute",
+        "change_email": "5/minute",
+        "change_email_confirm": "30/hour",
+        "activation": "30/hour",
+        "password_reset": "10/hour",
+        "resend_activation": "10/hour",
+        "availability_request": "20/hour",
+        "checkout": "20/hour",
+        "retry_payment": "10/min",
+        "payment_return": "30/min",
+        "order_status": "60/min",
+    },
+    # Prod chain: browser -> CloudFront -> nginx -> Django. Throttles take the client IP
+    # from the 2nd-to-last X-Forwarded-For entry (added by CloudFront), so it can't be spoofed.
+    "NUM_PROXIES": 2,
 }
+
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Brand Clothing API",
@@ -178,6 +201,11 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
         "HOST": os.getenv("POSTGRES_HOST", "db"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        # Reuse the connection between requests (default 0 = new connection, DNS lookup
+        # and Postgres process per request; failed under load.
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        # Check a reused connection is alive first (e.g. after a db restart).
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 
@@ -188,6 +216,12 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+
+ACTIVATION_TOKEN_TIMEOUT = 60 * 60 * 24 # 24 hours
+
+EMAIL_CHANGE_TOKEN_TIMEOUT = 60 * 60 * 24 # 24 hours
+
+PASSWORD_RESET_TIMEOUT = 60 * 60 # 1 hour
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
@@ -245,6 +279,9 @@ if USE_LOCALSTACK:
     AWS_S3_CUSTOM_DOMAIN = f"localhost:4566/{AWS_STORAGE_BUCKET_NAME}"
 else:
     AWS_S3_ENDPOINT_URL = None
+    # Set on staging/prod (e.g. theart-theartist.com/media): media links go through
+    # CloudFront, unsigned and cacheable. Unset = signed S3 links as before.
+    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN") or None
 
 AWS_DEFAULT_ACL = None
 AWS_S3_FILE_OVERWRITE = False
@@ -286,6 +323,7 @@ CORS_ALLOWED_ORIGINS = env_list(
 
 # Site URL
 SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 ACTIVATION_URL_BASE = f"{SITE_URL}/api/users/activate"
 
@@ -325,7 +363,15 @@ CELERY_BEAT_SCHEDULE = {
         "task": "carts.tasks.send_weekly_cart_report_task",
         "schedule": crontab(minute=0, hour=4, day_of_week="monday"),  # previous Mon-Sun week
     },
+    "sync-delivery-branches-daily": {
+        "task": "delivery.tasks.sync_all_providers",
+        # UTC. Staging runs 08:00-20:00 Kyiv only, so it sets DELIVERY_SYNC_HOUR=7.
+        "schedule": crontab(minute=0, hour=int(os.getenv("DELIVERY_SYNC_HOUR", "1"))),
+    },
 }
+# Staging: no weekly analyst report (CELERY_WEEKLY_REPORT=False in SSM).
+if not env_bool("CELERY_WEEKLY_REPORT", "True"):
+    CELERY_BEAT_SCHEDULE.pop("weekly-cart-report")
 
 # CART ANALYTICS
 # A cart is abandoned when it has items, no checkout, and was not changed for this long.
@@ -334,6 +380,23 @@ CART_ABANDON_AFTER_HOURS = int(os.getenv("CART_ABANDON_AFTER_HOURS", "24"))
 # Private bucket for analyst reports. Intentionally no default: never fall back to the media bucket.
 ANALYTICS_REPORTS_BUCKET = os.getenv("ANALYTICS_REPORTS_BUCKET")
 ANALYTICS_REPORTS_PREFIX = os.getenv("ANALYTICS_REPORTS_PREFIX", "reports/carts")
+
+# CACHE
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
+    }
+}
+
+# DELIVERY PROVIDERS
+
+# Nova Poshta — single JSON-RPC style endpoint (https://developers.novaposhta.ua).
+NOVA_POSHTA_API_KEY = os.environ.get("NOVA_POSHTA_API_KEY")
+NOVA_POSHTA_API_URL = os.environ.get(
+    "NOVA_POSHTA_API_URL",
+    "https://api.novaposhta.ua/v2.0/json/",
+)
 
 #LOGS
 LOGS_DIR = BASE_DIR / "logs"

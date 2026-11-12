@@ -1,0 +1,1 @@
+export { ActivationSuccessPage } from './ActivationSuccessPage';

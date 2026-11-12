@@ -12,9 +12,11 @@ Every secret, where it lives, and how to rotate it. Values are never in git, Ter
 | `EMAIL_HOST_PASSWORD` | SSM (same) | Django → Resend SMTP (API key, sending only) | yearly, on handover |
 | `GRAFANA_CLOUD_TOKEN` | SSM (same) | Alloy → Grafana Cloud (metrics/logs push) | yearly, on handover |
 | `WAYFORPAY_SECRET_KEY` | SSM (same), when configured | payments | on handover, on leak |
+| `NOVA_POSHTA_API_KEY` | SSM (same), when configured | Nova Poshta branch sync (`delivery`) | on handover, on leak |
 | `GRAFANA_AUTH` | GitHub secret | Terraform `infra/grafana`, release annotations | yearly, on handover |
 | `GRAFANA_SM_ACCESS_TOKEN` | GitHub secret | Terraform synthetic checks | yearly, on handover |
 | `TF_BUDGET_ALERT_EMAIL` | GitHub secret | alert / budget email (not secret, just not public) | when the address changes |
+| `GRAFANA_SLACK_WEBHOOK_URL` | GitHub secret | Grafana alerts → Slack channel (anyone with it can post there) | on handover, on leak |
 
 No secret, nothing to rotate:
 - **AWS from CI**: OIDC roles, short-lived credentials.
@@ -83,3 +85,5 @@ between the `ALTER` and the redeploy (~1 min). Never only one side.
 | Date | Env | Rotated |
 |---|---|---|
 | 2026-10-17 | staging, prod | `SECRET_KEY`, `GRAFANA_CLOUD_TOKEN` (new Alloy token `alloy-2026-10`) |
+| 2026-10-22 | staging, prod | `NOVA_POSHTA_API_KEY` added (Nova Poshta branch sync) |
+| 2026-10-26 | staging | `WAYFORPAY_SECRET_KEY` added: public TEST merchant `test_merch_n1` (no real money) |

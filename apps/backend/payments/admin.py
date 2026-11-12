@@ -13,8 +13,6 @@ class PaymentAdmin(admin.ModelAdmin):
         "amount",
         "provider",
         "status",
-        "transaction_id",
-        "payment_data",
         "paid_at",
         "created_at",
     )
@@ -27,9 +25,9 @@ class PaymentAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
+        "id",
         "provider_order_reference",
-        "transaction_id",
-        "order__id",
+        "order__order_reference",
         "order__email",
     )
 
@@ -39,7 +37,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "currency",
         "amount",
         "provider",
-        "transaction_id",
+        "payment_url",
         "payment_data",
         "paid_at",
         "created_at",
@@ -64,7 +62,7 @@ class PaymentAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "provider",
-                    "transaction_id",
+                    "payment_url",
                     "payment_data",
                     "paid_at",
                 )
@@ -82,3 +80,9 @@ class PaymentAdmin(admin.ModelAdmin):
     )
 
     ordering = ("-created_at",)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

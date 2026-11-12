@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { useGetCollectionsQuery } from '../../shared/api/collectionsApi';
@@ -37,6 +37,15 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
   const { data: collectionsData } = useGetCollectionsQuery({ lang: language });
   const [draftValue, setDraftValue] = useState<FiltersValue>(currentValue);
   const { dragOffset, handleTouchStart, handleTouchMove, handleTouchEnd } = useSwipeToClose(onClose);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const toggleType = (type: string) => {
     setDraftValue((prev) => ({
@@ -77,12 +86,20 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
       <div
         className={styles.filters}
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ transform: `translateY(${dragOffset}px)` }}
+        style={
+          dragOffset > 0
+            ? { transform: `translateY(${dragOffset}px)`, transition: 'none' }
+            : undefined
+        }
       >
-        <div className={styles.filters__handle} />
+        <div
+          className={styles.filters__handle}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <span className={styles.filters__handleBar} />
+        </div>
         <h2 className={styles.filters__title}>{t('catalog_page.filter_title')}</h2>
 
         <div className={styles.filters__wrapper}>
@@ -137,13 +154,15 @@ export const Filters = ({ currentValue, onApply, onClose }: FiltersProps) => {
 
         </div>
 
-        <button type="button" className={styles.filters__apply} onClick={handleApply}>
-          {t('catalog_page.save')} ({selectedCount})
-        </button>
+        <div className={styles.filters__buttons}> 
+          <button type="button" className={styles.filters__apply} onClick={handleApply}>
+            {t('catalog_page.save')} ({selectedCount})
+          </button>
 
-        <button type="button" className={styles.filters__reset} onClick={handleClearAll}>
-          {t('catalog_page.reset_filters')}
-        </button>
+          <button type="button" className={styles.filters__reset} onClick={handleClearAll}>
+            {t('catalog_page.reset_filters')}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,1 @@
+export { ActivationFailedPage } from './ActivationFailedPage';

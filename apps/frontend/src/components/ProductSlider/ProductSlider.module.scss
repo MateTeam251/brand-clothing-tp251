@@ -4,7 +4,10 @@
 $gap: 16px;
 
 .slider {
+  @include flex(column, 24px);
+
   max-width: 1440px;
+  width: 100%;
   margin-inline: auto;
   padding: 0;
   background-color: $dominant;
@@ -15,12 +18,11 @@ $gap: 16px;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 32px;
   }
 
   &__title {
     margin: 0 auto;
-    font-family: 'Bodoni', serif;
+    font-family: $font-heading;
     font-size: 32px;
     font-weight: 400;
     line-height: 1.1;
@@ -37,7 +39,7 @@ $gap: 16px;
     scrollbar-width: none;
     scroll-snap-type: x mandatory;
     cursor: grab;
-    touch-action: pan-y;
+    touch-action: pan-x pan-y pinch-zoom;
     user-select: none;
 
     &:global(.is-dragging) {

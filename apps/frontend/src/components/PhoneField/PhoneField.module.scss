@@ -1,0 +1,47 @@
+@use '../../app/styles/variables.scss' as *;
+
+.field {
+  &__label {
+    display: block;
+    margin: 0 0 4px 12px;
+    color: $color-inactive;
+    font-size: 12px;
+  }
+
+  &__error {
+    margin: 4px 0 0;
+    color: $error;
+    font-size: 12px;
+  }
+}
+
+.phone {
+  --react-international-phone-height: 44px;
+  --react-international-phone-border-radius: 8px;
+  --react-international-phone-border-color: #{$light-gray};
+  --react-international-phone-background-color: #fff;
+  --react-international-phone-font-size: 14px;
+  --react-international-phone-text-color: inherit;
+  --react-international-phone-dial-code-preview-text-color: inherit;
+  --react-international-phone-dial-code-preview-font-size: 14px;
+  --react-international-phone-dial-code-preview-background-color: #fff;
+  --react-international-phone-dial-code-preview-disabled-background-color: #fff;
+  --react-international-phone-dial-code-preview-disabled-text-color: inherit;
+  --react-international-phone-dial-code-preview-border-color: #{$light-gray};
+  --react-international-phone-country-selector-background-color: #fff;
+  --react-international-phone-country-selector-border-color: #{$light-gray};
+
+  width: 100%;
+  font-family: $font-body;
+
+  :global(.react-international-phone-input) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &--error {
+    --react-international-phone-border-color: #{$error};
+    --react-international-phone-country-selector-border-color: #{$error};
+    --react-international-phone-dial-code-preview-border-color: #{$error};
+  }
+}

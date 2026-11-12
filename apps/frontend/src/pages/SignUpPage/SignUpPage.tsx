@@ -1,23 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SyntheticEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useRegisterMutation } from '../../shared/api/authApi';
+import { useRegisterMutation, useResendActivationMutation } from '../../shared/api/authApi';
 import { useAppSelector } from '../../shared/hooks/reduxHooks';
 import { AuthCard } from '../../components/AuthCard';
 import { AuthField } from '../../components/AuthField';
+import { PhoneField } from '../../components/PhoneField';
 import { AuthCheckbox } from '../../components/AuthCheckbox';
 import { AuthMessageCard } from '../../components/AuthMessageCard';
 import { AuthSheet } from '../../components/AuthSheet';
 import { useCloseAuth } from '../../shared/hooks/useCloseAuth';
+import { isValidPhone } from '../../shared/utils/phone';
+import styles from './SignUpPage.module.scss';
+import { trackEvent } from '../../shared/analytics';
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+const RESEND_COOLDOWN_SECONDS = 60;
 
 const FIELD_KEYS = [
+  'first_name',
+  'last_name',
   'email',
   'password',
   'password_confirm',
+  'phone_number',
   'instagram',
+  'telegram',
   'agree_to_terms',
 ] as const;
 
@@ -48,11 +57,14 @@ export const SignUpPage = () => {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [register, { isLoading }] = useRegisterMutation();
 
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [telegram, setTelegram] = useState('');
   const [agree, setAgree] = useState(false);
   const [marketing, setMarketing] = useState(false);
 
@@ -60,6 +72,34 @@ export const SignUpPage = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const closeAuth = useCloseAuth();
+
+  const [resendActivation, { isLoading: isResending }] = useResendActivationMutation();
+  const [resendStatus, setResendStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => setCooldown((seconds) => seconds - 1), 1000);
+
+    return () => window.clearTimeout(timerId);
+  }, [cooldown]);
+
+  const handleResend = async () => {
+    if (!registeredEmail || isResending || cooldown > 0) {
+      return;
+    }
+
+    try {
+      await resendActivation({ email: registeredEmail }).unwrap();
+      setResendStatus('success');
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch {
+      setResendStatus('error');
+    }
+  };
 
   if (isAuthenticated) {
     return <Navigate to="/account" replace />;
@@ -73,7 +113,30 @@ export const SignUpPage = () => {
         text={t('sign_up.check_email.text', { email: registeredEmail })}
         linkTo="/"
         linkLabel={t('sign_up.check_email.home')}
-      />
+        onClose={closeAuth}
+      >
+        <div className={styles.resend}>
+          <button
+            type="button"
+            className={styles.resend__button}
+            onClick={handleResend}
+            disabled={isResending || cooldown > 0}
+          >
+            {cooldown > 0
+              ? t('sign_up.check_email.resend_wait', { seconds: cooldown })
+              : t('sign_up.check_email.resend')}
+          </button>
+
+          {resendStatus === 'success' && (
+            <p className={styles.resend__status}>{t('sign_up.check_email.resend_success')}</p>
+          )}
+          {resendStatus === 'error' && (
+            <p className={`${styles.resend__status} ${styles['resend__status--error']}`}>
+              {t('generic_error')}
+            </p>
+          )}
+        </div>
+      </AuthMessageCard>
     );
   }
 
@@ -81,8 +144,26 @@ export const SignUpPage = () => {
     event.preventDefault();
 
     const trimmedEmail = email.trim();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const trimmedPhone = phone.trim();
     const trimmedInstagram = instagram.trim();
+    const trimmedTelegram = telegram.trim();
     const errors: FieldErrors = {};
+
+    if (!trimmedFirstName) {
+      errors.first_name = t('auth.errors.required');
+    }
+
+    if (!trimmedLastName) {
+      errors.last_name = t('auth.errors.required');
+    }
+
+    if (!trimmedPhone) {
+      errors.phone_number = t('auth.errors.required');
+    } else if (!isValidPhone(trimmedPhone)) {
+      errors.phone_number = t('checkout_form.invalid_phone');
+    }
 
     if (!trimmedEmail) {
       errors.email = t('auth.errors.required');
@@ -98,10 +179,6 @@ export const SignUpPage = () => {
       errors.password_confirm = t('auth.errors.required');
     } else if (password !== passwordConfirm) {
       errors.password_confirm = t('sign_up.errors.password_mismatch');
-    }
-
-    if (!trimmedInstagram) {
-      errors.instagram = t('auth.errors.required');
     }
 
     if (!agree) {
@@ -120,12 +197,16 @@ export const SignUpPage = () => {
         email: trimmedEmail,
         password,
         password_confirm: passwordConfirm,
-        name: name.trim() || undefined,
+        first_name: firstName.trim() || undefined,
+        last_name: lastName.trim() || undefined,
+        phone_number: trimmedPhone,
         instagram: trimmedInstagram,
+        telegram: trimmedTelegram,
         agree_to_terms: agree,
         marketing_opt_in: marketing,
       }).unwrap();
 
+      trackEvent('sign_up', { method: 'email' });
       setRegisteredEmail(trimmedEmail);
     } catch (error) {
       const { status, data } = error as { status?: number; data?: unknown };
@@ -155,13 +236,33 @@ export const SignUpPage = () => {
         error={formError}
       >
         <AuthField
-          name="name"
+          name="first_name"
           type="text"
-          label={t('profile.name')}
-          value={name}
-          onChange={setName}
-          autoComplete="name"
+          label={t('profile.first_name')}
+          value={firstName}
+          onChange={setFirstName}
+          error={fieldErrors.first_name}
+          autoComplete="given-name"
         />
+
+        <AuthField
+          name="last_name"
+          type="text"
+          label={t('profile.last_name')}
+          value={lastName}
+          onChange={setLastName}
+          error={fieldErrors.last_name}
+          autoComplete="family-name"
+        />
+
+        <PhoneField
+          name="phone_number"
+          label={t('profile.phone')}
+          value={phone}
+          onChange={setPhone}
+          error={fieldErrors.phone_number}
+        />
+
         <AuthField
           name="email"
           type="email"
@@ -171,6 +272,7 @@ export const SignUpPage = () => {
           error={fieldErrors.email}
           autoComplete="email"
         />
+
         <AuthField
           name="instagram"
           type="text"
@@ -179,6 +281,16 @@ export const SignUpPage = () => {
           onChange={setInstagram}
           error={fieldErrors.instagram}
         />
+
+        <AuthField
+          name="telegram"
+          type="text"
+          label={t('profile.telegram')}
+          value={telegram}
+          onChange={setTelegram}
+          error={fieldErrors.telegram}
+        />
+
         <AuthField
           name="password"
           type="password"
@@ -188,6 +300,7 @@ export const SignUpPage = () => {
           error={fieldErrors.password}
           autoComplete="new-password"
         />
+
         <AuthField
           name="password_confirm"
           type="password"
@@ -197,6 +310,7 @@ export const SignUpPage = () => {
           error={fieldErrors.password_confirm}
           autoComplete="new-password"
         />
+
         <AuthCheckbox
           name="agree_to_terms"
           checked={agree}
@@ -204,6 +318,7 @@ export const SignUpPage = () => {
           label={t('sign_up.agree')}
           error={fieldErrors.agree_to_terms}
         />
+        
         <AuthCheckbox
           name="marketing_opt_in"
           checked={marketing}

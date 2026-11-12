@@ -1,13 +1,6 @@
 @use '../../app/styles/variables.scss' as *;
 @use '../../app/styles/mixins.scss' as *;
 
-// TODO: take exact status colors from Figma
-$status-pending: #ececec;
-$status-processing: #fdf1c4;
-$status-shipped: #cfeefe;
-$status-delivered: #d7f6c9;
-$status-canceled: #f9d6d6;
-
 .orders {
   display: flex;
   flex-direction: column;
@@ -50,7 +43,7 @@ $status-canceled: #f9d6d6;
 
   &__meta {
     margin: 4px 0 0;
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
     font-size: 14px;
     line-height: 20px;
     color: $color-inactive;
@@ -60,16 +53,20 @@ $status-canceled: #f9d6d6;
     flex-shrink: 0;
     padding: 4px 12px;
     border-radius: 100px;
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
     font-size: 12px;
     line-height: 16px;
 
     &--pending {
-      background-color: $status-pending;
+      background-color: $secondary;
     }
 
-    &--processing {
+    &--paid {
       background-color: $status-processing;
+    }
+
+    &--awaiting_shipment {
+      background-color: $status-awaiting-shipment;
     }
 
     &--shipped {
@@ -81,7 +78,7 @@ $status-canceled: #f9d6d6;
     }
 
     &--canceled {
-      background-color: $status-canceled;
+      background-color: $pink20;
     }
   }
 
@@ -98,12 +95,12 @@ $status-canceled: #f9d6d6;
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
   }
 
   &__productName {
     margin: 0;
-    font-family: 'Bodoni', 'Cambria', serif;
+    font-family: $font-heading;
     font-size: 18px;
     line-height: 24px;
   }
@@ -115,7 +112,7 @@ $status-canceled: #f9d6d6;
     margin: 0;
     padding-top: 16px;
     border-top: 1px solid $light-gray;
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
     font-size: 14px;
     line-height: 20px;
 
@@ -137,5 +134,39 @@ $status-canceled: #f9d6d6;
     &--total {
       font-weight: 600;
     }
+  }
+
+    &__payBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  &__pay {
+    height: 48px;
+    border: none;
+    border-radius: 999px;
+    background: $accent;
+    color: #000;
+    font: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: $pink100;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+
+  &__payError {
+    margin: 0;
+    font-size: 12px;
+    color: $error;
   }
 }

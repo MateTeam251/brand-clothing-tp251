@@ -47,7 +47,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
     font-weight: 400;
     font-size: 12px;
     line-height: 16px;
@@ -66,7 +66,7 @@
   }
 
   &__name {
-    font-family: 'Bodoni', serif;
+    font-family: $font-heading;
     font-weight: 500;
     font-size: 32px;
     line-height: 40px;
@@ -78,6 +78,9 @@
   }
 
   &__prices {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
     font-weight: 700;
     font-size: 16px;
     line-height: 24px;
@@ -87,20 +90,39 @@
     }
   }
 
+  &__oldPrice {
+    font-weight: 400;
+    text-decoration: line-through;
+    color: $color-inactive;
+  }
+
   &__shortDesc {
     margin: 4px 0 0;
   }
 
   &__sizeSelect {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    width: fit-content;
+    height: 42px;
+    padding: 0 12px;
     border: 1px solid $light-gray;
     border-radius: 8px;
-    height: 42px;
-    padding: 12px;
   }
 
   &__selector {
+    height: 100%;
+    padding: 0 20px 0 0;
     border: none;
     background-color: $dominant;
+    background-image: url('../../shared/assets/icons/arrow-bottom.svg');
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 11px 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
   }
 
   &__guide {
@@ -155,8 +177,8 @@
     background-color: $accent;
     border: none;
     border-radius: 100px;
-    padding: 12px 24px;
-    font-family: 'Bodoni', serif;
+    padding: 12px 16px;
+    font-family: $font-heading;
     font-weight: 500;
     font-size: 16px;
     line-height: 24px;
@@ -171,7 +193,7 @@
   }
 
   &__note {
-    font-family: 'Cambria', serif;
+    font-family: $font-body;
     font-weight: 400;
     font-size: 12px;
     line-height: 16px;
@@ -180,9 +202,6 @@
     text-align: center;
 
     @include on-desktop {
-      // font-size: 16px;
-      // line-height: 24px;
-      // text-align: left;
       display: none;
     }
   }
@@ -193,11 +212,12 @@
     background-color: #fff;
     border: 1px solid $light-gray;
     border-radius: 100px;
-    padding: 12px 24px;
-    font-family: 'Bodoni', serif;
+    padding: 12px 16px;
+    font-family: $font-heading;
     font-weight: 500;
     font-size: 16px;
     line-height: 24px;
+    cursor: pointer;
 
     &:hover {
       background-color: $accent;
@@ -206,6 +226,37 @@
     @include on-desktop {
       font-size: 20px;
     }
+    
+  }
+    &__availability {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease;
+
+    &--open {
+      grid-template-rows: 1fr;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  &__availabilityInner {
+    min-height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    transition: visibility 0s linear 0.3s;
+  }
+
+  &__availability--open &__availabilityInner {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  &__careLink {
+    color: inherit;
+    text-decoration: underline;
   }
 
   &__accordion {
@@ -217,7 +268,7 @@
   &__accordionItem {
   border-bottom: 1px solid $light-gray;
   padding: 16px;
-  font-family: 'Cambria', serif;
+  font-family: $font-body;
   font-weight: 400;
   font-size: 16px;
   line-height: 24px;

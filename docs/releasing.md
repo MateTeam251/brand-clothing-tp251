@@ -46,6 +46,7 @@ Then fix forward: fix on `develop`, release again.
 - **Never commit or revert directly on `main`.** A revert on `main` is remembered by git: the next `develop` → `main` merge silently deletes the reverted code again. To undo a release, use the rollback above.
 - **Hotfix**: branch from `develop`, PR into `develop`, check on staging, then release as usual.
 - Only one deploy per environment runs at a time; a second one waits.
+- A deploy restarts `web` (with migrations): **about 3 seconds of 502s**. Under load, release at a quiet time. On staging, tell the team before a load test so nobody merges to `develop` mid-run.
 
 ## What runs where
 
@@ -59,6 +60,8 @@ Then fix forward: fix on `develop`, release again.
 
 | Version | Date | What changed |
 |---|---|---|
+| v0.6.0 | 2026-11-11 | Database connections reused (load test: p95 3.1 s → 162 ms at 100 shoppers), WAL archived at least every 5 min (max data loss ~5 min), product photos through CloudFront `/media/*` (cached), correct public links in emails and API (`X-Forwarded-Host`, `FRONTEND_URL`), Redis on both environments (Celery broker + Django cache for per-endpoint throttling), Celery solo pool + in-memory Beat schedule, Nova Poshta branch sync (daily), user first/last name, Google Analytics ID in the frontend build, alerts to Slack (+ email) and no alerts on Grafana query errors, Python 3.15 image. Plus app features: checkout and payment flow, branded email templates, email change in the profile |
+| v0.5.1 | 2026-10-17 | Dashboard fixes (named table columns, 0 instead of "no data", load per CPU), origin certificate alert active, `docs/secrets.md`, first secrets rotation |
 | v0.5.0 | 2026-10-17 | nginx rate limits (login, sign-up, password reset, checkout), admin uploads up to 150 MB, product photos as WebP with media cleanup and versioned media bucket, origin certificate check, Grafana as code (alerts with runbooks, synthetic checks, 5 dashboards), container and Postgres metrics, release markers, new AMI, Dependabot updates (Python 3.14, nginx 1.31, Alloy 1.20) |
 | v0.4.7 | 2026-10-12 | Email through Resend (SMTP) on staging and production; SES stays set up for when AWS approves production access |
 | v0.4.6 | 2026-10-09 | SES bounce and complaint alerts (configuration set, SNS email, rate alarms) |

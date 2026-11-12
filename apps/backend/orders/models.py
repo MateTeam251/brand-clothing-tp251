@@ -4,24 +4,10 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from core.enums import Currency, Size, DeliveryProvider
+from core.enums import Currency, Size, DeliveryProvider, OrderStatus
+from core.pricing import calc_discounted
 from products.models import Product
-
-
-class OrderStatus(models.TextChoices):
-    """
-    Customer-facing order lifecycle.
-
-    The "PENDING" status is a technical prepayment status used during order placement.
-    The final business order begins with the "PAID" status after successful payment.
-    """
-
-    PENDING = "PENDING", "Pending"
-    PAID = "PAID", "Paid"
-    AWAITING_SHIPMENT = "AWAITING_SHIPMENT", "Awaiting Shipment"
-    SHIPPED = "SHIPPED", "Shipped"
-    DELIVERED = "DELIVERED", "Delivered"
-    CANCELED = "CANCELED", "Canceled"
+from carts.models import Cart
 
 
 class Order(models.Model):
@@ -40,13 +26,19 @@ class Order(models.Model):
         related_name="orders",
     )
 
-    delivery_address = models.TextField(
-        help_text="Final delivery address at the time of order placement.",
+    first_name = models.CharField(
+        max_length=255,
+    )
+
+    last_name = models.CharField(
+        max_length=255,
+    )
+
+    user_phone = models.CharField(
+        max_length=50,
     )
 
     email = models.EmailField()
-
-    created_at = models.DateTimeField(auto_now_add=True)
 
     status = models.CharField(
         max_length=45,
@@ -72,7 +64,6 @@ class Order(models.Model):
         validators=[MinValueValidator(Decimal("0.00"))],
     )
 
-
     total_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -84,19 +75,40 @@ class Order(models.Model):
         choices=DeliveryProvider.choices,
     )
 
+    delivery_address = models.TextField(
+        help_text="Final delivery address at the time of order placement.",
+    )
+
     delivery_data = models.JSONField(
         default=dict,
         blank=True,
         help_text="Provider specific delivery data.",
     )
 
-    user_name = models.CharField(
-        max_length=255,
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+        help_text="The cart from which this order was created.",
     )
 
-    user_phone = models.CharField(
-        max_length=50,
+    order_reference = models.CharField(
+        max_length=32,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Public order number shown to customers and support.",
     )
+
+    admin_comment = models.TextField(
+        blank=True,
+        help_text="Internal staff note. Never shown to customers.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -117,7 +129,8 @@ class Order(models.Model):
                 condition=(
                     models.Q(delivery_address__isnull=False) & ~models.Q(delivery_address="") &
                     models.Q(email__isnull=False) & ~models.Q(email="") &
-                    models.Q(user_name__isnull=False) & ~models.Q(user_name="") &
+                    models.Q(first_name__isnull=False) & ~models.Q(first_name="") &
+                    models.Q(last_name__isnull=False) & ~models.Q(last_name="") &
                     models.Q(user_phone__isnull=False) & ~models.Q(user_phone="")
                 ),
                 name="order_fields_must_be_filled",
@@ -125,7 +138,7 @@ class Order(models.Model):
         ]
 
     def __str__(self):
-        return f"Order #{self.pk}"
+        return self.order_reference or f"Order #{self.pk}"
 
 
 class OrderItem(models.Model):
@@ -145,7 +158,15 @@ class OrderItem(models.Model):
         related_name="order_items",
     )
 
-    product_name = models.TextField()
+    product_name = models.CharField(
+        max_length=255,
+    )
+
+    product_main_image = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="URL or path to the product main image at the time of purchase.",
+    )
 
     size = models.CharField(
         max_length=10,
@@ -190,16 +211,15 @@ class OrderItem(models.Model):
         ]
 
     @property
-    def unit_price_after_discount(self) -> Decimal:
+    def unit_price_after_discount(self) -> str:
         """
         Price per 1 unit after applying discount.
         """
 
-        if not self.discount_percent_at_purchase:
-            return self.price_at_purchase
-
-        discount = Decimal(100 - self.discount_percent_at_purchase) / Decimal("100")
-        return (self.price_at_purchase * discount).quantize(Decimal("0.01"))
+        return calc_discounted(
+            self.price_at_purchase,
+            self.discount_percent_at_purchase,
+        )
 
     @property
     def line_subtotal(self) -> Decimal:
@@ -215,7 +235,8 @@ class OrderItem(models.Model):
         Final total amount after discount for this order item.
         """
 
-        return self.unit_price_after_discount * self.quantity
+        # unit_price_after_discount is a str ("900.00"): str * int would repeat it.
+        return Decimal(self.unit_price_after_discount) * self.quantity
 
     def __str__(self):
         return f"{self.product_name} - {self.size} x {self.quantity}"

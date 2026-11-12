@@ -5,8 +5,9 @@
 locals {
   app_config = {
     DEBUG                   = "False"
-    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host}"
+    ALLOWED_HOSTS           = "${module.compute.app_public_ip},${local.origin_host},${local.site_host}"
     SITE_URL                = "https://${local.site_host}"
+    FRONTEND_URL            = "https://${local.site_host}"
     CSRF_TRUSTED_ORIGINS    = "https://${local.site_host}"
     CORS_ALLOWED_ORIGINS    = "https://${local.site_host}"
     DEFAULT_FROM_EMAIL      = "The Art — The Artist <noreply@theart-theartist.com>"
@@ -20,6 +21,9 @@ locals {
     AWS_STORAGE_BUCKET_NAME = module.storage.media_bucket_name
     WALG_S3_PREFIX          = "s3://${module.storage.backups_bucket_name}/wal-g"
     ECR_REGISTRY            = "875476618056.dkr.ecr.eu-central-1.amazonaws.com"
+
+    # Photo links via CloudFront /media/* (cached, unsigned) instead of signed S3 URLs.
+    AWS_S3_CUSTOM_DOMAIN = "${local.site_host}/media"
 
     # Weekly cart report (carts.reports). Private bucket, not the media one.
     ANALYTICS_REPORTS_BUCKET = module.storage.reports_bucket_name
@@ -37,8 +41,23 @@ locals {
     # Name CloudFront uses for the backend (dns.tf); certbot gets its certificate.
     ORIGIN_HOST = local.origin_host
 
-    # No COMPOSE_PROFILES = "celery" here: redis + celery don't fit next to
-    # web + db in 1 GB. Run the jobs by hand (see docker-compose.prod.yml).
+    # Public name nginx passes to Django as X-Forwarded-Host.
+    SITE_HOST = local.site_host
+
+    # Celery on staging too (abandoned carts, Nova Poshta sync), with a lower
+    # memory cap (~140 MB used with --pool=solo). No weekly analyst report here.
+    COMPOSE_PROFILES     = "celery"
+    CELERY_MEM_LIMIT     = "192m"
+    CELERY_WEEKLY_REPORT = "False"
+    # Nova Poshta sync at 07:00 UTC (prod 01:00): staging is off at night.
+    DELIVERY_SYNC_HOUR = "7"
+
+    # WayForPay public TEST merchant (no real money). Prod gets the real
+    # account later. Secret key: secrets/WAYFORPAY_SECRET_KEY (by hand).
+    WAYFORPAY_MERCHANT_ACCOUNT = "test_merch_n1"
+    WAYFORPAY_MERCHANT_DOMAIN  = local.site_host
+    WAYFORPAY_SERVICE_URL      = "https://${local.site_host}/api/payments/wayforpay/callback/"
+    WAYFORPAY_RETURN_URL       = "https://${local.site_host}/api/payments/wayforpay/return/"
 
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "staging"

@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetProductByIdQuery } from '../../shared/api/productsApi';
 import { useAddFavoriteMutation, useRemoveFavoriteByProductIdMutation } from '../../shared/api/favoritesApi';
-import { useAppSelector, useAppDispatch } from '../../shared/hooks/reduxHooks';
-import { addToCart } from '../../app/store/reducers/cartSlice';
+import { useAppSelector } from '../../shared/hooks/reduxHooks';
+import { useAddCartItemMutation } from '../../shared/api/cartApi';
 import { SIZES } from '../../shared/types/common';
 import { Loader } from '../../components/Loader/Loader';
 import { ErrorState } from '../../components/ErrorState/ErrorState';
@@ -15,12 +15,15 @@ import minusIcon from '../../shared/assets/icons/minus.svg';
 import styles from './ProductDetailsPage.module.scss';
 import { ProductGallery } from '../../components/ProductGallery';
 import { FavoriteButton } from '../../components/FavoriteButton';
+import { EmptyState } from '../../components/EmptyState';
+import { ReturnsPolicy } from '../../components/ReturnsPolicy';
+import { toAnalyticsItem, trackEvent } from '../../shared/analytics';
 
 export const ProductDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const [addCartItem, { isLoading: isAddingToCart }] = useAddCartItemMutation();
   const { currency, language } = useAppSelector((state) => state.settings);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [selectedSize, setSelectedSize] = useState('');
@@ -28,7 +31,7 @@ export const ProductDetailsPage = () => {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const location = useLocation();
 
-  const { data: product, isLoading, error } = useGetProductByIdQuery({
+  const { data: product, isLoading, error, refetch } = useGetProductByIdQuery({
     id: Number(id),
     currency,
     lang: language,
@@ -37,12 +40,28 @@ export const ProductDetailsPage = () => {
   const [addFavorite] = useAddFavoriteMutation();
   const [removeFavorite] = useRemoveFavoriteByProductIdMutation();
 
+  useEffect(() => {
+    if (!product) {
+      return;
+    }
+
+    trackEvent('view_item', {
+      currency: currency.toUpperCase(),
+      value: Number(product.discounted_price ?? product.price),
+      items: [toAnalyticsItem(product)],
+    });
+  }, [product, currency]);
+
   if (isLoading) {
     return <Loader />;
   }
 
+  if (error && 'status' in error && error.status === 404) {
+    return <EmptyState message={t('product.not_found')} />;
+  }
+
   if (error || !product) {
-    return <ErrorState />;
+    return <ErrorState onRetry={refetch} />;
   }
 
   const formatPrice = (price: string) =>
@@ -50,8 +69,18 @@ export const ProductDetailsPage = () => {
       style: 'currency',
       currency: currency.toUpperCase(),
       currencyDisplay: 'narrowSymbol',
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(Number(price));
+  
+  const handleSizeChange = (size: string) => {
+    setSelectedSize(size);
+
+    if (size) {
+      trackEvent('select_size', {
+        items: [toAnalyticsItem(product, { item_variant: size })],
+      });
+    }
+  };
 
   const displayedPrice = product.discounted_price ?? product.price;
   const hasDiscount = Boolean(product.discounted_price);
@@ -69,17 +98,26 @@ export const ProductDetailsPage = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    if (!selectedSize) {
+  const handleAddToCart = async () => {
+    if (!selectedSize || !product.is_available || isAddingToCart) {
       return;
     }
 
-    dispatch(addToCart({
-      id: Date.now(),
-      product: product.id,
-      size: selectedSize,
-      quantity: 1,
-    }));
+    try {
+      await addCartItem({
+        product: product.id,
+        size: selectedSize,
+        quantity: 1,
+      }).unwrap();
+
+      trackEvent('add_to_cart', {
+        currency: currency.toUpperCase(),
+        value: Number(product.discounted_price ?? product.price),
+        items: [toAnalyticsItem(product, { item_variant: selectedSize, quantity: 1 })],
+      });
+    } catch {
+      // TODO: show an error message when adding to cart fails
+    }
   };
 
   return (
@@ -100,10 +138,10 @@ export const ProductDetailsPage = () => {
                 />
 
                 <div className={styles.details__prices}>
-                  <span className={styles.details__price}>{formatPrice(displayedPrice)}</span>
                   {hasDiscount && (
                     <span className={styles.details__oldPrice}>{formatPrice(product.price)}</span>
                   )}
+                  <span className={styles.details__price}>{formatPrice(displayedPrice)}</span>
                 </div>
 
                 <p className={styles.details__shortDesc}>{product.description.split('\n')[0]}</p>
@@ -112,10 +150,10 @@ export const ProductDetailsPage = () => {
               <div className={styles.details__sizeSelect}>
                 <select
                   value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
+                  onChange={(e) => handleSizeChange(e.target.value)}
                   className={styles.details__selector}
                 >
-                  <option value="">{t('product.select_size')}</option>
+                  <option value="" disabled>{t('product.select_size')}</option>
                   {SIZES.map((size) => (
                     <option key={size} value={size}>{size}</option>
                   ))}
@@ -154,7 +192,7 @@ export const ProductDetailsPage = () => {
                   type="button"
                   className={styles.details__addToCart}
                   onClick={handleAddToCart}
-                  disabled={!selectedSize}
+                  disabled={!selectedSize || !product.is_available}
                 >
                   {t('product.cart_btn')}
                 </button>
@@ -162,24 +200,50 @@ export const ProductDetailsPage = () => {
                 <p className={styles.details__note}>{t('product.addToCart_note')}</p>
               </div>
 
-              <button
-                type="button"
-                className={styles.details__checkAvailability}
-                onClick={() => setIsAvailabilityFormOpen((prev) => !prev)}
-              >
-                {t('product.check_availability')}
-              </button>
+              {!product.is_available && (
+                <button
+                  type="button"
+                  className={styles.details__checkAvailability}
+                  onClick={() => setIsAvailabilityFormOpen((prev) => !prev)}
+                  aria-expanded={isAvailabilityFormOpen}
+                >
+                  {t('product.check_availability')}
+                </button>
+              )}
             </div>
 
-            {isAvailabilityFormOpen && <AvailabilityRequestForm productId={product.id} />}
+            {!product.is_available && (
+              <div
+                className={`${styles.details__availability} ${
+                  isAvailabilityFormOpen ? styles['details__availability--open'] : ''
+                }`}
+              >
+                <div className={styles.details__availabilityInner}>
+                  <AvailabilityRequestForm productId={product.id} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={styles.details__accordion}>
             {[
               { key: 'description_title', content: product.description },
-              { key: 'material_title', content: product.fabric_composition },
-              { key: 'care_title', content: t('care') },
-              { key: 'delivery_title', content: t('delivery') },
+              {
+                key: 'material_care_title',
+                content: (
+                  <>
+                    {[product.fabric_composition, t('product.care_text')]
+                      .filter(Boolean)
+                      .join('\n\n')}
+                    {'\n\n'}
+                    <Link to="/garment-care" className={styles.details__careLink}>
+                      {t('product.care_link')}
+                    </Link>
+                  </>
+                ),
+              },
+              { key: 'returns_title', content: <ReturnsPolicy /> },
+              { key: 'delivery_title', content: t('product.delivery_text') },
             ].map((item) => (
               <details key={item.key} className={styles.details__accordionItem}>
                 <summary className={styles.details__accordionSummary}>
@@ -189,20 +253,24 @@ export const ProductDetailsPage = () => {
                     <img src={minusIcon} alt="" className={styles.details__accordionIconMinus} />
                   </span>
                 </summary>
-                <p className={styles.details__accordionContent}>{item.content}</p>
+                 <div className={styles.details__accordionContent}>{item.content}</div>
               </details>
             ))}
           </div>
         </div>
 
-        <div className={styles.details__recommended}>
-          <ProductSlider
-            title={t('product.slider_title')}
-            queryParams={{ ordering: '?', limit: 9 }}
-            excludeProductId={product.id}
-            showViewAll={false}
-          />
-        </div>
+        {!product.is_available && (
+          <div className={styles.details__recommended}>
+            <ProductSlider
+              title={t('product.alternatives_title')}
+              queryParams={{ type: product.slug, limit: 50 }}
+              excludeProductId={product.id}
+              onlyAvailable
+              maxItems={9}
+              showViewAll={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
