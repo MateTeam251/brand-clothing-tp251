@@ -47,6 +47,13 @@ locals {
     # Starts the redis + celery services in docker-compose.prod.yml.
     COMPOSE_PROFILES = "celery"
 
+    # WayForPay merchant of the customer (login is not secret: it is sent in every
+    # payment form). Secret key: secrets/WAYFORPAY_SECRET_KEY (by hand).
+    WAYFORPAY_MERCHANT_ACCOUNT = "freelance_user_60aeb521e03a0"
+    WAYFORPAY_MERCHANT_DOMAIN  = local.site_host
+    WAYFORPAY_SERVICE_URL      = "https://${local.site_host}/api/payments/wayforpay/callback/"
+    WAYFORPAY_RETURN_URL       = "https://${local.site_host}/api/payments/wayforpay/return/"
+
     # Grafana Cloud (Alloy container). Not secret; the token is in secrets/.
     DEPLOY_ENV        = "prod"
     GRAFANA_PROM_URL  = "https://prometheus-prod-65-prod-eu-west-2.grafana.net/api/prom/push"
