@@ -259,10 +259,6 @@ export function CheckoutDeliveryForm({
           </>
         ) : (
           <>
-            <div className={styles.delivery__method}>
-              {t('checkout_delivery.method_international')}
-            </div>
-
             <SearchSelect
               label={t('checkout_delivery.country')}
               placeholder={t('checkout_delivery.country')}
