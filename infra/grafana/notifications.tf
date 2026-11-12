@@ -35,3 +35,13 @@ resource "grafana_notification_policy" "default" {
   repeat_interval    = "4h"
   disable_provenance = true
 }
+
+# The old "email" contact point couldn't be deleted in the same apply that moved the
+# policy off it (Grafana: 409 "referenced by a notification policy"). Forget it instead;
+# it stays in Grafana unused and can be deleted by hand.
+removed {
+  from = grafana_contact_point.email
+  lifecycle {
+    destroy = false
+  }
+}
