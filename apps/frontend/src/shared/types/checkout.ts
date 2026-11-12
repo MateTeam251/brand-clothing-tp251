@@ -16,8 +16,6 @@ export interface InternationalDeliveryValues {
   countryName: string;
   city: string;
   address: string;
-  houseNumber: string;
-  apartment: string;
   region: string;
   postalCode: string;
 }
@@ -35,7 +33,6 @@ export interface CheckoutDeliveryErrors {
   country?: string;
   internationalCity?: string;
   address?: string;
-  houseNumber?: string;
   postalCode?: string;
 }
 

@@ -38,20 +38,14 @@ const MAX_ADDRESS_LENGTH = 255;
 
 const getInternationalAddress = ({
   address,
-  houseNumber,
-  apartment,
   city,
   region,
   postalCode,
   countryName,
-}: InternationalDeliveryValues) => {
-  const street = [address.trim(), houseNumber.trim()].filter(Boolean).join(' ');
-  const apartmentPart = apartment.trim() ? `apt. ${apartment.trim()}` : '';
-
-  return [street, apartmentPart, city.trim(), region.trim(), postalCode.trim(), countryName]
+}: InternationalDeliveryValues) =>
+  [address.trim(), city.trim(), region.trim(), postalCode.trim(), countryName]
     .filter(Boolean)
     .join(', ');
-};
 
 const getInitialContact = (profile?: UserProfile): CheckoutContactValues => {
   if (!profile) {
@@ -94,8 +88,6 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
       countryName: '',
       city: '',
       address: '',
-      houseNumber: '',
-      apartment: '',
       region: '',
       postalCode: '',
     },
@@ -181,7 +173,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
         nextDeliveryErrors.branch = t('checkout_form.select_branch');
       }
     } else {
-      const { country, city, address, houseNumber, postalCode } = delivery.international;
+      const { country, city, address, postalCode } = delivery.international;
 
       if (!country) {
         nextDeliveryErrors.country = t('checkout_form.select_country');
@@ -195,10 +187,6 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
         nextDeliveryErrors.address = required;
       } else if (getInternationalAddress(delivery.international).length > MAX_ADDRESS_LENGTH) {
         nextDeliveryErrors.address = t('checkout_delivery.address_too_long');
-      }
-
-      if (!houseNumber.trim()) {
-        nextDeliveryErrors.houseNumber = required;
       }
 
       if (!postalCode.trim()) {
@@ -229,7 +217,7 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
     let shippingAnalytics: Record<string, unknown>;
 
     if (delivery.mode === 'international') {
-      const { country, city, address, houseNumber, apartment, region, postalCode } =
+      const { country, city, address, region, postalCode } =
         delivery.international;
 
       deliveryPayload = {
@@ -239,8 +227,6 @@ const CheckoutContent = ({ cart, profile }: CheckoutContentProps) => {
           country,
           city: city.trim(),
           address: address.trim(),
-          house_number: houseNumber.trim(),
-          apartment: apartment.trim(),
           region: region.trim(),
           postal_code: postalCode.trim(),
         },
