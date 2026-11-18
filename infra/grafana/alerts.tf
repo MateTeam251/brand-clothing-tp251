@@ -206,6 +206,9 @@ resource "grafana_rule_group" "this" {
             type       = "reduce"
             expression = "A"
             reducer    = "last"
+            # The newest point of a logs range query is often empty; "Strict" then
+            # returns nothing (= no data = "backup missing" fired). Skip empty points.
+            settings   = { mode = "dropNN" }
             datasource = { type = "__expr__", uid = "__expr__" }
           })
         }
