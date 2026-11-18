@@ -4,6 +4,8 @@
 locals {
   runbook = "https://github.com/MateTeam251/brand-clothing-tp251/blob/main/docs/alerts.md"
 
+  # Line filters in rules use |~ (regex), not |=: in Grafana Cloud's alert evaluation
+  # a |= filter returned no data although Explore found the lines (2026-11-18).
   rule_groups = {
     prod-backups = {
       interval = 600
@@ -11,7 +13,7 @@ locals {
         {
           name    = "prod backup failed"
           source  = "logs"
-          expr    = "count_over_time({env=\"prod\", container=\"db\"} |= \"WAL-G backup FAILED\" [1h])"
+          expr    = "count_over_time({env=\"prod\", container=\"db\"} |~ \"WAL-G backup FAILED\" [1h])"
           op      = "gt"
           value   = 0
           for     = null
@@ -21,7 +23,7 @@ locals {
         {
           name    = "prod WAL archiving failing"
           source  = "logs"
-          expr    = "count_over_time({env=\"prod\", container=\"db\"} |= \"archive command failed\" [15m])"
+          expr    = "count_over_time({env=\"prod\", container=\"db\"} |~ \"archive command failed\" [15m])"
           op      = "gt"
           value   = 0
           for     = "10m"
@@ -32,7 +34,7 @@ locals {
           # No data = no backup at all, so that alerts too.
           name    = "prod backup missing (26h)"
           source  = "logs"
-          expr    = "count_over_time({env=\"prod\", container=\"db\"} |= \"WAL-G backup completed\" [26h])"
+          expr    = "count_over_time({env=\"prod\", container=\"db\"} |~ \"WAL-G backup completed\" [26h])"
           op      = "lt"
           value   = 1
           for     = "10m"
