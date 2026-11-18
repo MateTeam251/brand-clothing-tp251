@@ -134,9 +134,8 @@ locals {
     prom = { uid = "grafanacloud-prom", type = "prometheus" }
   }
 
-  # Extra model fields per data source (as Grafana saves them).
   query_extra = {
-    logs = { queryType = "instant", datasource = { uid = "grafanacloud-logs", type = "loki" } }
+    logs = { queryType = "range", instant = false, range = true, step = "1m", intervalMs = 60000, maxDataPoints = 10, datasource = { uid = "grafanacloud-logs", type = "loki" } }
     prom = { range = false, legendFormat = "__auto" }
   }
 }
@@ -168,7 +167,7 @@ resource "grafana_rule_group" "this" {
       # A: the query
       data {
         ref_id         = "A"
-        query_type     = rule.value.source == "logs" ? "instant" : null
+        query_type     = rule.value.source == "logs" ? "range" : null
         datasource_uid = local.datasources[rule.value.source].uid
 
         relative_time_range {
@@ -189,7 +188,30 @@ resource "grafana_rule_group" "this" {
         ))
       }
 
-      # C: threshold on A
+      # B (logs only): last value of the range query
+      dynamic "data" {
+        for_each = rule.value.source == "logs" ? [1] : []
+        content {
+          ref_id         = "B"
+          query_type     = "expression"
+          datasource_uid = "__expr__"
+
+          relative_time_range {
+            from = 0
+            to   = 0
+          }
+
+          model = jsonencode({
+            refId      = "B"
+            type       = "reduce"
+            expression = "A"
+            reducer    = "last"
+            datasource = { type = "__expr__", uid = "__expr__" }
+          })
+        }
+      }
+
+      # C: threshold on A (prom) or B (logs)
       data {
         ref_id         = "C"
         query_type     = "expression"
@@ -203,7 +225,7 @@ resource "grafana_rule_group" "this" {
         model = jsonencode({
           refId         = "C"
           type          = "threshold"
-          expression    = "A"
+          expression    = rule.value.source == "logs" ? "B" : "A"
           datasource    = { type = "__expr__", uid = "__expr__" }
           intervalMs    = 1000
           maxDataPoints = 43200
