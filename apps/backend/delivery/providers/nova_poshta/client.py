@@ -22,8 +22,11 @@ class NovaPoshtaClient:
     """
 
     PAGE_LIMIT = 500
-    RATE_LIMIT_RETRIES = 5
-    RATE_LIMIT_BACKOFF_SECONDS = 5  # doubles on every retry: 5, 10, 20, 40, 80
+    # Retried: NP rate limiting, timeouts, connection errors and 5xx answers.
+    # Waits double on every retry: 5, 10, 20, 40, 80 s (~2.5 min at most per page).
+    # Other API errors (bad key, bad request) fail at once.
+    MAX_RETRIES = 5
+    BACKOFF_SECONDS = 5
 
     def __init__(self, config=None):
         self._config = config or get_nova_poshta_config()
@@ -36,9 +39,22 @@ class NovaPoshtaClient:
             "methodProperties": method_properties or {},
         }
 
-        for attempt in range(self.RATE_LIMIT_RETRIES + 1):
-            response = requests.post(self._config.api_url, json=payload, timeout=(5, 30))
-            response.raise_for_status()
+        for attempt in range(self.MAX_RETRIES + 1):
+            last_attempt = attempt == self.MAX_RETRIES
+
+            try:
+                response = requests.post(self._config.api_url, json=payload, timeout=(5, 30))
+                response.raise_for_status()
+            except (requests.Timeout, requests.ConnectionError) as error:
+                if last_attempt:
+                    raise
+                self._wait(attempt, f"network error ({type(error).__name__})")
+                continue
+            except requests.HTTPError:
+                if response.status_code < 500 or last_attempt:
+                    raise
+                self._wait(attempt, f"HTTP {response.status_code}")
+                continue
 
             data = response.json()
 
@@ -48,12 +64,15 @@ class NovaPoshtaClient:
             errors = data.get("errors") or []
             # NP reports rate limiting in the body with HTTP 200 (spelled "To many requests").
             rate_limited = any("many requests" in str(error).lower() for error in errors)
-            if not rate_limited or attempt == self.RATE_LIMIT_RETRIES:
+            if not rate_limited or last_attempt:
                 raise ValueError(f"Nova Poshta API error: {errors}")
 
-            delay = self.RATE_LIMIT_BACKOFF_SECONDS * 2 ** attempt
-            logger.warning("Nova Poshta rate limit hit, retrying in %ss", delay)
-            time.sleep(delay)
+            self._wait(attempt, "rate limit")
+
+    def _wait(self, attempt: int, reason: str) -> None:
+        delay = self.BACKOFF_SECONDS * 2 ** attempt
+        logger.warning("Nova Poshta %s, retrying in %ss", reason, delay)
+        time.sleep(delay)
 
     def iter_all_warehouses(self) -> Iterator[list[WarehouseData]]:
         """
